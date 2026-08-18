@@ -43,7 +43,7 @@ Any new features from this surrealra1n release may not exist in the previous ver
 This script only supports Debian-based, Arch-based, Fedora-based and macOS systems.||| 此脚本仅支持基于 Debian、Arch、Fedora 的系统以及 macOS。
 surrealra1n has been restored to the previous version! Please run the script again.||| surrealra1n 已恢复为上一版本！请重新运行脚本。
 surrealra1n has been switched to stable $MAIN_VERSION! Please run the script again.||| surrealra1n 已切换为稳定版 $MAIN_VERSION！请重新运行脚本。
-a failed or interrupted restore may leave the device requiring recovery or restore.||| 失败或中断的恢复可能使设备需要进入恢复或重新恢复。
+a failed or interrupted restore may leave the device requiring recovery or restore.||| 失败或中断的恢复可能使设备需要进入恢复模式或重新恢复。
 Invalid IPSW. You must select IPSW for iOS $LATEST_VERSION, not iOS $VERSION_LATEST||| IPSW 无效。你必须选择适用于 iOS $LATEST_VERSION 的 IPSW，而不是 iOS $VERSION_LATEST
 WARNING: Secure Boot is enabled. Loading an unsigned kernel module may be blocked.||| 警告：Secure Boot 已启用。加载未签名的内核模块可能会被阻止。
 You are already on the stable equivalent of your current version ($MAIN_VERSION).||| 你当前已经处于与你当前版本等效的稳定版（$MAIN_VERSION）。
@@ -182,7 +182,7 @@ And iOS 16.7.x restores are unsupported||| 并且不支持 iOS 16.7.x 恢复
 ideviceinfo failed after two attempts.||| ideviceinfo 尝试两次后仍失败。
 [*] Device is in Recovery or DFU mode.||| [*] 设备处于恢复或 DFU 模式。
 Fetching latest stable version info...||| 正在获取最新稳定版信息...
-Input the version you'd like to boot: ||| 输入你想引导的版本： 
+Input the version you'd like to boot: ||| 输入你想启动的版本： 
 Latest IPSW is not selected. Aborting.||| 未选择最新 IPSW。中止。
 Checking if device is in Recovery mode||| 正在检查设备是否处于恢复模式
 Checking for required dependencies...||| 正在检查所需依赖...
@@ -286,7 +286,7 @@ $pkg: $version||| $pkg：$version
 2. Select SHSH||| 2. 选择 SHSH
 Sending iBSS||| 正在发送 iBSS
 Sending iBEC||| 正在发送 iBEC
-4. Just Boot||| 4. 仅引导
+4. Just Boot||| 4. 仅启动
 Aborting.||| 中止。
 Options:||| 选项：
 4. Back||| 4. 返回
