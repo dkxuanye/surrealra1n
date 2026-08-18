@@ -31,7 +31,7 @@ def main() -> None:
         val = unquote(m.group(1))
         entries.setdefault(val, []).append(i)
     with open(OUT, "w", encoding="utf-8") as f:
-        for val, lns in entries.items():
+        for val, lns in sorted(entries.items(), key=lambda kv: len(kv[0]), reverse=True):
             f.write(f"{val}\t{','.join(map(str, lns))}\n")
     total = sum(len(v) for v in entries.values())
     print(f"总出现次数: {total}")
