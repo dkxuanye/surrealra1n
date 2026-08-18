@@ -1,0 +1,320 @@
+ERROR: Do not run this script with sudo or as root.	5
+[!] surrealra1n has crashed due to an issue	33
+[!] Exit code: $exit_code	34
+[!] Script: $script_file	35
+[!] Line: $line_number	36
+[!] Failed command: $failed_command	37
+[!] It is recommended to report this issue here:	39
+    https://github.com/pwnerblu/surrealra1n/issues	40
+Here's the recommended way to report this:	41
+Title should be a brief and clear summary of the issue you are trying to report	42
+Issue description should mention all relevant details to such issue if possible, and also a full terminal log attached.	43
+[!] Issues THAT DO NOT CONTAIN PROPER LOGS, DETAILS, OR ANYTHING RELEVANT, WILL BE CLOSED AS INVALID.	44
+[!] To attach this log into your issue, do the following:	46
+Cmd + A -> Cmd + C, then paste the entire log into your issue you're opening	48
+Ctrl + Shift + A -> Ctrl + Shift + C, then paste the entire log into the issue you're opening	50
+Your surrealra1n version: $CURRENT_VERSION	59
+Enter your user password when prompted to	61
+You are running surrealra1n on an Apple Silicon Mac.	80
+You are running surrealra1n on Intel macOS.	84
+Unrecognized distro; treating as Debian-based (apt-get detected).	107
+Unrecognized distro; treating as Arch-based (pacman detected).	112
+Unrecognized distro; treating as Fedora-based (dnf detected).	116
+Unrecognized distro; treating as Fedora-based (zypper detected, using dnf flow).	121
+Your macOS version $macos_ver is supported.	141
+surrealra1n only supports macOS 10.14 and later.	143
+Xcode Command Line Tools are not installed. Installing...	151
+Please re-run surrealra1n after the installation completes.	153
+Xcode Command Line Tools are installed.	156
+[!] Homebrew is not installed. You will need to install Homebrew from https://brew.sh	161
+Homebrew is installed.	164
+[$dep] is not installed. Installing...	171
+[$dep] is installed.	174
+Rosetta 2 is not installed. Installing...	182
+Rosetta 2 is installed.	185
+Unsupported Linux distribution.	191,272
+Could not detect a compatible package manager (apt-get, pacman, dnf, or zypper).	192
+This script only supports Debian-based, Arch-based, Fedora-based and macOS systems.	193,273
+Detected distro family: $DISTRO	197
+$1 - enter absolute path (blank to cancel): 	209
+$p	211
+Checking for required dependencies...	216
+Missing packages detected: ${MISSING_PACKAGES[*]}	229,248,265
+Installing missing dependencies...	230,249,266
+All dependencies are installed.	234
+All dependencies are already installed.	252,269
+[!] Required file missing: $1	334
+[!] Required directory missing: $1	341
+Checking for updates...	348
+A new version of surrealra1n is available: $LATEST_VERSION	355
+RELEASE NOTES:	356
+$RELEASE_NOTES	357
+	358,1240,1242,1432,1448,1471,1871,1873,2260,2264,2266,2273,3184,3232,3237,3602,3604,3727,3729,3785,3787,3815,3817
+It is strongly recommended to update to get the latest features + bug fixes.	359
+Would you like to update now? (y/n): 	360
+Failed to clone repository.	367,1454,1484
+$CURRENT_VERSION	372,1477
+Backing up your current surrealra1n installation...	373,1476
+Copying new files...	381,1266,1457,1487
+surrealra1n has been updated! Please run the script again	386
+You have declined the update.	389
+This version of surrealra1n is no longer supported, so it is recommended to update as soon as possible.	390
+Press enter to continue	392,1331,1567,1571,1578,1588,1896,2984,2987,2991,2998,3001,3039,3226,3244,3256,3541,3780
+surrealra1n is up to date.	395
+Checking for existing binaries...	399
+Found necessary binaries.	433
+Binaries do not exist	435,536,637
+Downloading binaries...	436,537,638
+Checking for dependencies that are required for usbliter8ctl, assuming Python3 is on your system	740
+$pkg: $version	746
+$pkg not installed	748
+Running: pip3 install $pkg	749
+Externally managed environment detected, retrying with --break-system-packages	751
+ideviceinfo failed after two attempts.	776
+[*] Device is not in normal mode. Trying recovery/DFU mode...	780
+[*] Device is in Recovery or DFU mode.	784
+[+] Device Identifier: $IDENTIFIER	788
+[+] ECID: $ECID	789
+[!] No device detected in normal or recovery mode.	791
+iPad mini 3 is not supported yet	810
+Unsupported device	1087
+$INFO_TEXT	1239,1870,3599,3725,3784,3814
+Options:	1241,1872,3603,3728,3786,3816
+1. Reinstall surrealra1n	1243
+2. Clear all created boot files and restore files	1244
+3. Go back to previous version of surrealra1n	1246
+4. Back	1247,1877,3608
+3. Back	1249,3732
+Please input an option (1-4): 	1252,1878,3609,3822
+Please input an option (1-3): 	1254,3733
+WARNING: All of your boot files, and other things will be deleted (if any files are in the surrealra1n directory, they will be erased), and surrealra1n will be fresh installed.	1257
+Are you sure you want to reinstall surrealra1n? (y/N): 	1258
+Failed to clone repository. You will need to fetch surrealra1n from releases on GitHub	1263
+surrealra1n has been reinstalled! Please run the script again	1271
+surrealra1n reinstall has been canceled.	1274
+WARNING: All of your boot files and restore files will be deleted. You will need to re-create them afterwards if you proceed.	1278
+This may be useful if you want more disk space.	1279
+Are you sure you want to clear these files? (y/N): 	1280
+Clearing boot files/restore files has been canceled	1286
+Rollback feature is not supported if you update from a beta.	1292
+WARNING: This will restore surrealra1n to the previous version backed up in surrealra1n.old.	1298
+Any new features from this surrealra1n release may not exist in the previous version	1299
+Are you sure you want to go back to the previous version? (y/N): 	1300
+surrealra1n has been restored to the previous version! Please run the script again.	1309
+You can upgrade to the latest version at any time later if you want to be on latest again.	1310
+Rollback has been canceled.	1313
+Invalid option. Exiting.	1319,1914,3659,3805,3833
+A7 devices may have issues pwning on Linux	1328
+If you have a MacBook, use surrealra1n on that instead	1329
+You may choose to continue attempting to pwn with Linux	1330
+Checking if this device is in pwned DFU already	1334
+Device is pwned!	1337,1363
+Skipping gaster reset	1339
+Proceed to do the following:	1345
+A12/A13 tether downgrades are for advanced users only. If you don't know what you're doing, DO not proceed	1346
+Disconnect your device from the computer, then connect it to your Pi Pico	1347
+Make sure your Pi Pico has the custom firmware required to pwn the device with usbliter8.	1348
+Press enter to continue once device is pwned successfully AND reconnected to the computer	1349
+Device is not pwned yet, attempting to pwn	1351
+Checking if this device has pwned successfully	1360
+Device has not pwned successfully	1365
+You need to put your device into DFU mode.	1374,1504
+Would you like instructions on how to do this? (y/n): 	1375,1505
+Instructions will begin in:	1377,1507,1516
+3" && sleep 1 && echo "2" && sleep 1 && echo "1	1378,1508,1517
+Hold power + home buttons.	1379
+10" && sleep 1 && echo "9" && sleep 1 && echo "8" && sleep 1 && echo "7" && sleep 1 && echo "6" && sleep 1 && echo "5" && sleep 1 && echo "4" && sleep 1 && echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1	1380
+Release the power button now, but keep holding home button.	1381
+5" && sleep 1 && echo "4" && sleep 1 && echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1	1382
+Put your device into DFU mode now	1384,1523
+Checking for DFU devices	1388,1527
+The device has entered DFU successfully!	1392,1531
+Device has not entered DFU mode successfully	1394,1533
+Device is now in DFU mode!	1401,1540
+Fetching latest stable version info...	1413
+Current version: $CURRENT_VERSION	1430
+Latest stable version: $MAIN_VERSION	1431
+You are already on the stable equivalent of your current version ($MAIN_VERSION).	1435
+No action needed.	1436
+Press enter to go back	1437
+WARNING: You are currently on $CURRENT_VERSION (development branch).	1444
+The latest stable version is $MAIN_VERSION (main branch).	1445
+Since your development version is newer than stable, switching will require a clean reinstall.	1446
+This means ALL boot files, restore files, and binaries will be deleted.	1447
+Are you sure you want to switch to stable? (y/N): 	1449
+surrealra1n has been switched to stable $MAIN_VERSION! Please run the script again.	1461,1491
+Switch to stable has been canceled.	1464,1494
+You are on $CURRENT_VERSION (development branch).	1468
+Latest stable version is $MAIN_VERSION (main branch).	1469
+This will upgrade you to stable without wiping your boot/restore files.	1470
+Would you like to switch to stable? (y/N): 	1472
+Hold volume down + power buttons.	1509,1518
+4" && sleep 1 && echo "3" && sleep 1 && ./bin/irecovery -n && echo "2" && sleep 1 && echo "1	1510,1519
+Release the power button now, but keep holding volume down button.	1511,1520
+8" && sleep 1 && echo "7" && sleep 1 && echo "6" && sleep 1 && echo "5" && sleep 1 && echo "4" && sleep 1 && echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1	1512,1521
+Put your device into recovery mode, then continue	1514
+Press enter to continue once Device is in Recovery	1515
+SEP is incompatible. Restore cannot continue	1562,1581,1591
+SEP is compatible but Touch ID will break	1566,1577
+SEP is compatible but Touch ID will break, device may take 3-5 minutes to boot, and may hang during Setup	1570
+SEP is compatible but Touch ID will break, device may take 3-5 minutes to boot, and may hang for 30 seconds when it reaches the Touch ID part of Setup. Deep sleep issues are also very likely	1574
+SEP is partially incompatible	1585,3252
+Device will be unable to activate after the restore.	1586
+And potentially other broken features	1587,2982,3217
+No IPSW selected. Aborting.	1715,1882,2961,3192,3519,3613,3624,3668,3737
+IPSW does not exist: $IPSW_PATH	1719,2965,3196,3523,3672
+No SHSH blob selected. Aborting.	1723,1892
+SHSH blob does not exist: $SHSH_PATH	1727
+iPhone X is not supported yet.	1732
+Legacy iOS Kit *does* support iPhone X restores with blobs though	1733
+futurerestore segfaulted (exit 139), retrying...	1773,1798,1817,1836,1854,3104,3123,3142,3165,3347,3699
+Restore has completed! Read above if there are any errors	1780,3354,3706
+futurerestore failed with exit code $EXIT_CODE	1783,3357,3709
+Restore has completed! Read above if there is any errors	1862,3173
+1. Select Target IPSW	1874,3605
+2. Select SHSH	1875
+3. Start Restore	1876,3607
+An SHSH blob is selected. Please ensure this blob is valid for iOS $VERSION, otherwise the restore will likely fail	1895
+Would you like to enable skip-blob for this restore? (y/n): 	1900
+Enabling --skip-blob option for this restore.	1902
+WARNING: This skips blob validation, ENSURE your SHSH is valid!	1903
+UNKNOWN	2106,2122
+HFS	2113
+APFS	2119
+Found APFS kernel module built for kernel $(uname -r).	2151
+Building the APFS kernel module for kernel $(uname -r)...	2153
+Kernel headers for $(uname -r) are missing, installing...	2155
+[!] Could not find or install kernel headers for $(uname -r).	2165
+    Install them manually (Debian/Ubuntu: linux-headers-$(uname -r), Arch: linux-headers, Fedora: kernel-devel) and re-run.	2166
+[!] Failed to clone linux-apfs-rw (network issue?).	2171
+    Check your internet connection and re-run.	2172
+[!] Failed to build the APFS kernel module (linux-apfs-rw).	2176
+    See the build output above; the module needs kernel headers matching $(uname -r).	2177
+$(uname -r)	2182
+WARNING: Secure Boot is enabled. Loading an unsigned kernel module may be blocked.	2186
+         If loading fails below, enroll the module signature or disable Secure Boot.	2187
+Loading the APFS kernel module...	2189
+[!] Failed to load the APFS kernel module.	2192
+    Check 'dmesg | grep -i apfs'. If Secure Boot is enabled, enroll the module	2193
+    signature with mokutil or disable Secure Boot, then re-run.	2194
+[!] Failed to get a free loop device for $img	2220
+    Make sure loop devices are available (e.g. 'modprobe loop') and try again.	2221
+$loopdev $mnt" >> "$APFS_TRACK_FILE	2224
+[!] Failed to mount $img ($loopdev) as APFS $mode.	2226
+    Check 'dmesg | grep -i apfs' for details.	2227
+iOS 16.0.x A12/A13 downgrade on Linux	2262
+WARNING: iOS 16.1+ restores on Linux are experimental. Proceed with caution.	2265,3233
+This functionality is brand new and has NOT received the same level of testing as the	2267
+macOS implementation. It patches the APFS restore ramdisk by building and loading the	2268
+experimental linux-apfs-rw kernel module, whose write support can potentially corrupt	2269
+the ramdisk. A failed or interrupted restore may leave your device requiring recovery	2270
+or a full restore, and this experimental Linux support is NOT equivalent in reliability	2271
+to the established macOS implementation.	2272
+Type YES to continue, anything else to abort: 	2274,3238
+Aborting.	2276,3240
+Using latest MTFW	2369,2371,2709,2711
+[!] Unrecognized filesystem in restore ramdisk ($restore_ramdisk_dmg).	2492
+    Expected an HFS+ (iOS 16.0.x) or APFS (iOS 16.1+) filesystem. Aborting for safety.	2493
+[!] Unrecognized filesystem in restored_external ramdisk (work/$ramdisk_dmg).	2521
+    Expected an HFS+ or APFS filesystem. Aborting for safety.	2522
+[!] APFS ramdisk verification failed after write.	2545
+    The linux-apfs-rw write may have corrupted the container.	2546
+    The ramdisk was NOT packed; check 'dmesg | grep -i apfs' and re-run.	2547
+APFS ramdisk write verified OK.	2550
+Input the version you'd like to boot: 	2814
+Please do a tethered restore to iOS $VERSION, then try tether boot again.	2820
+Sending iBSS	2833
+If you see the error: No such device (it may have been disconnected)	2838,3300
+This error is normal on Linux as long as the Device actually starts booting after iBSS is sent.	2839
+Device should now boot	2843,2848,2866
+Sending iBEC	2852
+Sending DeviceTree	2855
+Sending trustcache	2859
+Sending Kernelcache	2863
+Latest IPSW is not selected. Aborting.	2969,3200,3527
+Latest IPSW does not exist: $IPSW_PATH_LATEST	2973,3204,3531
+SEP is partially incompatible, read the following:	2978,3214
+The device will be unable to activate after the restore.	2979,3215
+You will need to tether restore to 14.0 beta 4 first, activate the device, then tether restore to the desired version.	2980,3220
+Sideloading outside of TrollStore may or may not work, your mileage may vary.	2981,3216
+You cannot set a Passcode or use Touch ID because of BPR being enforced	2983,3218,3229,3253
+Your device may have deep sleep issues after this restore	2986,2989,2996
+Touch ID will not work	2990,2993,3000
+USB accessories will not work	2995
+14.2 and lower downgrades are unsupported, except for 14.0 beta 4	3005
+Also, 14.3 iBoot workaround does not work on 13.x and lower. SEP is totally incompatible	3007
+10.3.3 tether downgrades are not supported on this device.	3012
+10.3.3 is also not OTA signed for this device, so you cannot restore to 10.3.3 without saved blobs	3014
+SEP is incompatible	3019,3022,3249,3258
+13.x restores below 13.4 are not supported	3027
+iOS 16.0-16.5.1 restores are unsupported	3032
+And iOS 16.7.x restores are unsupported	3033
+You will have some issues with the restore:	3036
+iMessage/SMS may not work	3037
+VPNs may not work, and potentially other issues.	3038
+11.3-12.4.1 downgrades are supported but they have not been integrated yet into surrealra1n $CURRENT_VERSION	3043
+Fetching shsh blobs for iOS $LATEST_VERSION	3054,3331
+$VERSION	3059,3321,3588
+No SHSH file found in the shsh folder. Aborting	3065,3338,3577,3684
+Restore files does not exist, making new ones	3072,3279,3560
+Restore files already exist	3079,3286,3563
+Would you like to make new ones? (y/n): 	3080,3287,3564
+A12/A13 downgrades are only supported on macOS 12 and later.	3186
+14.1 downgrades are not supported on this device	3209
+You will need to tether restore to iOS 13.4 - 13.7 first, activate the device (may have to activate via Finder/iTunes/Legacy iOS Kit), then tether restore to the desired version.	3222
+You may also stay on iOS 13 if desired more than iOS 14/15.	3223
+Haptic home button will not work.	3224,3228
+Since iOS 16 should activate normally, there is so need to head to iOS 13.x or iOS 14.0 beta 4.	3230
+This build patches the APFS restore ramdisk with the experimental linux-apfs-rw kernel	3234
+module. It has not received the same level of testing as the macOS implementation, and	3235
+a failed or interrupted restore may leave the device requiring recovery or restore.	3236
+iOS 17-26 A12/A13 downgrades are not supported at the moment	3246
+Haptic home button will not work, and AssistiveTouch home button will also not appear	3254
+On iPhone 11 models, it will be basically fully functional except for UWB, Face ID, and Passcode	3255
+UWB may or may not work.	3263
+This means: Precise findings for AirTags and such.	3264
+This error is normal on Linux as long as the Device enters iBSS recovery mode (screen Should remain blank but be detected as Recovery mode device).	3301
+usbliter8ctl may error out.	3304
+The error may be normal as long as the Device enters iBSS recovery mode (screen Should remain blank but be detected as Recovery mode device).	3305
+Checking if device is in Recovery mode	3310
+Device has been detected in Recovery mode.	3313
+Device not detected in Recovery. Exiting	3315
+Restore has finished! Read above if there are any errors	3324,3328
+Skipping removal of powerd	3439
+Removing powerd	3442
+Here is the following things that may happen on seprmvr64 restore:	3535
+1. Touch ID will not work	3536
+2. Passcode will not work	3537
+3. Password protected Wi-Fi networks will not work	3538
+4. Battery life may be affected on iOS 7/8, because we use a workaround there to make deep sleep panics not occur	3539
+5. Potentially other broken features	3540
+A8 is currently unsupported as we are rewriting surrealra1n, but it should be back eventually.	3543
+Restore has finished! Read above if there's any errors	3590
+seprmvr64 restores to iOS 7 and 9 are not removed.	3600
+The separate seprmvr64 restore options was removed because the functionality was migrated to this menu	3601
+2. Select Base IPSW	3606
+Invalid IPSW. You must select IPSW for iOS $LATEST_VERSION, not iOS $VERSION_LATEST	3631
+seprmvr64 restores to 8.x are not supported in surrealra1n	3640
+Would you like to jailbreak as part of this restore? (Y/n): 	3643
+Jailbreak option enabled	3645
+Jailbreak option disabled	3648
+This OTA restore will use $LATEST_VERSION baseband	3726
+1. Select 10.3.3 IPSW	3730
+2. Start Restore	3731
+IPSW is invalid	3747
+This surrealra1n beta has expired	3764
+A newer beta is available. Please update to continue.	3765
+You will need to exit, re-run surrealra1n.sh, and when it prompts for an update, update surrealra1n.	3766
+A12/A13 device support is entirely experimental.	3778
+Expect to have issues or bugs.	3779
+1. Restore (with SHSH blobs)	3788
+2. Restore (Tethered)	3789
+3. Restore to 10.3.3 untethered (some A7 devices only)	3790
+4. Just Boot	3791
+5. Back	3792
+Please input an option (1-5): 	3793
+1. Downgrade Options	3818
+2. Misc Utilities	3819
+3. Switch to main branch	3820
+4. Exit	3821
+surrealra1n is exiting	3830
