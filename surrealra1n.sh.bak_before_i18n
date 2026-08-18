@@ -3,7 +3,7 @@ CURRENT_VERSION="v2.0 beta 27 re-release 4"
 VERSION_DISPLAY="v2.0 测试版 27 重新发布 4"
 
 if [ "$EUID" -eq 0 ]; then
-  echo "错误：请勿使用 sudo 或以 root 身份运行此脚本。"
+  echo "ERROR: Do not run this script with sudo or as root."
   exit 1
 fi
 
@@ -31,11 +31,11 @@ error_handler() {
     local script_file="${BASH_SOURCE[1]:-$0}"
 
     {
-        echo "[!] surrealra1n 因出现问题而崩溃"
-        echo "[!] 退出码：$exit_code"
-        echo "[!] 脚本：$script_file"
-        echo "[!] 行号：$line_number"
-        echo "[!] 失败的命令：$failed_command"
+        echo "[!] surrealra1n has crashed due to an issue"
+        echo "[!] Exit code: $exit_code"
+        echo "[!] Script: $script_file"
+        echo "[!] Line: $line_number"
+        echo "[!] Failed command: $failed_command"
         echo
         echo "[!] It is recommended to report this issue here:"
         echo "    https://github.com/pwnerblu/surrealra1n/issues"
@@ -57,9 +57,9 @@ error_handler() {
 
 trap 'error_handler $LINENO' ERR
 
-echo "你的 surrealra1n 版本：$VERSION_DISPLAY"
+echo "Your surrealra1n version: $CURRENT_VERSION"
 # Request sudo password upfront
-echo "在提示时输入你的用户密码"
+echo "Enter your user password when prompted to"
 sudo -v || exit 1
 
 sudo rm -rf "tmp"
@@ -78,11 +78,11 @@ ARCH="$(uname -m)"
 if [[ "$(uname)" == "Darwin" ]]; then
     DISTRO="macOS"
     if [[ "$ARCH" == "arm64" ]]; then
-        echo "你正在 Apple Silicon Mac 上运行 surrealra1n。"
+        echo "You are running surrealra1n on an Apple Silicon Mac."
         dist=3
         echo
     elif [[ "$ARCH" == "x86_64" ]]; then
-        echo "你正在 Intel macOS 上运行 surrealra1n。"
+        echo "You are running surrealra1n on Intel macOS."
         dist=4
         echo
     fi
@@ -96,31 +96,31 @@ elif [[ -r /etc/os-release ]]; then
     elif [[ "$ID" == "debian" || "${ID_LIKE:-}" == *debian* ]]; then
         DISTRO="Debian"
         dist=1
-        read -n 1 -s -r -p "按任意键继续"
+        read -n 1 -s -r -p "Press any key to continue"
     elif [[ "$ID" == "fedora" || "${ID_LIKE:-}" == *fedora* || "${ID_LIKE:-}" == *rhel* ]]; then
         DISTRO="Fedora"
         dist=5
-        read -n 1 -s -r -p "按任意键继续"
+        read -n 1 -s -r -p "Press any key to continue"
     # generic Linux fallback
     elif command -v apt-get &>/dev/null; then
         DISTRO="Debian"
         dist=1
-        echo "无法识别的发行版；按基于 Debian 处理（检测到 apt-get）。"
-        read -n 1 -s -r -p "按任意键继续"
+        echo "Unrecognized distro; treating as Debian-based (apt-get detected)."
+        read -n 1 -s -r -p "Press any key to continue"
     elif command -v pacman &>/dev/null; then
         DISTRO="Arch"
         dist=2
-        echo "无法识别的发行版；按基于 Arch 处理（检测到 pacman）。"
+        echo "Unrecognized distro; treating as Arch-based (pacman detected)."
     elif command -v dnf &>/dev/null; then
         DISTRO="Fedora"
         dist=5
-        echo "无法识别的发行版；按基于 Fedora 处理（检测到 dnf）。"
-        read -n 1 -s -r -p "按任意键继续"
+        echo "Unrecognized distro; treating as Fedora-based (dnf detected)."
+        read -n 1 -s -r -p "Press any key to continue"
     elif command -v zypper &>/dev/null; then
         DISTRO="Fedora"
         dist=5
-        echo "无法识别的发行版；按基于 Fedora 处理（检测到 zypper，使用 dnf 流程）。"
-        read -n 1 -s -r -p "按任意键继续"
+        echo "Unrecognized distro; treating as Fedora-based (zypper detected, using dnf flow)."
+        read -n 1 -s -r -p "Press any key to continue"
     fi
 fi
 
@@ -139,9 +139,9 @@ fi
 
 if [[ $dist == 3 || $dist == 4 ]]; then
     if [[ "$(printf '%s\n' "10.14" "$macos_ver" | sort -V | head -n1)" == "10.14" ]]; then
-        echo "你的 macOS 版本 $macos_ver 受支持。"
+        echo "Your macOS version $macos_ver is supported."
     else
-        echo "surrealra1n 仅支持 macOS 10.14 及更高版本。"
+        echo "surrealra1n only supports macOS 10.14 and later."
         exit 1
     fi
 fi
@@ -149,30 +149,30 @@ fi
 if [[ $dist == 3 || $dist == 4 ]]; then
     # Check for Xcode Command Line Tools
     if ! xcode-select -p &>/dev/null; then
-        echo "未安装 Xcode 命令行工具。正在安装..."
+        echo "Xcode Command Line Tools are not installed. Installing..."
         xcode-select --install
-        echo "安装完成后请重新运行 surrealra1n。"
+        echo "Please re-run surrealra1n after the installation completes."
         exit 1
     else
-        echo "已安装 Xcode 命令行工具。"
+        echo "Xcode Command Line Tools are installed."
     fi
 
     # Check for Homebrew
     if ! command -v brew &>/dev/null; then
-        echo "[!] 未安装 Homebrew。你需要从 https://brew.sh 安装 Homebrew"
+        echo "[!] Homebrew is not installed. You will need to install Homebrew from https://brew.sh"
         exit 1
     else
-        echo "已安装 Homebrew。"
+        echo "Homebrew is installed."
     fi
 
     # Check for missing brew dependencies
     BREW_DEPS=("libimobiledevice" "libirecovery" "binutils" "libusb")
     for dep in "${BREW_DEPS[@]}"; do
         if ! brew list "$dep" &>/dev/null; then
-            echo "未安装 [$dep]。正在安装..."
+            echo "[$dep] is not installed. Installing..."
             brew install "$dep"
         else
-            echo "已安装 [$dep]。"
+            echo "[$dep] is installed."
         fi
     done
 fi
@@ -180,22 +180,22 @@ fi
 # Check for Rosetta 2 (Apple Silicon only)
 if [[ $dist == 3 ]]; then
     if ! /usr/bin/pgrep -q oahd; then
-        echo "未安装 Rosetta 2。正在安装..."
+        echo "Rosetta 2 is not installed. Installing..."
         softwareupdate --install-rosetta --agree-to-license
     else
-        echo "已安装 Rosetta 2。"
+        echo "Rosetta 2 is installed."
     fi
 fi
 
 # Unsupported check
 if [[ "$DISTRO" == "Unsupported" ]]; then
-    echo "不支持的 Linux 发行版。"
-    echo "无法检测到兼容的包管理器（apt-get、pacman、dnf 或 zypper）。"
-    echo "此脚本仅支持基于 Debian、Arch、Fedora 的系统以及 macOS。"
+    echo "Unsupported Linux distribution."
+    echo "Could not detect a compatible package manager (apt-get, pacman, dnf, or zypper)."
+    echo "This script only supports Debian-based, Arch-based, Fedora-based and macOS systems."
     exit 1
 fi
 
-echo "检测到系统发行版：$DISTRO"
+echo "Detected distro family: $DISTRO"
 
 if [[ $dist == 3 || $dist == 4 ]]; then
     zenity="./bin/zenity"
@@ -207,14 +207,14 @@ pick_file() {
     local p
     p=$($zenity --file-selection --title="$1" 2>/dev/null)
     if [[ -z "$p" ]]; then
-        read -e -r -p "$1 - 请输入绝对路径（留空则取消）：" p </dev/tty
+        read -e -r -p "$1 - enter absolute path (blank to cancel): " p </dev/tty
     fi
     echo "$p"
 }
 
 
 # Dependency check
-echo "正在检查所需依赖..."
+echo "Checking for required dependencies..."
 
 if [[ $dist == 1 ]]; then
     DEPENDENCIES=(libusb-1.0-0-dev libusbmuxd-tools libimobiledevice-utils usbmuxd zenity git curl make gcc python3-pip python3-usb)
@@ -227,12 +227,12 @@ if [[ $dist == 1 ]]; then
     done
 
     if [ ${#MISSING_PACKAGES[@]} -ne 0 ]; then
-        echo "检测到缺少软件包：${MISSING_PACKAGES[*]}"
-        echo "正在安装缺失的依赖..."
+        echo "Missing packages detected: ${MISSING_PACKAGES[*]}"
+        echo "Installing missing dependencies..."
         sudo apt update || true # issue workarounds
         sudo apt install -y "${MISSING_PACKAGES[@]}" || true # issue workarounds
     else
-        echo "所有依赖均已安装。" 
+        echo "All dependencies are installed." 
     fi
 elif [[ $dist == 2 ]]; then
     DEPENDENCIES=(libusb libusbmuxd libimobiledevice usbmuxd zenity git curl make gcc base-devel python-pip)
@@ -246,11 +246,11 @@ elif [[ $dist == 2 ]]; then
     done
 
     if [ ${#MISSING_PACKAGES[@]} -ne 0 ]; then
-        echo "检测到缺少软件包：${MISSING_PACKAGES[*]}"
-        echo "正在安装缺失的依赖..."
+        echo "Missing packages detected: ${MISSING_PACKAGES[*]}"
+        echo "Installing missing dependencies..."
         sudo pacman -Syu --needed "${MISSING_PACKAGES[@]}"
     else
-        echo "所有依赖均已安装。"
+        echo "All dependencies are already installed."
     fi
 elif [[ $dist == 5 ]]; then
     DEPENDENCIES=(libusb1-devel usbmuxd libimobiledevice-utils zenity git curl make gcc python3-pip python3-pyusb)
@@ -263,15 +263,15 @@ elif [[ $dist == 5 ]]; then
     done
 
     if [ ${#MISSING_PACKAGES[@]} -ne 0 ]; then
-        echo "检测到缺少软件包：${MISSING_PACKAGES[*]}"
-        echo "正在安装缺失的依赖..."
+        echo "Missing packages detected: ${MISSING_PACKAGES[*]}"
+        echo "Installing missing dependencies..."
         sudo dnf install -y "${MISSING_PACKAGES[@]}"
     else
-        echo "所有依赖均已安装。"
+        echo "All dependencies are already installed."
     fi
 elif [[ "$DISTRO" == "unknown" ]]; then
-    echo "不支持的 Linux 发行版。"
-    echo "此脚本仅支持基于 Debian、Arch、Fedora 的系统以及 macOS。"
+    echo "Unsupported Linux distribution."
+    echo "This script only supports Debian-based, Arch-based, Fedora-based and macOS systems."
     exit 1
 fi
 
@@ -332,46 +332,46 @@ find_dmg_arm64e() {
 
 require_file() {
     if [[ ! -f "$1" ]]; then
-        echo "[!] 缺少所需文件：$1"
+        echo "[!] Required file missing: $1"
         exit 1
     fi
 }
 
 require_dir() {
     if [[ ! -d "$1" ]]; then
-        echo "[!] 缺少所需目录：$1"
+        echo "[!] Required directory missing: $1"
         exit 1
     fi
 }
 
 #
 
-echo "正在检查更新..."
+echo "Checking for updates..."
 rm -rf update/latest.txt
 curl -L -o update/latest.txt https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt
 LATEST_VERSION=$(head -n 1 "update/latest.txt" | tr -d '\r\n')
 RELEASE_NOTES=$(awk '/^RELEASE NOTES:/{flag=1; next} flag' "update/latest.txt")
 
 if [[ $LATEST_VERSION != $CURRENT_VERSION ]]; then
-    echo "发现 surrealra1n 新版本：$LATEST_VERSION"
+    echo "A new version of surrealra1n is available: $LATEST_VERSION"
     echo "更新说明："
     echo "$RELEASE_NOTES"
     echo ""
-    echo "强烈建议更新以获得最新功能 + 错误修复。"
-    read -p "是否现在更新？(y/n):" update
+    echo "It is strongly recommended to update to get the latest features + bug fixes."
+    read -p "Would you like to update now? (y/n): " update
     if [[ $update == y || $update == Y ]]; then
         rm -rf "updatefiles"
         mkdir updatefiles
         rm -rf "updatefiles/repo"
         git clone --branch development https://github.com/pwnerblu/surrealra1n updatefiles/repo --recursive
         if [[ ! -d updatefiles/repo ]]; then
-            echo "克隆仓库失败。"
+            echo "Failed to clone repository."
             exit 1
         fi
         rm -rf "surrealra1n.old"
         mkdir -p surrealra1n.old # make folder to back up old surrealra1n installation
         echo "$CURRENT_VERSION" > surrealra1n.old/oldversion.txt
-        echo "正在备份你当前的 surrealra1n 安装..."
+        echo "Backing up your current surrealra1n installation..."
         mv -v bin surrealra1n.old/
         mv -v futurerestore surrealra1n.old/
         mv -v keys surrealra1n.old/
@@ -379,25 +379,25 @@ if [[ $LATEST_VERSION != $CURRENT_VERSION ]]; then
         rm -rf "bin"
         rm -rf "futurerestore"
         rm -rf "keys"
-        echo "正在复制新文件..."
+        echo "Copying new files..."
         cp -av updatefiles/repo/. ./
         chmod +x surrealra1n.sh
 
         rm -rf "updatefiles"
-        echo "surrealra1n 已更新！请重新运行脚本"
+        echo "surrealra1n has been updated! Please run the script again"
         exit 0
     else
-        echo "你已拒绝更新。"
-        echo "此版本的 surrealra1n 已不再受支持，建议尽快更新。"
+        echo "You have declined the update."
+        echo "This version of surrealra1n is no longer supported, so it is recommended to update as soon as possible."
         outdated=1
-        read -p "按回车继续"
+        read -p "Press enter to continue"
     fi
 else
-    echo "surrealra1n 已是最新版本。"
+    echo "surrealra1n is up to date."
     sleep 1
 fi
 
-echo "正在检查现有二进制文件..."
+echo "Checking for existing binaries..."
 
 #!/bin/bash
 
@@ -431,10 +431,10 @@ if [[ -f "./bin/img4" && \
       -f "./activate.sh" && \
       -f "./backup.sh" && \
       -f "./futurerestore/futurerestore" ]]; then
-    echo "已找到所需二进制文件。"
+    echo "Found necessary binaries."
 elif [[ $dist == 3 ]]; then
-    echo "二进制文件不存在"
-    echo "正在下载二进制文件..."
+    echo "Binaries do not exist"
+    echo "Downloading binaries..."
 
     mkdir -p bin futurerestore
 
@@ -534,8 +534,8 @@ elif [[ $dist == 3 ]]; then
     xattr -c bin/*
     xattr -c futurerestore/futurerestore
 elif [[ $dist == 4 ]]; then
-    echo "二进制文件不存在"
-    echo "正在下载二进制文件..."
+    echo "Binaries do not exist"
+    echo "Downloading binaries..."
 
     mkdir -p bin futurerestore
 
@@ -635,8 +635,8 @@ elif [[ $dist == 4 ]]; then
     xattr -c bin/*
     xattr -c futurerestore/futurerestore
 else
-    echo "二进制文件不存在"
-    echo "正在下载二进制文件..."
+    echo "Binaries do not exist"
+    echo "Downloading binaries..."
 
     mkdir -p bin futurerestore
 
@@ -738,18 +738,18 @@ else
     cd ..
 fi
 
-echo "正在检查 usbliter8ctl 所需的依赖，假设你的系统已安装 Python3"
+echo "Checking for dependencies that are required for usbliter8ctl, assuming Python3 is on your system"
 # Check required packages
 PACKAGES=("pyusb")
 for pkg in "${PACKAGES[@]}"; do
     if pip3 show "$pkg" &>/dev/null; then
         version=$(pip3 show "$pkg" | grep Version | awk '{print $2}')
-        echo "$pkg：$version"
+        echo "$pkg: $version"
     else
-        echo "$pkg 未安装"
-        echo "正在运行：pip3 install $pkg"
+        echo "$pkg not installed"
+        echo "Running: pip3 install $pkg"
         if pip3 install "$pkg" 2>&1 | grep -q "externally-managed"; then
-            echo "检测到外部管理环境，使用 --break-system-packages 重试"
+            echo "Externally managed environment detected, retrying with --break-system-packages"
             pip3 install "$pkg" --break-system-packages
         fi
     fi
@@ -774,22 +774,22 @@ elif [[ $IDEVICE_STATUS -ne 0 && "$IDEVICE_INFO" != *"No device found!"* ]] || [
         SERIAL="none"
         MODE="Normal"
     else
-        echo "ideviceinfo 尝试两次后仍失败。"
+        echo "ideviceinfo failed after two attempts."
         exit 1
     fi
 else
-    echo "[*] 设备不在正常模式。正在尝试恢复/DFU 模式..."
+    echo "[*] Device is not in normal mode. Trying recovery/DFU mode..."
     # Try irecovery
     IRECOVERY_INFO=$(./bin/irecovery -q 2>/dev/null) || true
     if [[ -n "$IRECOVERY_INFO" ]]; then
-        echo "[*] 设备处于恢复或 DFU 模式。"
+        echo "[*] Device is in Recovery or DFU mode."
         IDENTIFIER=$(echo "$IRECOVERY_INFO" | grep "^PRODUCT:" | cut -d ':' -f2 | xargs)
         ECID=$(echo "$IRECOVERY_INFO" | grep "^ECID:" | cut -d ':' -f2 | xargs)
         MODE=$(echo "$IRECOVERY_INFO" | grep "^MODE:" | cut -d ':' -f2 | xargs)
-        echo "[+] 设备标识符：$IDENTIFIER"
-        echo "[+] ECID：$ECID"
+        echo "[+] Device Identifier: $IDENTIFIER"
+        echo "[+] ECID: $ECID"
     else
-        echo "[!] 未在正常或恢复模式下检测到设备。"
+        echo "[!] No device detected in normal or recovery mode."
         IDENTIFIER="NONE"
         MODE="None"
         ECID="None"
@@ -808,7 +808,7 @@ if [[ -d "seprmvr64boot" ]]; then
 fi
 
 if [[ $IDENTIFIER == iPad4,7 || $IDENTIFIER == iPad4,8 || $IDENTIFIER == iPad4,9 ]]; then
-    echo "iPad mini 3 尚不受支持"
+    echo "iPad mini 3 is not supported yet"
     exit 1
 fi
 
@@ -1085,7 +1085,7 @@ elif [[ $IDENTIFIER == iPad5,3 || $IDENTIFIER == iPad5,4 ]]; then
     REFER="ipad5b"
     REFER2="ipad5b"
 else
-    echo "不支持的设备"
+    echo "Unsupported device"
     exit 1
 fi
 
@@ -1239,66 +1239,66 @@ misc_utils(){
 clear
 echo "$INFO_TEXT"
 echo ""
-echo "选项："
+echo "Options:"
 echo ""
-echo "1. 重新安装 surrealra1n"
-echo "2. 清除所有已创建的启动文件和恢复文件"
+echo "1. Reinstall surrealra1n"
+echo "2. Clear all created boot files and restore files"
 if [[ -d "surrealra1n.old" ]]; then
-    echo "3. 回到 surrealra1n 的上一版本"
-    echo "4. 返回"
+    echo "3. Go back to previous version of surrealra1n"
+    echo "4. Back"
 else
-    echo "3. 返回"
+    echo "3. Back"
 fi
 if [[ -d "surrealra1n.old" ]]; then
-    read -p "请输入选项（1-4）：" misc_utils_options
+    read -p "Please input an option (1-4): " misc_utils_options
 else
-    read -p "请输入选项（1-3）：" misc_utils_options
+    read -p "Please input an option (1-3): " misc_utils_options
 fi
 if [[ $misc_utils_options == 1 ]]; then
-    echo "警告：你的所有启动文件和其余内容都将被删除（surrealra1n 目录中的任何文件都会被清除），并将全新安装 surrealra1n。"
-    read -p "你确定要重新安装 surrealra1n 吗？(y/N):" surrealra1n_reinstall
+    echo "WARNING: All of your boot files, and other things will be deleted (if any files are in the surrealra1n directory, they will be erased), and surrealra1n will be fresh installed."
+    read -p "Are you sure you want to reinstall surrealra1n? (y/N): " surrealra1n_reinstall
     if [[ $surrealra1n_reinstall == Y || $surrealra1n_reinstall == y ]]; then
         sudo rm -rf ./*
         git clone --branch development https://github.com/pwnerblu/surrealra1n repo --recursive
         if [[ ! -d repo ]]; then
-            echo "克隆仓库失败。你需要从 GitHub 的 releases 页面获取 surrealra1n"
+            echo "Failed to clone repository. You will need to fetch surrealra1n from releases on GitHub"
             exit 1
         fi
-        echo "正在复制新文件..."
+        echo "Copying new files..."
         cp -av repo/. ./
         chmod +x surrealra1n.sh
 
         rm -rf "repo"
-        echo "surrealra1n 已重新安装！请重新运行脚本"
+        echo "surrealra1n has been reinstalled! Please run the script again"
         exit 0
     else
-        echo "已取消重新安装 surrealra1n。"
+        echo "surrealra1n reinstall has been canceled."
         misc_utils
     fi
 elif [[ $misc_utils_options == 2 ]]; then
-    echo "警告：你的所有启动文件和恢复文件都将被删除。如果继续，之后你需要重新生成它们。"
-    echo "如果你想获得更多磁盘空间，这可能会很有用。"
-    read -p "你确定要清除这些文件吗？(y/N):" clear_files    
+    echo "WARNING: All of your boot files and restore files will be deleted. You will need to re-create them afterwards if you proceed."
+    echo "This may be useful if you want more disk space."
+    read -p "Are you sure you want to clear these files? (y/N): " clear_files    
     if [[ $clear_files == y || $clear_files == Y ]]; then
         sudo rm -rf "boot"
         sudo rm -rf "restorefiles"
         sudo rm -rf "noseprestore"
     else
-        echo "已取消清除启动文件/恢复文件"
+        echo "Clearing boot files/restore files has been canceled"
         misc_utils
     fi
 elif [[ $misc_utils_options == 3 ]] && [[ -d "surrealra1n.old" ]]; then
     old_version=$(cat surrealra1n.old/oldversion.txt)
     if [[ "$old_version" == *beta* ]]; then
-        echo "如果你从测试版更新，则不支持回滚功能。"
+        echo "Rollback feature is not supported if you update from a beta."
         rm -rf "surrealra1n.old"
         sleep 4
         misc_utils
         return
     fi
-    echo "警告：这将把 surrealra1n 恢复为 surrealra1n.old 中备份的上一版本。"
-    echo "此版本 surrealra1n 的任何新功能可能不存在于上一版本中"
-    read -p "你确定要回到上一版本吗？(y/N):" rollback_confirm
+    echo "WARNING: This will restore surrealra1n to the previous version backed up in surrealra1n.old."
+    echo "Any new features from this surrealra1n release may not exist in the previous version"
+    read -p "Are you sure you want to go back to the previous version? (y/N): " rollback_confirm
     if [[ $rollback_confirm == Y || $rollback_confirm == y ]]; then
         rm -rf "bin"
         rm -rf "futurerestore"
@@ -1307,17 +1307,17 @@ elif [[ $misc_utils_options == 3 ]] && [[ -d "surrealra1n.old" ]]; then
         cp -av surrealra1n.old/. ./
         chmod +x surrealra1n.sh
         rm -rf "surrealra1n.old"
-        echo "surrealra1n 已恢复为上一版本！请重新运行脚本。"
-        echo "如果你想再次使用最新版，之后随时可以升级到最新版本。"
+        echo "surrealra1n has been restored to the previous version! Please run the script again."
+        echo "You can upgrade to the latest version at any time later if you want to be on latest again."
         exit 0
     else
-        echo "已取消回滚。"
+        echo "Rollback has been canceled."
         misc_utils
     fi
 elif [[ $misc_utils_options == 3 ]] || [[ $misc_utils_options == 4 ]]; then
     main_menu
 else
-    echo "无效的选项。退出。"
+    echo "Invalid option. Exiting."
     exit 1
 fi
 
@@ -1326,30 +1326,30 @@ fi
 pwn_device(){
 
 if [[ $IDENTIFIER == iPhone6* || $IDENTIFIER == iPad4* ]] && [[ $dist == 1 || $dist == 2 || $dist == 5 ]]; then
-    echo "A7 设备在 Linux 上破解可能会出现问题"
-    echo "如果你有 MacBook，请改用它来运行 surrealra1n"
-    echo "你可以选择继续尝试在 Linux 上破解"
-    read -p "按回车继续"
+    echo "A7 devices may have issues pwning on Linux"
+    echo "If you have a MacBook, use surrealra1n on that instead"
+    echo "You may choose to continue attempting to pwn with Linux"
+    read -p "Press enter to continue"
 fi
 
-echo "正在检查此设备是否已处于破解 DFU 状态"
+echo "Checking if this device is in pwned DFU already"
 irecovery_output=$(./bin/irecovery -q)
 if echo "$irecovery_output" | grep -q "PWND"; then
-    echo "设备已破解！"
+    echo "Device is pwned!"
     if [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPhone12* || $IDENTIFIER == iPad11* ]]; then
-        echo "跳过 gaster 重置"
+        echo "Skipping gaster reset"
     else
         ./bin/gaster reset
     fi
     return
 elif [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPhone12* || $IDENTIFIER == iPad11* ]]; then
-    echo "请按照以下步骤操作："
-    echo "A12/A13 有线降级仅面向高级用户。如果你不清楚自己在做什么，请不要继续"
-    echo "将设备从电脑断开，然后将其连接到你的 Pi Pico"
-    echo "请确保你的 Pi Pico 已刷入使用 usbliter8 破解设备所需的定制固件。"
-    read -p "设备破解成功并重新连接电脑后，按回车继续"
+    echo "Proceed to do the following:"
+    echo "A12/A13 tether downgrades are for advanced users only. If you don't know what you're doing, DO not proceed"
+    echo "Disconnect your device from the computer, then connect it to your Pi Pico"
+    echo "Make sure your Pi Pico has the custom firmware required to pwn the device with usbliter8."
+    read -p "Press enter to continue once device is pwned successfully AND reconnected to the computer"
 else
-    echo "设备尚未破解，正在尝试破解"
+    echo "Device is not pwned yet, attempting to pwn"
     ./bin/gaster pwn 
     ./bin/gaster reset
     if [[ $IDENTIFIER == iPhone10,3 || $IDENTIFIER == iPhone10,6 ]]; then
@@ -1358,12 +1358,12 @@ else
     fi
 fi
 
-echo "正在检查此设备是否已破解成功"
+echo "Checking if this device has pwned successfully"
 irecovery_output=$(./bin/irecovery -q)
 if echo "$irecovery_output" | grep -q "PWND"; then
-    echo "设备已破解！"
+    echo "Device is pwned!"
 else
-    echo "设备未能破解成功"
+    echo "Device has not pwned successfully"
     exit 1
 fi
 
@@ -1372,34 +1372,34 @@ fi
 dfu_helper(){
 
 if [[ $MODE == Normal || $MODE == Recovery ]]; then
-    echo "你需要将设备置于 DFU 模式。"
-    read -p "需要操作方法说明吗？(y/n):" dfu_instructions
+    echo "You need to put your device into DFU mode."
+    read -p "Would you like instructions on how to do this? (y/n): " dfu_instructions
     if [[ $dfu_instructions == y || $dfu_instructions == Y ]]; then
-        echo "说明将在以下时间后开始："
+        echo "Instructions will begin in:"
         echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1" && sleep 1
-        echo "同时按住电源键和 Home 键。" 
+        echo "Hold power + home buttons." 
         echo "10" && sleep 1 && echo "9" && sleep 1 && echo "8" && sleep 1 && echo "7" && sleep 1 && echo "6" && sleep 1 && echo "5" && sleep 1 && echo "4" && sleep 1 && echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1" && sleep 1
-        echo "现在松开电源键，但继续按住 Home 键。"
+        echo "Release the power button now, but keep holding home button."
         echo "5" && sleep 1 && echo "4" && sleep 1 && echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1" && sleep 1
     else
-        echo "现在将你的设备置于 DFU 模式"
+        echo "Put your device into DFU mode now"
     fi
 fi
 
-echo "正在检查 DFU 设备"
+echo "Checking for DFU devices"
 if [[ $dfu_instructions == Y || $dfu_instructions == y ]]; then
     MODE=$(./bin/irecovery -q | grep "^MODE:" | cut -d ':' -f2 | xargs) || true
     if [[ $MODE == DFU ]]; then
-        echo "设备已成功进入 DFU 模式！"
+        echo "The device has entered DFU successfully!"
     else
-        echo "设备未能成功进入 DFU 模式"
+        echo "Device has not entered DFU mode successfully"
         exit 1
     fi
 else
     while true; do
       MODE=$(./bin/irecovery -q 2>/dev/null | grep "^MODE:" | cut -d ':' -f2 | xargs) || true
       if [ "$MODE" = "DFU" ]; then
-        echo "设备现已处于 DFU 模式！"
+        echo "Device is now in DFU mode!"
         break
       fi
 
@@ -1411,7 +1411,7 @@ fi
 
 switch_to_main(){
 
-echo "正在获取最新稳定版信息..."
+echo "Fetching latest stable version info..."
 curl -L -o update/latest_main.txt https://github.com/pwnerblu/surrealra1n/raw/refs/heads/main/update/latest.txt
 MAIN_VERSION=$(head -n 1 "update/latest_main.txt" | tr -d '\r\n')
 
@@ -1428,53 +1428,53 @@ MAIN_MINOR=$(echo "$MAIN_CLEAN" | cut -d'.' -f2)
 MAIN_PATCH=$(echo "$MAIN_CLEAN" | cut -d'.' -f3)
 MAIN_PATCH=${MAIN_PATCH:-0}
 
-echo "当前版本：$VERSION_DISPLAY"
-echo "最新稳定版：$MAIN_VERSION"
+echo "Current version: $CURRENT_VERSION"
+echo "Latest stable version: $MAIN_VERSION"
 echo ""
 
 if [[ "$CURRENT_MAJOR" == "$MAIN_MAJOR" && "$CURRENT_MINOR" == "$MAIN_MINOR" && "$CURRENT_PATCH" == "$MAIN_PATCH" ]]; then
-    echo "你当前已经处于与你当前版本等效的稳定版（$MAIN_VERSION）。"
-    echo "无需操作。"
-    read -p "按回车返回"
+    echo "You are already on the stable equivalent of your current version ($MAIN_VERSION)."
+    echo "No action needed."
+    read -p "Press enter to go back"
     main_menu
     return
 fi
 
 if [[ "$CURRENT_MAJOR" -gt "$MAIN_MAJOR" ]] || \
    [[ "$CURRENT_MAJOR" -eq "$MAIN_MAJOR" && "$CURRENT_MINOR" -gt "$MAIN_MINOR" ]]; then
-    echo "警告：你当前使用的是 $VERSION_DISPLAY（开发分支）。"
-    echo "最新稳定版是 $MAIN_VERSION（main 分支）。"
-    echo "由于你的开发版比稳定版更新，切换将需要全新重装。"
-    echo "这意味着所有启动文件和恢复文件以及二进制文件都将被删除。"
+    echo "WARNING: You are currently on $CURRENT_VERSION (development branch)."
+    echo "The latest stable version is $MAIN_VERSION (main branch)."
+    echo "Since your development version is newer than stable, switching will require a clean reinstall."
+    echo "This means ALL boot files, restore files, and binaries will be deleted."
     echo ""
-    read -p "你确定要切换到稳定版吗？(y/N):" switch_confirm
+    read -p "Are you sure you want to switch to stable? (y/N): " switch_confirm
     if [[ $switch_confirm == Y || $switch_confirm == y ]]; then
         sudo rm -rf ./*
         git clone --branch main https://github.com/pwnerblu/surrealra1n repo --recursive
         if [[ ! -d repo ]]; then
-            echo "克隆仓库失败。"
+            echo "Failed to clone repository."
             exit 1
         fi
-        echo "正在复制新文件..."
+        echo "Copying new files..."
         cp -av repo/. ./
         chmod +x surrealra1n.sh
         rm -rf "repo"
-        echo "surrealra1n 已切换为稳定版 $MAIN_VERSION！请重新运行脚本。"
+        echo "surrealra1n has been switched to stable $MAIN_VERSION! Please run the script again."
         exit 0
     else
-        echo "已取消切换到稳定版。"
+        echo "Switch to stable has been canceled."
         main_menu
     fi
 else
-    echo "你当前使用的是 $VERSION_DISPLAY（开发分支）。"
-    echo "最新稳定版是 $MAIN_VERSION（main 分支）。"
-    echo "这将把你升级到稳定版，不会清除你的启动/恢复文件。"
+    echo "You are on $CURRENT_VERSION (development branch)."
+    echo "Latest stable version is $MAIN_VERSION (main branch)."
+    echo "This will upgrade you to stable without wiping your boot/restore files."
     echo ""
-    read -p "是否要切换到稳定版？(y/N):" switch_confirm
+    read -p "Would you like to switch to stable? (y/N): " switch_confirm
     if [[ $switch_confirm == Y || $switch_confirm == y ]]; then
         rm -rf "surrealra1n.old"
         mkdir -p surrealra1n.old
-        echo "正在备份你当前的 surrealra1n 安装..."
+        echo "Backing up your current surrealra1n installation..."
         echo "$CURRENT_VERSION" > surrealra1n.old/oldversion.txt
         mv -v bin surrealra1n.old/
         mv -v futurerestore surrealra1n.old/
@@ -1482,17 +1482,17 @@ else
         mv -v surrealra1n.sh surrealra1n.old/
         git clone --branch main https://github.com/pwnerblu/surrealra1n repo --recursive
         if [[ ! -d repo ]]; then
-            echo "克隆仓库失败。"
+            echo "Failed to clone repository."
             exit 1
         fi
-        echo "正在复制新文件..."
+        echo "Copying new files..."
         cp -av repo/. ./
         chmod +x surrealra1n.sh
         rm -rf "repo"
-        echo "surrealra1n 已切换为稳定版 $MAIN_VERSION！请重新运行脚本。"
+        echo "surrealra1n has been switched to stable $MAIN_VERSION! Please run the script again."
         exit 0
     else
-        echo "已取消切换到稳定版。"
+        echo "Switch to stable has been canceled."
         main_menu
     fi
 fi
@@ -1502,43 +1502,43 @@ fi
 dfu_helper_a11(){
 
 if [[ $MODE == Normal || $MODE == Recovery ]]; then
-    echo "你需要将设备置于 DFU 模式。"
-    read -p "需要操作方法说明吗？(y/n):" dfu_instructions
+    echo "You need to put your device into DFU mode."
+    read -p "Would you like instructions on how to do this? (y/n): " dfu_instructions
     if [[ $dfu_instructions == y || $dfu_instructions == Y ]] && [[ $MODE == Recovery ]]; then
-        echo "说明将在以下时间后开始："
+        echo "Instructions will begin in:"
         echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1" && sleep 1
-        echo "同时按住音量减键和电源键。" 
+        echo "Hold volume down + power buttons." 
         echo "4" && sleep 1 && echo "3" && sleep 1 && ./bin/irecovery -n && echo "2" && sleep 1 && echo "1" && sleep 1
-        echo "现在松开电源键，但继续按住音量减键。"
+        echo "Release the power button now, but keep holding volume down button."
         echo "8" && sleep 1 && echo "7" && sleep 1 && echo "6" && sleep 1 && echo "5" && sleep 1 && echo "4" && sleep 1 && echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1" && sleep 1
     elif [[ $dfu_instructions == y || $dfu_instructions == Y ]] && [[ $MODE == Normal ]]; then
-        echo "将设备置于恢复模式，然后继续"
-        read -p "设备进入恢复模式后按回车继续"
-        echo "说明将在以下时间后开始："
+        echo "Put your device into recovery mode, then continue"
+        read -p "Press enter to continue once Device is in Recovery"
+        echo "Instructions will begin in:"
         echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1" && sleep 1
-        echo "同时按住音量减键和电源键。" 
+        echo "Hold volume down + power buttons." 
         echo "4" && sleep 1 && echo "3" && sleep 1 && ./bin/irecovery -n && echo "2" && sleep 1 && echo "1" && sleep 1
-        echo "现在松开电源键，但继续按住音量减键。"
+        echo "Release the power button now, but keep holding volume down button."
         echo "8" && sleep 1 && echo "7" && sleep 1 && echo "6" && sleep 1 && echo "5" && sleep 1 && echo "4" && sleep 1 && echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1" && sleep 1
     else
-        echo "现在将你的设备置于 DFU 模式"
+        echo "Put your device into DFU mode now"
     fi
 fi
 
-echo "正在检查 DFU 设备"
+echo "Checking for DFU devices"
 if [[ $dfu_instructions == Y || $dfu_instructions == y ]]; then
     MODE=$(./bin/irecovery -q | grep "^MODE:" | cut -d ':' -f2 | xargs) || true
     if [[ $MODE == DFU ]]; then
-        echo "设备已成功进入 DFU 模式！"
+        echo "The device has entered DFU successfully!"
     else
-        echo "设备未能成功进入 DFU 模式"
+        echo "Device has not entered DFU mode successfully"
         exit 1
     fi
 else
     while true; do
       MODE=$(./bin/irecovery -q 2>/dev/null | grep "^MODE:" | cut -d ':' -f2 | xargs) || true
       if [ "$MODE" = "DFU" ]; then
-        echo "设备现已处于 DFU 模式！"
+        echo "Device is now in DFU mode!"
         break
       fi
 
@@ -1560,36 +1560,36 @@ reset_restore_vars() {
 sep_checker(){
 
 if [[ $IDENTIFIER == iPhone6* || $IDENTIFIER == iPhone7* || $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 || $IDENTIFIER == iPod7* || $IDENTIFIER == iPad4,1 || $IDENTIFIER == iPad4,2 || $IDENTIFIER == iPad4,3 || $IDENTIFIER == iPad4,4 || $IDENTIFIER == iPad4,5 ]] && [[ $VERSION == 7.* || $VERSION == 8.* || $VERSION == 9.* || $VERSION == 10.0* || $VERSION == 11.0* || $VERSION == 11.1* || $VERSION == 11.2* ]]; then
-    echo "SEP 不兼容。恢复无法继续"
+    echo "SEP is incompatible. Restore cannot continue"
     exit 1
 fi
 if [[ $IDENTIFIER == iPhone6* ]] && [[ $VERSION == 10.1* ]]; then
-    echo "SEP 兼容，但 Touch ID 将失效"
-    read -p "按回车继续"
+    echo "SEP is compatible but Touch ID will break"
+    read -p "Press enter to continue"
 fi
 if [[ $IDENTIFIER == iPhone7* || $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 ]] && [[ $VERSION == 10.1* || $VERSION == 10.2* || $VERSION == 10.3* ]]; then
-    echo "SEP 兼容，但 Touch ID 将失效，设备启动可能需要 3-5 分钟，并可能在设置过程中卡住"
-    read -p "按回车继续"
+    echo "SEP is compatible but Touch ID will break, device may take 3-5 minutes to boot, and may hang during Setup"
+    read -p "Press enter to continue"
 fi
 if [[ $IDENTIFIER == iPad5* ]] && [[ $VERSION == 13.* ]]; then
-    echo "SEP 兼容，但 Touch ID 将失效，设备启动可能需要 3-5 分钟，并且在设置中进入 Touch ID 环节时可能会卡住 30 秒。也很可能出现深度睡眠问题"
+    echo "SEP is compatible but Touch ID will break, device may take 3-5 minutes to boot, and may hang for 30 seconds when it reaches the Touch ID part of Setup. Deep sleep issues are also very likely"
 fi
 if [[ $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 ]] && [[ $VERSION == 11.3* || $VERSION == 11.4* || $VERSION == 12.* ]]; then
-    echo "SEP 兼容，但 Touch ID 将失效"
-    read -p "按回车继续"
+    echo "SEP is compatible but Touch ID will break"
+    read -p "Press enter to continue"
 fi
 if [[ $IDENTIFIER == iPad5,3 || $IDENTIFIER == iPad5,4 ]] && [[ $VERSION == 8.* || $VERSION == 9.* || $VERSION == 10.* || $VERSION == 11.* || $VERSION == 12.* ]]; then
-    echo "SEP 不兼容。恢复无法继续"
+    echo "SEP is incompatible. Restore cannot continue"
     exit 1
 fi
 if [[ $IDENTIFIER == iPhone10* ]] && [[ $VERSION == 14.3* || $VERSION == 14.4* || $VERSION == 14.5* || $VERSION == 14.6* || $VERSION == 14.7* || $VERSION == 14.8* || $VERSION == 15.* ]]; then
-    echo "SEP 部分不兼容"
-    echo "恢复后设备将无法激活。"
-    echo "以及可能存在的其他失效功能"
-    read -p "按回车继续"
+    echo "SEP is partially incompatible"
+    echo "Device will be unable to activate after the restore."
+    echo "And potentially other broken features"
+    read -p "Press enter to continue"
 fi
 if [[ $IDENTIFIER == iPhone10* ]] && [[ $VERSION == 11.* || $VERSION == 12.* || $VERSION == 13.* || $VERSION == 14.0* || $VERSION == 14.1* || $VERSION == 14.2* ]]; then
-    echo "SEP 不兼容。恢复无法继续"
+    echo "SEP is incompatible. Restore cannot continue"
     exit 1
 fi
 
@@ -1713,25 +1713,25 @@ fi
 restore_with_blobs(){
 
 if [[ -z "$IPSW_PATH" ]]; then
-    echo "未选择 IPSW。中止。"
+    echo "No IPSW selected. Aborting."
     exit 1
 fi
 if [[ ! -f "$IPSW_PATH" ]]; then
-    echo "IPSW 不存在：$IPSW_PATH"
+    echo "IPSW does not exist: $IPSW_PATH"
     exit 1
 fi
 if [[ -z "$SHSH_PATH" ]]; then
-    echo "未选择 SHSH 文件。中止。"
+    echo "No SHSH blob selected. Aborting."
     exit 1
 fi
 if [[ ! -f "$SHSH_PATH" ]]; then
-    echo "SHSH 文件不存在：$SHSH_PATH"
+    echo "SHSH blob does not exist: $SHSH_PATH"
     exit 1
 fi
 
 if [[ $IDENTIFIER == iPhone10,3 || $IDENTIFIER == iPhone10,6 ]]; then
-    echo "iPhone X 尚不受支持。"
-    echo "不过 Legacy iOS Kit *确实*支持使用 SHSH 文件恢复 iPhone X"
+    echo "iPhone X is not supported yet."
+    echo "Legacy iOS Kit *does* support iPhone X restores with blobs though"
     exit 1
 fi
 
@@ -1771,17 +1771,17 @@ if [[ $IDENTIFIER == iPhone7* || $IDENTIFIER == iPad5* || $IDENTIFIER == iPod7* 
             EXIT_CODE=$?
             set -e
             if [[ $EXIT_CODE -eq 139 ]]; then
-                echo "futurerestore 段错误（退出码 139），正在重试..."
+                echo "futurerestore segfaulted (exit 139), retrying..."
                 sleep 2
             else
                 break
             fi
         done
         if [[ $EXIT_CODE -eq 0 ]]; then
-            echo "恢复已完成！如有任何错误，请查看上方输出"
+            echo "Restore has completed! Read above if there are any errors"
             exit 0
         else
-            echo "futurerestore 失败，退出码 $EXIT_CODE"
+            echo "futurerestore failed with exit code $EXIT_CODE"
             exit 1
         fi
     fi
@@ -1796,7 +1796,7 @@ if [[ $IDENTIFIER == iPhone7* || $IDENTIFIER == iPad5* || $IDENTIFIER == iPod7* 
         EXIT_CODE=$?
         set -e
         if [[ $EXIT_CODE -eq 139 ]]; then
-            echo "futurerestore 段错误（退出码 139），正在重试..."
+            echo "futurerestore segfaulted (exit 139), retrying..."
             sleep 2
         else
             break
@@ -1815,7 +1815,7 @@ elif [[ $IDENTIFIER == iPad4* || $IDENTIFIER == iPhone6* ]] && [[ $VERSION == 10
         EXIT_CODE=$?
         set -e
         if [[ $EXIT_CODE -eq 139 ]]; then
-            echo "futurerestore 段错误（退出码 139），正在重试..."
+            echo "futurerestore segfaulted (exit 139), retrying..."
             sleep 2
         else
             break
@@ -1834,7 +1834,7 @@ elif [[ $IDENTIFIER == iPad5* ]] && [[ $VERSION == 11.* || $VERSION == 12.* ]]; 
         EXIT_CODE=$?
         set -e
         if [[ $EXIT_CODE -eq 139 ]]; then
-            echo "futurerestore 段错误（退出码 139），正在重试..."
+            echo "futurerestore segfaulted (exit 139), retrying..."
             sleep 2
         else
             break
@@ -1852,7 +1852,7 @@ else
         EXIT_CODE=$?
         set -e
         if [[ $EXIT_CODE -eq 139 ]]; then
-            echo "futurerestore 段错误（退出码 139），正在重试..."
+            echo "futurerestore segfaulted (exit 139), retrying..."
             sleep 2
         else
             break
@@ -1860,7 +1860,7 @@ else
     done
 fi
 
-echo "恢复已完成！如有任何错误，请查看上方输出"
+echo "Restore has completed! Read above if there is any errors"
 exit 0
 
 }
@@ -1870,17 +1870,17 @@ restore_untethered_opts(){
 clear 
 echo "$INFO_TEXT"
 echo ""
-echo "选项："
+echo "Options:"
 echo ""
-echo "1. 选择目标 IPSW"
-echo "2. 选择 SHSH"
-echo "3. 开始恢复"
-echo "4. 返回"
-read -p "请输入选项（1-4）：" untether_options
+echo "1. Select Target IPSW"
+echo "2. Select SHSH"
+echo "3. Start Restore"
+echo "4. Back"
+read -p "Please input an option (1-4): " untether_options
 if [[ $untether_options == 1 ]]; then
-    IPSW_PATH=$(pick_file "选择一个 IPSW 文件")
+    IPSW_PATH=$(pick_file "Select an IPSW file")
     if [[ -z "$IPSW_PATH" ]]; then
-        echo "未选择 IPSW。中止。"
+        echo "No IPSW selected. Aborting."
         exit 1
     fi
     unzip -j "$IPSW_PATH" "BuildManifest.plist" -d work
@@ -1888,20 +1888,20 @@ if [[ $untether_options == 1 ]]; then
     VERSION=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
     restore_untethered_opts
 elif [[ $untether_options == 2 ]]; then
-    SHSH_PATH=$(pick_file "选择一个 SHSH2 文件")
+    SHSH_PATH=$(pick_file "Select an SHSH2 file")
     if [[ -z "$SHSH_PATH" ]]; then
-        echo "未选择 SHSH 文件。中止。"
+        echo "No SHSH blob selected. Aborting."
         exit 1
     fi
-    echo "已选择 SHSH 文件。请确保该文件对 iOS $VERSION 有效，否则恢复很可能会失败"
-    read -p "按回车继续"
+    echo "An SHSH blob is selected. Please ensure this blob is valid for iOS $VERSION, otherwise the restore will likely fail"
+    read -p "Press enter to continue"
     restore_untethered_opts
 elif [[ $untether_options == 3 ]]; then
     sep_checker
-    read -p "是否要为此次恢复启用跳过 SHSH 验证？(y/n):" skip_blob_det
+    read -p "Would you like to enable skip-blob for this restore? (y/n): " skip_blob_det
     if [[ $skip_blob_det == y || $skip_blob_det == Y ]]; then
-        echo "为此恢复启用 --skip-blob 选项。"
-        echo "警告：这将跳过 SHSH 文件验证，请确保你的 SHSH 有效！"
+        echo "Enabling --skip-blob option for this restore."
+        echo "WARNING: This skips blob validation, ENSURE your SHSH is valid!"
         sleep 5
         skip_blob_set=1
     else
@@ -1912,7 +1912,7 @@ elif [[ $untether_options == 4 ]]; then
     reset_restore_vars
     restore_utils
 else
-    echo "无效的选项。退出。"
+    echo "Invalid option. Exiting."
     exit 1
 fi
 
@@ -2149,11 +2149,11 @@ setup_apfs_module() {
     fi
     mkdir -p apfs
     if [[ -f apfs/apfs.ko && -f apfs/apfs.kernel ]] && [[ "$(cat apfs/apfs.kernel 2>/dev/null)" == "$(uname -r)" ]]; then
-        echo "已找到为内核 $(uname -r) 构建的 APFS 内核模块。"
+        echo "Found APFS kernel module built for kernel $(uname -r)."
     else
-        echo "正在为内核 $(uname -r) 构建 APFS 内核模块..."
+        echo "Building the APFS kernel module for kernel $(uname -r)..."
         if [[ ! -d "/lib/modules/$(uname -r)/build" ]]; then
-            echo "缺少适用于 $(uname -r) 的内核头文件，正在安装..."
+            echo "Kernel headers for $(uname -r) are missing, installing..."
             if [[ $dist == 1 ]]; then
                 sudo apt-get install -y "linux-headers-$(uname -r)" || true
             elif [[ $dist == 2 ]]; then
@@ -2163,19 +2163,19 @@ setup_apfs_module() {
             fi
         fi
         if [[ ! -d "/lib/modules/$(uname -r)/build" ]]; then
-            echo "[!] 找不到或无法安装适用于 $(uname -r) 的内核头文件。"
-            echo "请手动安装它们（Debian/Ubuntu: linux-headers-$(uname -r)，Arch: linux-headers，Fedora: kernel-devel），然后重新运行。"
+            echo "[!] Could not find or install kernel headers for $(uname -r)."
+            echo "    Install them manually (Debian/Ubuntu: linux-headers-$(uname -r), Arch: linux-headers, Fedora: kernel-devel) and re-run."
             exit 1
         fi
         rm -rf apfs/linux-apfs-rw
         if ! git clone --depth 1 https://github.com/linux-apfs/linux-apfs-rw apfs/linux-apfs-rw; then
-            echo "[!] 克隆 linux-apfs-rw 失败（网络问题？）。"
-            echo "请检查你的网络连接并重新运行。"
+            echo "[!] Failed to clone linux-apfs-rw (network issue?)."
+            echo "    Check your internet connection and re-run."
             exit 1
         fi
         if ! ( cd apfs/linux-apfs-rw && make ); then
-            echo "[!] 构建 APFS 内核模块（linux-apfs-rw）失败。"
-            echo "请查看上面的构建输出；该模块需要与 $(uname -r) 匹配的内核头文件。"
+            echo "[!] Failed to build the APFS kernel module (linux-apfs-rw)."
+            echo "    See the build output above; the module needs kernel headers matching $(uname -r)."
             exit 1
         fi
         cp apfs/linux-apfs-rw/apfs.ko apfs/apfs.ko
@@ -2184,15 +2184,15 @@ setup_apfs_module() {
     fi
     if ! lsmod 2>/dev/null | grep -q "^apfs "; then
         if command -v mokutil &>/dev/null && [[ "$(mokutil --sb-state 2>/dev/null)" == *enabled* ]]; then
-            echo "警告：Secure Boot 已启用。加载未签名的内核模块可能会被阻止。"
-            echo "如果下面的加载失败，请注册模块签名或禁用 Secure Boot。"
+            echo "WARNING: Secure Boot is enabled. Loading an unsigned kernel module may be blocked."
+            echo "         If loading fails below, enroll the module signature or disable Secure Boot."
         fi
-        echo "正在加载 APFS 内核模块..."
+        echo "Loading the APFS kernel module..."
         sudo modprobe libcrc32c 2>/dev/null || true
         if ! sudo insmod apfs/apfs.ko; then
-            echo "[!] 加载 APFS 内核模块失败。"
-            echo "请检查 'dmesg | grep -i apfs'。如果启用了 Secure Boot，请注册模块签名"
-            echo "使用 mokutil 注册签名，或禁用 Secure Boot，然后重新运行。"
+            echo "[!] Failed to load the APFS kernel module."
+            echo "    Check 'dmesg | grep -i apfs'. If Secure Boot is enabled, enroll the module"
+            echo "    signature with mokutil or disable Secure Boot, then re-run."
             exit 1
         fi
     fi
@@ -2218,14 +2218,14 @@ apfs_mount() {
     local loopdev
     loopdev=$(sudo losetup -f --show "$img" 2>/dev/null) || loopdev=""
     if [[ -z "$loopdev" ]]; then
-        echo "[!] 未能为 $img 获取空闲的 loop 设备"
-        echo "请确保 loop 设备可用（例如 'modprobe loop'），然后重试。"
+        echo "[!] Failed to get a free loop device for $img"
+        echo "    Make sure loop devices are available (e.g. 'modprobe loop') and try again."
         exit 1
     fi
     echo "$loopdev $mnt" >> "$APFS_TRACK_FILE"
     if ! sudo mount -t apfs -o "$opts" "$loopdev" "$mnt"; then
-        echo "[!] 将 $img（$loopdev）作为 APFS $mode 挂载失败。"
-        echo "详情请检查 'dmesg | grep -i apfs'。"
+        echo "[!] Failed to mount $img ($loopdev) as APFS $mode."
+        echo "    Check 'dmesg | grep -i apfs' for details."
         cleanup_apfs
         exit 1
     fi
@@ -2260,21 +2260,21 @@ make_custom_ipsw_a12_ios16(){
 if [[ $dist == 3 || $dist == 4 ]]; then
     echo ""
 elif [[ $VERSION == 16.0* ]]; then
-    echo "在 Linux 上降级 iOS 16.0.x A12/A13"
+    echo "iOS 16.0.x A12/A13 downgrade on Linux"
 else
     echo ""
-    echo "警告：在 Linux 上进行 iOS 16.1+ 恢复是实验性的。请谨慎操作。"
+    echo "WARNING: iOS 16.1+ restores on Linux are experimental. Proceed with caution."
     echo ""
-    echo "此功能是全新的，尚未经过与"
-    echo "macOS 实现同等程度的测试。它通过构建并加载"
-    echo "实验性的 linux-apfs-rw 内核模块来修补 APFS 恢复 ramdisk，其写入支持可能损坏"
-    echo "ramdisk。失败或中断的恢复可能使你的设备需要进入恢复"
-    echo "或进行完整恢复，而且这个实验性的 Linux 支持在可靠性上并不等同"
-    echo "相比成熟的 macOS 实现。"
+    echo "This functionality is brand new and has NOT received the same level of testing as the"
+    echo "macOS implementation. It patches the APFS restore ramdisk by building and loading the"
+    echo "experimental linux-apfs-rw kernel module, whose write support can potentially corrupt"
+    echo "the ramdisk. A failed or interrupted restore may leave your device requiring recovery"
+    echo "or a full restore, and this experimental Linux support is NOT equivalent in reliability"
+    echo "to the established macOS implementation."
     echo ""
-    read -p "输入 YES 继续，输入其他内容则中止：" apfs_consent
+    read -p "Type YES to continue, anything else to abort: " apfs_consent
     if [[ $apfs_consent != YES ]]; then
-        echo "中止。"
+        echo "Aborting."
         exit 1
     fi
 fi
@@ -2367,9 +2367,9 @@ cp -v tmp1/Firmware/ave/$AVE tmp2/Firmware/ave/$AVE
 cp -v tmp1/Firmware/$fs_dmg_name.root_hash tmp2/Firmware/$fs_dmg_18_name.root_hash 
 cp -v tmp1/Firmware/$fs_dmg_name.mtree tmp2/Firmware/$fs_dmg_18_name.mtree 
 if [[ $VERSION == 13.* ]] && [[ $IDENTIFIER == iPhone12* ]]; then
-    echo "使用最新 MTFW"
+    echo "Using latest MTFW"
 elif [[ $IDENTIFIER == iPhone11,2 || $IDENTIFIER == iPhone11,4 || $IDENTIFIER == iPhone11,6 ]]; then
-    echo "使用最新 MTFW"
+    echo "Using latest MTFW"
 else
     cp -v tmp1/Firmware/$MTFW tmp2/Firmware/$MTFW # copy MTFW for target iOS
 fi
@@ -2490,8 +2490,8 @@ else
         cp -v work/libimg4.patch work/rdmnt/usr/lib/libimg4.dylib
         chmod 755 work/rdmnt/usr/lib/libimg4.dylib
     else
-        echo "[!] 恢复 ramdisk（$restore_ramdisk_dmg）中的文件系统无法识别。"
-        echo "预期是 HFS+（iOS 16.0.x）或 APFS（iOS 16.1+）文件系统。出于安全考虑，中止操作。"
+        echo "[!] Unrecognized filesystem in restore ramdisk ($restore_ramdisk_dmg)."
+        echo "    Expected an HFS+ (iOS 16.0.x) or APFS (iOS 16.1+) filesystem. Aborting for safety."
         exit 1
     fi
     # restored patch start: the restored_external binary must come from a ramdisk
@@ -2519,8 +2519,8 @@ else
     elif [[ $ramdisk2_fs == "HFS" ]]; then
         ./bin/hfsplus work/ramdisk2.raw extract usr/local/bin/restored_external work/restored_external
     else
-        echo "[!] restored_external ramdisk（work/$ramdisk_dmg）中的文件系统无法识别。"
-        echo "预期是 HFS+ 或 APFS 文件系统。出于安全考虑，中止操作。"
+        echo "[!] Unrecognized filesystem in restored_external ramdisk (work/$ramdisk_dmg)."
+        echo "    Expected an HFS+ or APFS filesystem. Aborting for safety."
         exit 1
     fi
     ./bin/restoredpatcher work/restored_external work/restored_patch -c # patch cryptex1 install validation
@@ -2543,12 +2543,12 @@ else
         if ! cmp -s work/asr_verify work/asr_patched || \
            ! cmp -s work/libimg4_verify work/libimg4.patch || \
            ! cmp -s work/restored_verify work/restored_patch; then
-            echo "[!] 写入后 APFS ramdisk 验证失败。"
-            echo "linux-apfs-rw 的写入可能已损坏该容器。"
-            echo "ramdisk 未被打包；请检查 'dmesg | grep -i apfs' 并重新运行。"
+            echo "[!] APFS ramdisk verification failed after write."
+            echo "    The linux-apfs-rw write may have corrupted the container."
+            echo "    The ramdisk was NOT packed; check 'dmesg | grep -i apfs' and re-run."
             exit 1
         fi
-        echo "APFS ramdisk 写入已验证通过。"
+        echo "APFS ramdisk write verified OK."
     else
         ./bin/hfsplus work/ramdisk.raw rm usr/local/bin/restored_external
         ./bin/hfsplus work/ramdisk.raw add work/restored_patch usr/local/bin/restored_external
@@ -2707,9 +2707,9 @@ else
     cp -v tmp1/Firmware/$fs_dmg_name.mtree tmp2/Firmware/$fs_dmg_18_name.mtree 
 fi
 if [[ $VERSION == 13.* ]] && [[ $IDENTIFIER == iPhone12* ]]; then
-    echo "使用最新 MTFW"
+    echo "Using latest MTFW"
 elif [[ $IDENTIFIER == iPhone11,2 || $IDENTIFIER == iPhone11,4 || $IDENTIFIER == iPhone11,6 ]]; then
-    echo "使用最新 MTFW"
+    echo "Using latest MTFW"
 else
     cp -v tmp1/Firmware/$MTFW tmp2/Firmware/$MTFW # copy MTFW for target iOS
 fi
@@ -2812,13 +2812,13 @@ rm -rf "work"
 just_boot(){
 
 if [[ ! -f boot/$ECID.txt ]]; then
-    read -p "输入你想启动的版本：" VERSION
+    read -p "Input the version you'd like to boot: " VERSION
 else
     VERSION=$(cat boot/$ECID.txt) 
 fi
 bootdir="boot/$IDENTIFIER/$VERSION"
 if [[ ! -d $bootdir ]]; then
-    echo "请先有线恢复至 iOS $VERSION，然后再尝试有线引导。"
+    echo "Please do a tethered restore to iOS $VERSION, then try tether boot again."
     exit 1
 fi
 
@@ -2831,40 +2831,40 @@ pwn_device
 
 sleep 5
 
-echo "正在发送 iBSS"
+echo "Sending iBSS"
 if [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPhone12* || $IDENTIFIER == iPad11* ]]; then
     curl -L -o bin/liter8ctl https://github.com/ahmadkamal09999-tech/usbliter8/raw/refs/heads/main/usbliter8ctl
     if [[ $dist == 1 || $dist == 2 || $dist == 5 ]]; then
         python3 bin/liter8ctl boot $bootdir/iBSS.boot || true
-        echo "如果你看到错误：No such device（设备可能已断开连接）"
-        echo "只要设备在发送 iBSS 后确实开始启动，这个错误在 Linux 上是正常的。"
+        echo "If you see the error: No such device (it may have been disconnected)"
+        echo "This error is normal on Linux as long as the Device actually starts booting after iBSS is sent."
     else
         python3 bin/liter8ctl boot $bootdir/iBSS.boot
     fi
-    echo "设备现在应该会启动"
+    echo "Device should now boot"
     exit 0
 fi
 ./bin/irecovery -f $bootdir/iBSS.img4
 if [[ $IDENTIFIER == iPhone10* ]]; then
-    echo "设备现在应该会启动"
+    echo "Device should now boot"
     exit 0
 fi
 sleep 5
-echo "正在发送 iBEC"
+echo "Sending iBEC"
 ./bin/irecovery -f $bootdir/iBEC.img4
 sleep 5
-echo "正在发送 DeviceTree"
+echo "Sending DeviceTree"
 ./bin/irecovery -f $bootdir/DeviceTree.img4
 ./bin/irecovery -c devicetree
 if [[ $VERSION == 12.* || $VERSION == 13.* || $VERSION == 14.* || $VERSION == 15.* ]]; then
-    echo "正在发送 trustcache"
+    echo "Sending trustcache"
     ./bin/irecovery -f $bootdir/Trustcache.img4
     ./bin/irecovery -c firmware
 fi
-echo "正在发送 Kernelcache"
+echo "Sending Kernelcache"
 ./bin/irecovery -f $bootdir/Kernelcache.img4
 ./bin/irecovery -c bootx
-echo "设备现在应该会启动"
+echo "Device should now boot"
 exit 0
 
 }
@@ -2959,89 +2959,89 @@ fi
 do_tethered_restore(){
 
 if [[ -z "$IPSW_PATH" ]]; then
-    echo "未选择 IPSW。中止。"
+    echo "No IPSW selected. Aborting."
     exit 1
 fi
 if [[ ! -f "$IPSW_PATH" ]]; then
-    echo "IPSW 不存在：$IPSW_PATH"
+    echo "IPSW does not exist: $IPSW_PATH"
     exit 1
 fi
 if [[ -z "$IPSW_PATH_LATEST" ]]; then
-    echo "未选择最新 IPSW。中止。"
+    echo "Latest IPSW is not selected. Aborting."
     exit 1
 fi
 if [[ ! -f "$IPSW_PATH_LATEST" ]]; then
-    echo "最新 IPSW 不存在：$IPSW_PATH_LATEST"
+    echo "Latest IPSW does not exist: $IPSW_PATH_LATEST"
     exit 1
 fi
 
 if [[ $IDENTIFIER == iPhone10* ]] && [[ $VERSION == 14.3* || $VERSION == 14.4* || $VERSION == 14.5* || $VERSION == 14.6* || $VERSION == 14.7* || $VERSION == 14.8* || $VERSION == 15.* ]]; then
-    echo "SEP 部分不兼容，请阅读以下内容："
-    echo "恢复后设备将无法激活。"
-    echo "你需要先有线恢复至 14.0 测试版 4，激活设备，然后有线恢复至目标版本。"
-    echo "在 TrollStore 之外侧载可能会也可能不会生效，效果因人而异。"
-    echo "以及可能存在的其他失效功能"
-    echo "由于强制启用了 BPR，你无法设置锁屏密码或使用 Touch ID"
-    read -p "按回车继续"
+    echo "SEP is partially incompatible, read the following:"
+    echo "The device will be unable to activate after the restore."
+    echo "You will need to tether restore to 14.0 beta 4 first, activate the device, then tether restore to the desired version."
+    echo "Sideloading outside of TrollStore may or may not work, your mileage may vary."
+    echo "And potentially other broken features"
+    echo "You cannot set a Passcode or use Touch ID because of BPR being enforced"
+    read -p "Press enter to continue"
 elif [[ $IDENTIFIER == iPad5* ]] && [[ $VERSION == 14.* || $VERSION == 15.* ]]; then
-    echo "此次恢复后你的设备可能会出现深度睡眠问题"
-    read -p "按回车继续"
+    echo "Your device may have deep sleep issues after this restore"
+    read -p "Press enter to continue"
 elif [[ $IDENTIFIER == iPad5* ]] && [[ $VERSION == 13.* ]]; then
-    echo "此次恢复后你的设备可能会出现深度睡眠问题"
-    echo "Touch ID 将无法使用"
-    read -p "按回车继续"
+    echo "Your device may have deep sleep issues after this restore"
+    echo "Touch ID will not work"
+    read -p "Press enter to continue"
 elif [[ $IDENTIFIER == iPad5* ]] && [[ $VERSION == 12.* || $VERSION == 11.4* || $VERSION == 11.3* ]]; then
-    echo "Touch ID 将无法使用"
+    echo "Touch ID will not work"
     if [[ $IDENTIFIER == iPad5,3 || $IDENTIFIER == iPad5,4 ]] && [[ $VERSION == 12.* ]]; then
-        echo "USB 配件将无法使用"
-        echo "此次恢复后你的设备可能会出现深度睡眠问题"
+        echo "USB accessories will not work"
+        echo "Your device may have deep sleep issues after this restore"
     fi
-    read -p "按回车继续"
+    read -p "Press enter to continue"
 elif [[ $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 || $IDENTIFIER == iPhone7* ]] && [[ $VERSION == 10.* ]]; then
-    echo "Touch ID 将无法使用"
-    read -p "按回车继续"
+    echo "Touch ID will not work"
+    read -p "Press enter to continue"
 fi
 
 if [[ $IDENTIFIER == iPhone10* ]] && [[ $VERSION == 14.0* || $VERSION == 14.1* || $VERSION == 14.2* ]] && [[ $BUILD != 18A5342e ]]; then
-    echo "不支持降级到 14.2 及更低版本，14.0 测试版 4 除外"
+    echo "14.2 and lower downgrades are unsupported, except for 14.0 beta 4"
     if [[ $VERSION == 13.* || $VERSION == 12.* || $VERSION == 11.* ]]; then
-        echo "另外，14.3 iBoot 变通方案在 13.x 及更低版本上无效。SEP 完全不兼容"
+        echo "Also, 14.3 iBoot workaround does not work on 13.x and lower. SEP is totally incompatible"
     fi
     exit 1
 fi
 if [[ $IDENTIFIER == iPhone6* || $IDENTIFIER == iPad4* ]] && [[ $VERSION == 10.3.3 ]] && [[ $BUILD == 14G60 ]]; then
-    echo "此设备不支持有线降级到 10.3.3。"
+    echo "10.3.3 tether downgrades are not supported on this device."
     if [[ $IDENTIFIER == iPad4,6 ]]; then
-        echo "10.3.3 对该设备也未进行 OTA 签名，因此没有保存的 SHSH 文件就无法恢复至 10.3.3"
+        echo "10.3.3 is also not OTA signed for this device, so you cannot restore to 10.3.3 without saved blobs"
     fi
     exit 1
 fi
 if [[ $IDENTIFIER == iPad4,6 || $IDENTIFIER == iPad4,7 || $IDENTIFIER == iPad4,8 || $IDENTIFIER == iPad4,9 || $IDENTIFIER == iPad5,3 || $IDENTIFIER == iPad5,4 ]] && [[ $VERSION == 7.* || $VERSION == 8.* || $VERSION == 9.* || $VERSION == 10.* || $VERSION == 11.0* || $VERSION == 11.1* || $VERSION == 11.2* ]]; then
-    echo "SEP 不兼容"
+    echo "SEP is incompatible"
     exit 1
 elif [[ $IDENTIFIER == iPad5,1 || $IDENTIFIER == iPad5,2 || $IDENTIFIER == iPod7* || $IDENTIFIER == iPhone7* || $IDENTIFIER == iPhone6* || $IDENTIFIER == iPad4,1 || $IDENTIFIER == iPad4,2 || $IDENTIFIER == iPad4,3 || $IDENTIFIER == iPad4,4 || $IDENTIFIER == iPad4,5 ]] && [[ $VERSION == 7.* || $VERSION == 8.* || $VERSION == 9.* || $VERSION == 10.0* || $VERSION == 11.0* || $VERSION == 11.1* || $VERSION == 11.2* ]]; then
-    echo "SEP 不兼容"
+    echo "SEP is incompatible"
     exit 1
 fi
 
 if [[ $IDENTIFIER == iPad5* ]] && [[ $VERSION == 13.1* || $VERSION == 13.2* || $VERSION == 13.3* ]]; then
-    echo "不支持 13.4 以下的 13.x 恢复"
+    echo "13.x restores below 13.4 are not supported"
     exit 1
 fi
 
 if [[ $IDENTIFIER == iPhone10* ]] && [[ $VERSION != 16.6* ]] && [[ $BUILD == 20* ]]; then
-    echo "不支持 iOS 16.0-16.5.1 恢复"
-    echo "并且不支持 iOS 16.7.x 恢复"
+    echo "iOS 16.0-16.5.1 restores are unsupported"
+    echo "And iOS 16.7.x restores are unsupported"
     exit 1
 elif [[ $IDENTIFIER == iPhone10* ]] && [[ $VERSION == 16.6* ]]; then
-    echo "你将在此次恢复中遇到一些问题："
-    echo "iMessage/SMS 可能无法使用"
-    echo "VPN 可能无法使用，还可能有其他问题。"
-    read -p "按回车继续"
+    echo "You will have some issues with the restore:"
+    echo "iMessage/SMS may not work"
+    echo "VPNs may not work, and potentially other issues."
+    read -p "Press enter to continue"
 fi
 
 if [[ $IDENTIFIER == iPad5,3 || $IDENTIFIER == iPad5,4 ]] && [[ $VERSION == 11.* || $VERSION == 12.* ]]; then
-    echo "11.3-12.4.1 降级受支持，但尚未集成到 surrealra1n $VERSION_DISPLAY 中"
+    echo "11.3-12.4.1 downgrades are supported but they have not been integrated yet into surrealra1n $CURRENT_VERSION"
     exit 1
 fi
 
@@ -3052,7 +3052,7 @@ else
 fi
 pwn_device
 det_rsep_flag
-echo "正在获取 iOS $LATEST_VERSION 的 SHSH 文件"
+echo "Fetching shsh blobs for iOS $LATEST_VERSION"
 rm -rf "shsh"
 mkdir -p shsh
 mkdir -p boot
@@ -3063,22 +3063,22 @@ sudo ./bin/tsschecker -d $IDENTIFIER -s -e $ECID -i $LATEST_VERSION --save-path 
 # Find the .shsh2 file in the shsh directory
 SHSH_PATH=$(find shsh -type f -name "*.shsh2" | head -n 1)
 if [[ -z "$SHSH_PATH" ]]; then
-    echo "在 shsh 文件夹中未找到 SHSH 文件。中止"
+    echo "No SHSH file found in the shsh folder. Aborting"
     exit 1
 fi
 
 restoredir="restorefiles/$IDENTIFIER/$VERSION"
 
 if [[ ! -f "$restoredir/custom.ipsw" ]] && [[ ! -f "$restoredir/ramdisk.im4p" ]] && [[ ! -f "$restoredir/kernel.im4p" ]]; then
-    echo "恢复文件不存在，正在生成新的"
+    echo "Restore files does not exist, making new ones"
     if [[ $IDENTIFIER == iPhone10* ]] && [[ $VERSION == 16.* ]]; then
         make_custom_ipsw_ios16
     else
         make_custom_ipsw
     fi
 else
-    echo "恢复文件已存在"
-    read -p "是否要生成新的？(y/n):" restorefiles_remake
+    echo "Restore files already exist"
+    read -p "Would you like to make new ones? (y/n): " restorefiles_remake
     if [[ $restorefiles_remake == Y || $restorefiles_remake == y ]]; then
         rm -rf "$restoredir"
         if [[ $IDENTIFIER == iPhone10* ]] && [[ $VERSION == 16.* ]]; then
@@ -3102,7 +3102,7 @@ if [[ $IDENTIFIER == iPhone7* || $IDENTIFIER == iPad5* || $IDENTIFIER == iPod7* 
         EXIT_CODE=$?
         set -e
         if [[ $EXIT_CODE -eq 139 ]]; then
-            echo "futurerestore 段错误（退出码 139），正在重试..."
+            echo "futurerestore segfaulted (exit 139), retrying..."
             sleep 2
         else
             break
@@ -3121,7 +3121,7 @@ elif [[ $IDENTIFIER == iPad4* || $IDENTIFIER == iPhone6* ]] && [[ $VERSION == 10
         EXIT_CODE=$?
         set -e
         if [[ $EXIT_CODE -eq 139 ]]; then
-            echo "futurerestore 段错误（退出码 139），正在重试..."
+            echo "futurerestore segfaulted (exit 139), retrying..."
             sleep 2
         else
             break
@@ -3140,7 +3140,7 @@ elif [[ $IDENTIFIER == iPad5* ]] && [[ $VERSION == 11.* || $VERSION == 12.* ]]; 
         EXIT_CODE=$?
         set -e
         if [[ $EXIT_CODE -eq 139 ]]; then
-            echo "futurerestore 段错误（退出码 139），正在重试..."
+            echo "futurerestore segfaulted (exit 139), retrying..."
             sleep 2
         else
             break
@@ -3163,7 +3163,7 @@ else
         EXIT_CODE=$?
         set -e
         if [[ $EXIT_CODE -eq 139 ]]; then
-            echo "futurerestore 段错误（退出码 139），正在重试..."
+            echo "futurerestore segfaulted (exit 139), retrying..."
             sleep 2
         else
             break
@@ -3171,7 +3171,7 @@ else
     done
 fi
 
-echo "恢复已完成！如有任何错误，请查看上方输出"
+echo "Restore has completed! Read above if there is any errors"
 prepare_boot_files
 exit 0
 
@@ -3184,85 +3184,85 @@ if [[ $dist == 3 || $dist == 4 ]]; then
     if [[ $macos_ver == 12.* || $macos_ver == 13.* || $macos_ver == 14.* || $macos_ver == 15.* || $macos_ver == 26.* || $macos_ver == 27.* ]]; then
         echo ""
     else
-        echo "A12/A13 降级仅在 macOS 12 及更高版本上受支持。"
+        echo "A12/A13 downgrades are only supported on macOS 12 and later."
         exit 1
     fi
 fi
 
 if [[ -z "$IPSW_PATH" ]]; then
-    echo "未选择 IPSW。中止。"
+    echo "No IPSW selected. Aborting."
     exit 1
 fi
 if [[ ! -f "$IPSW_PATH" ]]; then
-    echo "IPSW 不存在：$IPSW_PATH"
+    echo "IPSW does not exist: $IPSW_PATH"
     exit 1
 fi
 if [[ -z "$IPSW_PATH_LATEST" ]]; then
-    echo "未选择最新 IPSW。中止。"
+    echo "Latest IPSW is not selected. Aborting."
     exit 1
 fi
 if [[ ! -f "$IPSW_PATH_LATEST" ]]; then
-    echo "最新 IPSW 不存在：$IPSW_PATH_LATEST"
+    echo "Latest IPSW does not exist: $IPSW_PATH_LATEST"
     exit 1
 fi
 
 if [[ $IDENTIFIER == iPhone11,4 ]] && [[ $VERSION == 14.1* ]]; then
-    echo "此设备不支持降级到 14.1"
+    echo "14.1 downgrades are not supported on this device"
     exit 1
 fi
 
 if [[ $VERSION == 14.* || $VERSION == 15.* ]]; then
-    echo "SEP 部分不兼容，请阅读以下内容："
-    echo "恢复后设备将无法激活。"
-    echo "在 TrollStore 之外侧载可能会也可能不会生效，效果因人而异。"
-    echo "以及可能存在的其他失效功能"
-    echo "由于强制启用了 BPR，你无法设置锁屏密码或使用 Touch ID"
+    echo "SEP is partially incompatible, read the following:"
+    echo "The device will be unable to activate after the restore."
+    echo "Sideloading outside of TrollStore may or may not work, your mileage may vary."
+    echo "And potentially other broken features"
+    echo "You cannot set a Passcode or use Touch ID because of BPR being enforced"
     if [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPad11* ]]; then
-        echo "你需要先有线恢复至 14.0 测试版 4，激活设备，然后有线恢复至目标版本。"
+        echo "You will need to tether restore to 14.0 beta 4 first, activate the device, then tether restore to the desired version."
     elif [[ $IDENTIFIER == iPhone12* ]]; then
-        echo "你需要先有线恢复至 iOS 13.4 - 13.7，激活设备（可能需要通过 Finder/iTunes/Legacy iOS Kit 激活），然后有线恢复至目标版本。"
-        echo "如果你更想停留在 iOS 13，也可以不升到 iOS 14/15。"
-        echo "触感 Home 键将无法使用。"
+        echo "You will need to tether restore to iOS 13.4 - 13.7 first, activate the device (may have to activate via Finder/iTunes/Legacy iOS Kit), then tether restore to the desired version."
+        echo "You may also stay on iOS 13 if desired more than iOS 14/15."
+        echo "Haptic home button will not work."
     fi
-    read -p "按回车继续"
+    read -p "Press enter to continue"
 elif [[ $VERSION == 16.* ]]; then
-    echo "触感 Home 键将无法使用。"
-    echo "由于强制启用了 BPR，你无法设置锁屏密码或使用 Touch ID"
-    echo "由于 iOS 16 应该可以正常激活，因此无需降级到 iOS 13.x 或 iOS 14.0 测试版 4。"
+    echo "Haptic home button will not work."
+    echo "You cannot set a Passcode or use Touch ID because of BPR being enforced"
+    echo "Since iOS 16 should activate normally, there is so need to head to iOS 13.x or iOS 14.0 beta 4."
     if [[ $dist != 3 && $dist != 4 ]] && [[ $VERSION != 16.0* ]]; then
         echo ""
-        echo "警告：在 Linux 上进行 iOS 16.1+ 恢复是实验性的。请谨慎操作。"
-        echo "此构建使用实验性的 linux-apfs-rw 内核修补 APFS 恢复 ramdisk"
-        echo "模块。它没有经过与 macOS 实现同等程度的测试，并且"
-        echo "失败或中断的恢复可能使设备需要进入恢复模式或重新恢复。"
+        echo "WARNING: iOS 16.1+ restores on Linux are experimental. Proceed with caution."
+        echo "This build patches the APFS restore ramdisk with the experimental linux-apfs-rw kernel"
+        echo "module. It has not received the same level of testing as the macOS implementation, and"
+        echo "a failed or interrupted restore may leave the device requiring recovery or restore."
         echo ""
-        read -p "输入 YES 继续，输入其他内容则中止：" apfs_consent
+        read -p "Type YES to continue, anything else to abort: " apfs_consent
         if [[ $apfs_consent != YES ]]; then
-            echo "中止。"
+            echo "Aborting."
             exit 1
         fi
     fi
-    read -p "按回车继续"
+    read -p "Press enter to continue"
 elif [[ $VERSION == 17.* || $VERSION == 18.* || $VERSION == 26.* ]]; then
-    echo "目前暂不支持 A12/A13 降级到 iOS 17-26"
+    echo "iOS 17-26 A12/A13 downgrades are not supported at the moment"
     exit 1
 elif [[ $VERSION == 13.* || $VERSION == 12.* ]] && [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPad11* ]]; then
-    echo "SEP 不兼容"
+    echo "SEP is incompatible"
     exit 1
 elif [[ $VERSION == 13.4* || $VERSION == 13.5* || $VERSION == 13.6* || $VERSION == 13.7* ]] && [[ $IDENTIFIER == iPhone12* ]]; then
-    echo "SEP 部分不兼容"
-    echo "由于强制启用了 BPR，你无法设置锁屏密码或使用 Touch ID"
-    echo "触感 Home 键将无法使用，辅助触控的 Home 键也不会出现"
-    echo "在 iPhone 11 机型上，除了 UWB、Face ID 和锁屏密码外，基本可以完全正常工作"
-    read -p "按回车继续"
+    echo "SEP is partially incompatible"
+    echo "You cannot set a Passcode or use Touch ID because of BPR being enforced"
+    echo "Haptic home button will not work, and AssistiveTouch home button will also not appear"
+    echo "On iPhone 11 models, it will be basically fully functional except for UWB, Face ID, and Passcode"
+    read -p "Press enter to continue"
 elif [[ $VERSION == 13.0* || $VERSION == 13.1* || $VERSION == 13.2* || $VERSION == 13.3* ]] && [[ $IDENTIFIER == iPhone12* ]]; then
-    echo "SEP 不兼容"
+    echo "SEP is incompatible"
     exit 1
 fi
 
 if [[ $IDENTIFIER == iPhone12,1 || $IDENTIFIER == iPhone12,3 || $IDENTIFIER == iPhone12,5 ]]; then
-    echo "UWB 可能可用也可能不可用。"
-    echo "这意味着：AirTags 等的精确查找将不可用。"
+    echo "UWB may or may not work."
+    echo "This means: Precise findings for AirTags and such."
     sleep 6
 fi
 
@@ -3277,15 +3277,15 @@ det_rsep_flag
 restoredir="restorefiles/$IDENTIFIER/$VERSION"
 
 if [[ ! -f "$restoredir/custom.ipsw" ]]; then
-    echo "恢复文件不存在，正在生成新的"
+    echo "Restore files does not exist, making new ones"
     if [[ $VERSION == 16.* ]]; then
         make_custom_ipsw_a12_ios16
     else
         make_custom_ipsw_a12_ios14
     fi
 else
-    echo "恢复文件已存在"
-    read -p "是否要生成新的？(y/n):" restorefiles_remake
+    echo "Restore files already exist"
+    read -p "Would you like to make new ones? (y/n): " restorefiles_remake
     if [[ $restorefiles_remake == Y || $restorefiles_remake == y ]]; then
         rm -rf "$restoredir"
         if [[ $VERSION == 16.* ]]; then
@@ -3298,22 +3298,22 @@ fi
 curl -L -o bin/liter8ctl https://github.com/ahmadkamal09999-tech/usbliter8/raw/refs/heads/main/usbliter8ctl
 if [[ $dist == 1 || $dist == 2 || $dist == 5 ]]; then
     python3 bin/liter8ctl boot boot/$IDENTIFIER/iBSS.patch || true
-    echo "如果你看到错误：No such device（设备可能已断开连接）"
-    echo "只要设备进入 iBSS 恢复模式，这个错误在 Linux 上是正常的（屏幕应保持黑屏，但会被识别为恢复模式设备）。"
+    echo "If you see the error: No such device (it may have been disconnected)"
+    echo "This error is normal on Linux as long as the Device enters iBSS recovery mode (screen Should remain blank but be detected as Recovery mode device)."
 elif [[ $macos_ver == 27.* || $macos_ver == 26.* || $macos_ver == 15.* || $macos_ver == 14.* || $macos_ver == 13.* || $macos_ver == 12.* ]]; then
     python3 bin/liter8ctl boot boot/$IDENTIFIER/iBSS.patch || true
-    echo "usbliter8ctl 可能会出错。"
-    echo "只要设备进入 iBSS 恢复模式，这个错误可能也是正常的（屏幕应保持黑屏，但会被识别为恢复模式设备）。"
+    echo "usbliter8ctl may error out."
+    echo "The error may be normal as long as the Device enters iBSS recovery mode (screen Should remain blank but be detected as Recovery mode device)."
 else
     python3 bin/liter8ctl boot boot/$IDENTIFIER/iBSS.patch 
 fi
 sleep 6
-echo "正在检查设备是否处于恢复模式"
+echo "Checking if device is in Recovery mode"
 MODE=$(./bin/irecovery -q | grep "^MODE:" | cut -d ':' -f2 | xargs)
 if [[ $MODE == Recovery ]]; then
-    echo "已在恢复模式下检测到设备。"
+    echo "Device has been detected in Recovery mode."
 else
-    echo "未在恢复模式下检测到设备。退出"
+    echo "Device not detected in Recovery. Exiting"
     exit 1
 fi
 APNONCE=$(./bin/irecovery -q | grep "^NONC:" | cut -d ':' -f2 | xargs)
@@ -3322,21 +3322,21 @@ mkdir -p boot
 echo "$VERSION" > boot/$ECID.txt
 if [[ $IDENTIFIER == iPhone12,8 ]]; then
     sudo LD_LIBRARY_PATH="lib" ./bin/idevicerestore -ey $restoredir/custom.ipsw
-    echo "恢复已完成！如有任何错误，请查看上方输出"
+    echo "Restore has finished! Read above if there are any errors"
     exit 0
 elif [[ $VERSION == 16.* ]] && [[ $IDENTIFIER != iPhone12,8 ]]; then
     sudo LD_LIBRARY_PATH="lib" ./bin/idevicerestore -ey $restoredir/custom.ipsw
-    echo "恢复已完成！如有任何错误，请查看上方输出"
+    echo "Restore has finished! Read above if there are any errors"
     exit 0
 fi
-echo "正在获取 iOS $LATEST_VERSION 的 SHSH 文件"
+echo "Fetching shsh blobs for iOS $LATEST_VERSION"
 rm -rf "shsh"
 mkdir -p shsh
 sudo ./bin/tsschecker -d $IDENTIFIER -s -e $ECID -i $LATEST_VERSION --save-path shsh --apnonce $APNONCE
 # Find the .shsh2 file in the shsh directory
 SHSH_PATH=$(find shsh -type f -name "*.shsh2" | head -n 1)
 if [[ -z "$SHSH_PATH" ]]; then
-    echo "在 shsh 文件夹中未找到 SHSH 文件。中止"
+    echo "No SHSH file found in the shsh folder. Aborting"
     exit 1
 fi
 while true; do
@@ -3345,17 +3345,17 @@ while true; do
     EXIT_CODE=$?
     set -e
     if [[ $EXIT_CODE -eq 139 ]]; then
-        echo "futurerestore 段错误（退出码 139），正在重试..."
+        echo "futurerestore segfaulted (exit 139), retrying..."
         sleep 2
     else
         break
     fi
 done
 if [[ $EXIT_CODE -eq 0 ]]; then
-    echo "恢复已完成！如有任何错误，请查看上方输出"
+    echo "Restore has completed! Read above if there are any errors"
     exit 0
 else
-    echo "futurerestore 失败，退出码 $EXIT_CODE"
+    echo "futurerestore failed with exit code $EXIT_CODE"
     exit 1
 fi
 
@@ -3437,10 +3437,10 @@ if [[ $VERSION == 7.* || $VERSION == 8.* ]]; then
     ./bin/hfsplus tmp1/rootfs.raw grow $grow_to
 fi
 if [[ $VERSION == 9.* ]]; then
-    echo "跳过移除 powerd"
+    echo "Skipping removal of powerd"
 else
     # Try and work around deep sleep issues without jailbreak
-    echo "正在移除 powerd"
+    echo "Removing powerd"
     ./bin/hfsplus tmp1/rootfs.raw rm System/Library/CoreServices/powerd.bundle/powerd
     ./bin/hfsplus tmp1/rootfs.raw rm System/Library/LaunchDaemons/com.apple.powerd.plist
 fi
@@ -3517,31 +3517,31 @@ rm -rf "work"
 do_tethered_seprmvr64_restore(){
 
 if [[ -z "$IPSW_PATH" ]]; then
-    echo "未选择 IPSW。中止。"
+    echo "No IPSW selected. Aborting."
     exit 1
 fi
 if [[ ! -f "$IPSW_PATH" ]]; then
-    echo "IPSW 不存在：$IPSW_PATH"
+    echo "IPSW does not exist: $IPSW_PATH"
     exit 1
 fi
 if [[ -z "$IPSW_PATH_LATEST" ]]; then
-    echo "未选择最新 IPSW。中止。"
+    echo "Latest IPSW is not selected. Aborting."
     exit 1
 fi
 if [[ ! -f "$IPSW_PATH_LATEST" ]]; then
-    echo "最新 IPSW 不存在：$IPSW_PATH_LATEST"
+    echo "Latest IPSW does not exist: $IPSW_PATH_LATEST"
     exit 1
 fi
 
-echo "以下是进行 seprmvr64 恢复时可能发生的情况："
-echo "1. Touch ID 将无法使用"
-echo "2. 锁屏密码将无法使用"
-echo "3. 受密码保护的 Wi-Fi 网络将无法使用"
-echo "4. 在 iOS 7/8 上电池续航可能会受影响，因为我们在那里使用了变通方案来避免深度睡眠崩溃"
-echo "5. 可能存在的其他失效功能"
-read -p "按回车继续"
+echo "Here is the following things that may happen on seprmvr64 restore:"
+echo "1. Touch ID will not work"
+echo "2. Passcode will not work"
+echo "3. Password protected Wi-Fi networks will not work"
+echo "4. Battery life may be affected on iOS 7/8, because we use a workaround there to make deep sleep panics not occur"
+echo "5. Potentially other broken features"
+read -p "Press enter to continue"
 if [[ $IDENTIFIER == iPhone7* || $IDENTIFIER == iPad5* || $IDENTIFIER == iPod7* ]]; then
-    echo "A8 目前不受支持，因为我们正在重写 surrealra1n，但它最终应该会回归。"
+    echo "A8 is currently unsupported as we are rewriting surrealra1n, but it should be back eventually."
     exit 1
 fi
 
@@ -3558,11 +3558,11 @@ else
 fi
 
 if [[ ! -f "$restoredir/$ipsw_custom" ]]; then
-    echo "恢复文件不存在，正在生成新的"
+    echo "Restore files does not exist, making new ones"
     prepare_seprmvr64_ipsw_legacy
 else
-    echo "恢复文件已存在"
-    read -p "是否要生成新的？(y/n):" restorefiles_remake
+    echo "Restore files already exist"
+    read -p "Would you like to make new ones? (y/n): " restorefiles_remake
     if [[ $restorefiles_remake == Y || $restorefiles_remake == y ]]; then
         rm -rf "$restoredir"
         prepare_seprmvr64_ipsw_legacy
@@ -3575,7 +3575,7 @@ sudo ./bin/tsschecker -d $IDENTIFIER -s -e $ECID -i $LATEST_VERSION --save-path 
 # Find the .shsh2 file in the shsh directory
 SHSH_PATH=$(find shsh -type f -name "*.shsh2" | head -n 1)
 if [[ -z "$SHSH_PATH" ]]; then
-    echo "在 shsh 文件夹中未找到 SHSH 文件。中止"
+    echo "No SHSH file found in the shsh folder. Aborting"
     exit 1
 fi
 ./bin/img4tool -s "$SHSH_PATH" -e -m "$IDENTIFIER-im4m"
@@ -3588,7 +3588,7 @@ ECID=$(./bin/irecovery -q | grep "^ECID:" | cut -d ':' -f2 | xargs)
 mkdir -p boot
 echo "$VERSION" > boot/$ECID.txt
 sudo LD_LIBRARY_PATH="lib" ./bin/idevicerestore -ey $restoredir/$ipsw_custom
-echo "恢复已完成！如有任何错误，请查看上方输出"
+echo "Restore has finished! Read above if there's any errors"
 prepare_boot_files_seprmvr64
 exit 0
 
@@ -3598,20 +3598,20 @@ restore_tethered_opts(){
 
 clear 
 echo "$INFO_TEXT"
-echo "seprmvr64 恢复到 iOS 7 和 9 的功能未被移除。"
-echo "独立的 seprmvr64 恢复选项已被移除，因为该功能已迁移到此菜单"
+echo "seprmvr64 restores to iOS 7 and 9 are not removed."
+echo "The separate seprmvr64 restore options was removed because the functionality was migrated to this menu"
 echo ""
-echo "选项："
+echo "Options:"
 echo ""
-echo "1. 选择目标 IPSW"
-echo "2. 选择基础 IPSW"
-echo "3. 开始恢复"
-echo "4. 返回"
-read -p "请输入选项（1-4）：" tether_options
+echo "1. Select Target IPSW"
+echo "2. Select Base IPSW"
+echo "3. Start Restore"
+echo "4. Back"
+read -p "Please input an option (1-4): " tether_options
 if [[ $tether_options == 1 ]]; then
-    IPSW_PATH=$(pick_file "选择一个 IPSW 文件")
+    IPSW_PATH=$(pick_file "Select an IPSW file")
     if [[ -z "$IPSW_PATH" ]]; then
-        echo "未选择 IPSW。中止。"
+        echo "No IPSW selected. Aborting."
         exit 1
     fi
     rm -rf work/BuildManifest.plist
@@ -3620,16 +3620,16 @@ if [[ $tether_options == 1 ]]; then
     VERSION=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
     restore_tethered_opts
 elif [[ $tether_options == 2 ]]; then
-    IPSW_PATH_LATEST=$(pick_file "选择适用于 iOS $LATEST_VERSION 的 IPSW 文件")
+    IPSW_PATH_LATEST=$(pick_file "Select iOS $LATEST_VERSION IPSW file")
     if [[ -z "$IPSW_PATH_LATEST" ]]; then
-        echo "未选择 IPSW。中止。"
+        echo "No IPSW selected. Aborting."
         exit 1
     fi
     rm -rf work/BuildManifest.plist
     unzip -j "$IPSW_PATH_LATEST" "BuildManifest.plist" -d work
     VERSION_LATEST=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
     if [[ $VERSION_LATEST != $LATEST_VERSION ]]; then
-        echo "IPSW 无效。你必须选择适用于 iOS $LATEST_VERSION 的 IPSW，而不是 iOS $VERSION_LATEST"
+        echo "Invalid IPSW. You must select IPSW for iOS $LATEST_VERSION, not iOS $VERSION_LATEST"
         exit 1
     fi
     restore_tethered_opts
@@ -3638,15 +3638,15 @@ elif [[ $tether_options == 3 ]]; then
         do_tethered_restore_a12_a13
     elif [[ $VERSION == 7.* || $VERSION == 8.* || $VERSION == 9.* ]]; then
         if [[ $VERSION == 8.* ]]; then
-            echo "surrealra1n 不支持 seprmvr64 恢复到 8.x"
+            echo "seprmvr64 restores to 8.x are not supported in surrealra1n"
             exit 1
         elif [[ $VERSION == 7.* ]]; then
-            read -p "是否要在本次恢复时顺带越狱？(Y/n):" jailbreak_choice
+            read -p "Would you like to jailbreak as part of this restore? (Y/n): " jailbreak_choice
             if [[ $jailbreak_choice == Y || $jailbreak_choice == y ]]; then
-                echo "越狱选项已启用"
+                echo "Jailbreak option enabled"
                 JAILBREAK=1
             else
-                echo "越狱选项已禁用"
+                echo "Jailbreak option disabled"
             fi
         fi
         do_tethered_seprmvr64_restore
@@ -3657,7 +3657,7 @@ elif [[ $tether_options == 4 ]]; then
     reset_restore_vars
     restore_utils
 else
-    echo "无效的选项。退出。"
+    echo "Invalid option. Exiting."
     exit 0
 fi
 
@@ -3666,11 +3666,11 @@ fi
 restore_a7_to_1033(){
 
 if [[ -z "$IPSW_PATH" ]]; then
-    echo "未选择 IPSW。中止。"
+    echo "No IPSW selected. Aborting."
     exit 1
 fi
 if [[ ! -f "$IPSW_PATH" ]]; then
-    echo "IPSW 不存在：$IPSW_PATH"
+    echo "IPSW does not exist: $IPSW_PATH"
     exit 1
 fi
 dfu_helper
@@ -3682,7 +3682,7 @@ sudo ./bin/tsschecker -d $IDENTIFIER -i 10.3.3 -e $ECID -o -m tmp/BuildManifest-
 # Find the .shsh2 file in the shsh directory
 SHSH_PATH=$(find shsh -type f -name "*.shsh2" | head -n 1)
 if [[ -z "$SHSH_PATH" ]]; then
-    echo "在 shsh 文件夹中未找到 SHSH 文件。中止"
+    echo "No SHSH file found in the shsh folder. Aborting"
     exit 1
 fi
 det_rsep_flag
@@ -3697,17 +3697,17 @@ while true; do
     EXIT_CODE=$?
     set -e
     if [[ $EXIT_CODE -eq 139 ]]; then
-        echo "futurerestore 段错误（退出码 139），正在重试..."
+        echo "futurerestore segfaulted (exit 139), retrying..."
         sleep 2
     else
         break
     fi
 done
 if [[ $EXIT_CODE -eq 0 ]]; then
-    echo "恢复已完成！如有任何错误，请查看上方输出"
+    echo "Restore has completed! Read above if there are any errors"
     exit 0
 else
-    echo "futurerestore 失败，退出码 $EXIT_CODE"
+    echo "futurerestore failed with exit code $EXIT_CODE"
     exit 1
 fi
 
@@ -3724,18 +3724,18 @@ else
 fi
  
 echo "$INFO_TEXT"
-echo "此 OTA 恢复将使用 $LATEST_VERSION 基带"
+echo "This OTA restore will use $LATEST_VERSION baseband"
 echo ""
-echo "选项："
+echo "Options:"
 echo ""
-echo "1. 选择 10.3.3 IPSW"
-echo "2. 开始恢复"
-echo "3. 返回"
-read -p "请输入选项（1-3）：" restore_a7_options_choice
+echo "1. Select 10.3.3 IPSW"
+echo "2. Start Restore"
+echo "3. Back"
+read -p "Please input an option (1-3): " restore_a7_options_choice
 if [[ $restore_a7_options_choice == 1 ]]; then
-    IPSW_PATH=$(pick_file "选择一个 IPSW 文件")
+    IPSW_PATH=$(pick_file "Select an IPSW file")
     if [[ -z "$IPSW_PATH" ]]; then
-        echo "未选择 IPSW。中止。"
+        echo "No IPSW selected. Aborting."
         exit 1
     fi
     rm -rf work/BuildManifest.plist
@@ -3745,7 +3745,7 @@ if [[ $restore_a7_options_choice == 1 ]]; then
     if [[ $VERSION == 10.3.3 ]] && [[ $BUILD == 14G60 ]]; then
         restore_a7_options
     else
-        echo "IPSW 无效"
+        echo "IPSW is invalid"
         sleep 2
         reset_restore_vars
         restore_a7_options
@@ -3762,9 +3762,9 @@ fi
 restore_utils(){
 
 if [[ $outdated == 1 ]]; then
-    echo "此 surrealra1n 测试版已过期"
-    echo "有更新的测试版可用。请更新后继续。"
-    echo "你需要退出，重新运行 surrealra1n.sh，当它提示更新时，选择更新 surrealra1n。"
+    echo "This surrealra1n beta has expired"
+    echo "A newer beta is available. Please update to continue."
+    echo "You will need to exit, re-run surrealra1n.sh, and when it prompts for an update, update surrealra1n."
     sleep 10
     main_menu
     return
@@ -3776,22 +3776,22 @@ if [[ $IDENTIFIER == NONE ]]; then
 fi
 
 if [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPhone12* || $IDENTIFIER == iPad11* ]]; then
-    echo "A12/A13 设备支持完全是实验性的。"
-    echo "请做好遇到问题或错误的准备。"
-    read -p "按回车继续"
+    echo "A12/A13 device support is entirely experimental."
+    echo "Expect to have issues or bugs."
+    read -p "Press enter to continue"
 fi
 
 clear 
 echo "$INFO_TEXT"
 echo ""
-echo "选项："
+echo "Options:"
 echo ""
-echo "1. 恢复（使用 SHSH 文件）"
-echo "2. 恢复（有线）"
-echo "3. 无栓恢复至 10.3.3（仅部分 A7 设备）"
-echo "4. 仅启动"
-echo "5. 返回"
-read -p "请输入选项（1-5）：" restore_options
+echo "1. Restore (with SHSH blobs)"
+echo "2. Restore (Tethered)"
+echo "3. Restore to 10.3.3 untethered (some A7 devices only)"
+echo "4. Just Boot"
+echo "5. Back"
+read -p "Please input an option (1-5): " restore_options
 if [[ $restore_options == 1 ]]; then
     restore_untethered_opts
 elif [[ $restore_options == 2 ]]; then
@@ -3803,7 +3803,7 @@ elif [[ $restore_options == 4 ]]; then
 elif [[ $restore_options == 5 ]]; then
     main_menu
 else
-    echo "无效的选项。退出。"
+    echo "Invalid option. Exiting."
     exit 1
 fi
 
@@ -3814,13 +3814,13 @@ main_menu(){
 clear
 echo "$INFO_TEXT"
 echo ""
-echo "选项："
+echo "Options:"
 echo ""
-echo "1. 降级选项"
-echo "2. 杂项工具"
-echo "3. 切换到 main 分支"
-echo "4. 退出"
-read -p "请输入选项（1-4）：" option
+echo "1. Downgrade Options"
+echo "2. Misc Utilities"
+echo "3. Switch to main branch"
+echo "4. Exit"
+read -p "Please input an option (1-4): " option
 if [[ $option == 1 ]]; then
     restore_utils
 elif [[ $option == 2 ]]; then
@@ -3828,10 +3828,10 @@ elif [[ $option == 2 ]]; then
 elif [[ $option == 3 ]]; then
     switch_to_main
 elif [[ $option == 4 ]]; then
-    echo "surrealra1n 正在退出"
+    echo "surrealra1n is exiting"
     exit 0
 else
-    echo "无效的选项。退出。"
+    echo "Invalid option. Exiting."
     exit 1
 fi
 
