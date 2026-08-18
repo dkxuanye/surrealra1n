@@ -2,7 +2,7 @@
 """提取 surrealra1n.sh 中的用户可见字符串（去重），生成清单文件。
 
 输出格式: 每行 "字符串<TAB>行号1,行号2,..."，按字符串长度从长到短排序。
-仅匹配 echo / printf / read -p / zenity --title 后的双引号内容。
+仅匹配 echo / printf / read -p / pick_file / zenity --title 后的双引号内容（非贪婪捕获，遇到第一个未转义引号即停）。
 """
 import re
 from collections import OrderedDict
@@ -11,7 +11,7 @@ SRC = "surrealra1n.sh"
 OUT = "scripts/i18n_strings.txt"
 
 LINE_RE = re.compile(
-    r'^(?:echo(?: -[a-z]+)?\s+|printf(?: -v\s+\w+)?\s+|read(?: -[a-z]+)*\s+-p\s+|--title=)(".*")'
+    r'^(?:echo(?: -[a-z]+)?\s+|printf(?: -v\s+\w+)?\s+|read(?: -[a-z](?: \S+)?)*\s+-p\s+|pick_file\s+|--title=)("(?:\\.|[^"\\])*")'
 )
 
 

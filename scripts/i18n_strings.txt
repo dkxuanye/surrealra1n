@@ -1,8 +1,6 @@
-10" && sleep 1 && echo "9" && sleep 1 && echo "8" && sleep 1 && echo "7" && sleep 1 && echo "6" && sleep 1 && echo "5" && sleep 1 && echo "4" && sleep 1 && echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1	1380
 SEP is compatible but Touch ID will break, device may take 3-5 minutes to boot, and may hang for 30 seconds when it reaches the Touch ID part of Setup. Deep sleep issues are also very likely	1574
 You will need to tether restore to iOS 13.4 - 13.7 first, activate the device (may have to activate via Finder/iTunes/Legacy iOS Kit), then tether restore to the desired version.	3222
 WARNING: All of your boot files, and other things will be deleted (if any files are in the surrealra1n directory, they will be erased), and surrealra1n will be fresh installed.	1257
-8" && sleep 1 && echo "7" && sleep 1 && echo "6" && sleep 1 && echo "5" && sleep 1 && echo "4" && sleep 1 && echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1	1512,1521
 This error is normal on Linux as long as the Device enters iBSS recovery mode (screen Should remain blank but be detected as Recovery mode device).	3301
 The error may be normal as long as the Device enters iBSS recovery mode (screen Should remain blank but be detected as Recovery mode device).	3305
 WARNING: All of your boot files and restore files will be deleted. You will need to re-create them afterwards if you proceed.	1278
@@ -26,9 +24,7 @@ Since iOS 16 should activate normally, there is so need to head to iOS 13.x or i
 Since your development version is newer than stable, switching will require a clean reinstall.	1446
 A8 is currently unsupported as we are rewriting surrealra1n, but it should be back eventually.	3543
 Ctrl + Shift + A -> Ctrl + Shift + C, then paste the entire log into the issue you're opening	50
-5" && sleep 1 && echo "4" && sleep 1 && echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1	1382
 WARNING: This will restore surrealra1n to the previous version backed up in surrealra1n.old.	1298
-4" && sleep 1 && echo "3" && sleep 1 && ./bin/irecovery -n && echo "2" && sleep 1 && echo "1	1510,1519
 You can upgrade to the latest version at any time later if you want to be on latest again.	1310
 Make sure your Pi Pico has the custom firmware required to pwn the device with usbliter8.	1348
 Press enter to continue once device is pwned successfully AND reconnected to the computer	1349
@@ -151,7 +147,6 @@ VPNs may not work, and potentially other issues.	3038
 A12/A13 device support is entirely experimental.	3778
 This may be useful if you want more disk space.	1279
 Checking if this device is in pwned DFU already	1334
-3" && sleep 1 && echo "2" && sleep 1 && echo "1	1378,1508,1517
 No SHSH file found in the shsh folder. Aborting	3065,3338,3577,3684
 Checking if this device has pwned successfully	1360
 futurerestore failed with exit code $EXIT_CODE	1783,3357,3709
@@ -208,7 +203,6 @@ SHSH blob does not exist: $SHSH_PATH	1727
 5. Potentially other broken features	3540
 [!] Failed command: $failed_command	37
 Switch to stable has been canceled.	1464,1494
-$loopdev $mnt" >> "$APFS_TRACK_FILE	2224
 Installing missing dependencies...	230,249,266
 [!] Required directory missing: $1	341
 [+] Device Identifier: $IDENTIFIER	788
@@ -250,6 +244,7 @@ Hold power + home buttons.	1379
 Device is now in DFU mode!	1401,1540
 Skipping removal of powerd	3439
 [!] Exit code: $exit_code	34
+Press any key to continue	98,102,108,117,122
 Found necessary binaries.	433
 iMessage/SMS may not work	3037
 1. Touch ID will not work	3536
@@ -301,6 +296,7 @@ RELEASE NOTES:	356
 $RELEASE_NOTES	357
 $pkg: $version	746
 2. Select SHSH	1875
+$loopdev $mnt	2224
 Sending iBSS	2833
 Sending iBEC	2852
 4. Just Boot	3791
@@ -317,4 +313,9 @@ UNKNOWN	2106,2122
 APFS	2119
 HFS	2113
 $p	211
+10	1380
+3	1378,1508,1517
+5	1382
+4	1510,1519
+8	1512,1521
 	358,1240,1242,1432,1448,1471,1871,1873,2260,2264,2266,2273,3184,3232,3237,3602,3604,3727,3729,3785,3787,3815,3817
