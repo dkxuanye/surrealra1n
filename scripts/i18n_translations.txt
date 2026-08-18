@@ -52,9 +52,11 @@ You are already on the stable equivalent of your current version ($MAIN_VERSION)
 If you want to Download iOS14.0 beta4(18A5342e) IPSW, Please enter 18A5342e below||| 如果你想下载 iOS14.0 测试版 4（18A5342e）的 IPSW，请在下方输入 18A5342e
 Unrecognized distro; treating as Fedora-based (zypper detected, using dnf flow).||| 无法识别的发行版；按基于 Fedora 处理（检测到 zypper，使用 dnf 流程）。
 Could not detect a compatible package manager (apt-get, pacman, dnf, or zypper).||| 无法检测到兼容的包管理器（apt-get、pacman、dnf 或 zypper）。
+SSH ramdisk should now be booting! In a moment, you will connect to SSH session||| SSH ramdisk 现在应该正在启动！稍后你将连接到 SSH 会话
 Externally managed environment detected, retrying with --break-system-packages||| 检测到外部管理环境，使用 --break-system-packages 重试
     Check 'dmesg | grep -i apfs'. If Secure Boot is enabled, enroll the module||| 请检查 'dmesg | grep -i apfs'。如果启用了 Secure Boot，请注册模块签名
     Make sure loop devices are available (e.g. 'modprobe loop') and try again.||| 请确保 loop 设备可用（例如 'modprobe loop'），然后重试。
+SSHtars are from SSHRD_Script: https://github.com/verygenericname/SSHRD_Script||| SSHtar 来自 SSHRD_Script：https://github.com/verygenericname/SSHRD_Script
 [!] Unrecognized filesystem in restored_external ramdisk (work/$ramdisk_dmg).||| [!] restored_external ramdisk（work/${ramdisk_dmg}）中的文件系统无法识别。
 Sideloading outside of TrollStore may or may not work, your mileage may vary.||| 在 TrollStore 之外侧载可能会也可能不会生效，效果因人而异。
 It is strongly recommended to update to get the latest features + bug fixes.||| 强烈建议更新以获得最新功能 + 错误修复。
@@ -67,15 +69,16 @@ This means ALL boot files, restore files, and binaries will be deleted.||| 这�
 This will upgrade you to stable without wiping your boot/restore files.||| 这将把你升级到稳定版，不会清除你的启动/恢复文件。
 You cannot set a Passcode or use Touch ID because of BPR being enforced||| 由于强制启用了 BPR，你无法设置锁屏密码或使用 Touch ID
 [!] Unrecognized filesystem in restore ramdisk ($restore_ramdisk_dmg).||| [!] 恢复 ramdisk（${restore_ramdisk_dmg}）中的文件系统无法识别。
-iOS 17.x support is really experimental and limited to 17.0 - 17.3.1.||| iOS 17.x 支持是真正的实验性功能，仅限 17.0 - 17.3.1。
 WARNING: You are currently on $CURRENT_VERSION (development branch).||| 警告：你当前使用的是 ${VERSION_DISPLAY}（开发分支）。
 If you see the error: No such device (it may have been disconnected)||| 如果你看到错误：No such device（设备可能已断开连接）
+Port: 2222 | Host: sftp://127.0.0.1 | User: root | Password: alpine||| 端口：2222 | 主机：sftp://127.0.0.1 | 用户：root | 密码：alpine
 Release the power button now, but keep holding volume down button.||| 现在松开电源键，但继续按住音量减键。
 Here is the following things that may happen on seprmvr64 restore:||| 以下是进行 seprmvr64 恢复时可能发生的情况：
 Unrecognized distro; treating as Debian-based (apt-get detected).||| 无法识别的发行版；按基于 Debian 处理（检测到 apt-get）。
 Are you sure you want to go back to the previous version? (y/N): ||| 你确定要回到上一版本吗？(y/N): 
 Legacy iOS Kit *does* support iPhone X restores with blobs though||| 不过 Legacy iOS Kit *确实*支持使用 SHSH 文件恢复 iPhone X
 14.2 and lower downgrades are unsupported, except for 14.0 beta 4||| 不支持降级到 14.2 及更低版本，14.0 测试版 4 除外
+Keep in mind, mounting data partition may not work at the moment!||| 请注意，目前挂载数据分区可能无法正常工作！
 WARNING: This skips blob validation, ENSURE your SHSH is valid!||| 警告：这将跳过 SHSH 文件验证，请确保你的 SHSH 有效！
     signature with mokutil or disable Secure Boot, then re-run.||| 使用 mokutil 注册签名，或禁用 Secure Boot，然后重新运行。
 Unrecognized distro; treating as Arch-based (pacman detected).||| 无法识别的发行版；按基于 Arch 处理（检测到 pacman）。
@@ -88,8 +91,8 @@ surrealra1n has been reinstalled! Please run the script again||| surrealra1n 已
 Rollback feature is not supported if you update from a beta.||| 如果你从测试版更新，则不支持回滚功能。
 Would you like to enable skip-blob for this restore? (y/n): ||| 是否要为此次恢复启用跳过 SHSH 验证？(y/n): 
 A12/A13 downgrades are only supported on macOS 12 and later.||| A12/A13 降级仅在 macOS 12 及更高版本上受支持。
-iOS 17-26 A12/A13 downgrades are not supported at the moment||| 目前暂不支持 A12/A13 降级到 iOS 17-26
 Would you like to jailbreak as part of this restore? (Y/n): ||| 是否要在本次恢复时顺带越狱？(Y/n): 
+iOS 18-27 A12/A13 downgrades are not supported at the moment||| 目前暂不支持 A12/A13 降级到 iOS 18-27
 Please re-run surrealra1n after the installation completes.||| 安装完成后请重新运行 surrealra1n。
 Release the power button now, but keep holding home button.||| 现在松开电源键，但继续按住 Home 键。
 [!] Failed to build the APFS kernel module (linux-apfs-rw).||| [!] 构建 APFS 内核模块（linux-apfs-rw）失败。
@@ -180,16 +183,17 @@ You need to put your device into DFU mode.||| 你需要将设备置于 DFU 模�
 Device has been detected in Recovery mode.||| 已在恢复模式下检测到设备。
 Error: Failed to fetch data from $json_url||| 错误：从 $json_url 获取数据失败
 Error: API returned invalid JSON, content:||| 错误：API 返回了无效的 JSON，内容：
+Which version would you like to download: ||| 你想下载哪个版本： 
 Enter your user password when prompted to||| 在提示时输入你的用户密码
 Rosetta 2 is not installed. Installing...||| 未安装 Rosetta 2。正在安装...
 SEP is compatible but Touch ID will break||| SEP 兼容，但 Touch ID 将失效
-Which version would you like to download: ||| 你想下载哪个版本： 
 surrealra1n reinstall has been canceled.||| 已取消重新安装 surrealra1n。
 The device has entered DFU successfully!||| 设备已成功进入 DFU 模式！
 to the established macOS implementation.||| 相比成熟的 macOS 实现。
 iOS 16.0-16.5.1 restores are unsupported||| 不支持 iOS 16.0-16.5.1 恢复
 Would you like to make new ones? (y/n): ||| 是否要生成新的？(y/n): 
 Device not detected in Recovery. Exiting||| 未在恢复模式下检测到设备。退出
+iOS 17.x support is really experimental.||| iOS 17.x 支持是真正的实验性功能。
 Xcode Command Line Tools are installed.||| 已安装 Xcode 命令行工具。
 All dependencies are already installed.||| 所有依赖均已安装。
 And iOS 16.7.x restores are unsupported||| 并且不支持 iOS 16.7.x 恢复
@@ -211,12 +215,14 @@ SHSH blob does not exist: $SHSH_PATH||| SHSH 文件不存在：$SHSH_PATH
 5. Potentially other broken features||| 5. 可能存在的其他失效功能
 Select iOS $LATEST_VERSION IPSW file||| 选择适用于 iOS $LATEST_VERSION 的 IPSW 文件
 SHA1 checksum verified successfully!||| SHA1 校验和验证成功！
+SSH ramdisk is created successfully!||| SSH ramdisk 创建成功！
 [!] Failed command: $failed_command||| [!] 失败的命令：$failed_command
 Switch to stable has been canceled.||| 已取消切换到稳定版。
 MD5 checksum verified successfully!||| MD5 校验和验证成功！
 Installing missing dependencies...||| 正在安装缺失的依赖...
 [!] Required directory missing: $1||| [!] 缺少所需目录：$1
 [+] Device Identifier: $IDENTIFIER||| [+] 设备标识符：$IDENTIFIER
+Welcome to surrealsshrd v1.0 alpha||| 欢迎使用 surrealsshrd v1.0 alpha
 Checking for existing binaries...||| 正在检查现有二进制文件...
 Device has not pwned successfully||| 设备未能破解成功
 Put your device into DFU mode now||| 现在将你的设备置于 DFU 模式
@@ -247,6 +253,8 @@ SEP is partially incompatible||| SEP 部分不兼容
 USB accessories will not work||| USB 配件将无法使用
 Error: MD5 checksum mismatch!||| 错误：MD5 校验和不匹配！
 Error: Download failed (curl)||| 错误：下载失败（curl）
+A12/A13 SSHRD requires macOS!||| A12/A13 SSHRD 需要 macOS！
+iOS 18.4 ramdisk will be used||| 将使用 iOS 18.4 ramdisk
 Proceed to do the following:||| 请按照以下步骤操作：
 1. Restore (with SHSH blobs)||| 1. 恢复（使用 SHSH 文件）
 Failed to clone repository.||| 克隆仓库失败。
@@ -271,16 +279,17 @@ Verifying MD5 checksum...||| 正在验证 MD5 校验和...
 Downloading to $IPSW_PATH||| 正在下载到 $IPSW_PATH
 Downloading to $ipsw_file||| 正在下载到 $ipsw_file
 File saved to: $ipsw_file||| 文件已保存到：$ipsw_file
+3. surrealSSHRD (A12/A13)||| 3. surrealSSHRD（A12/A13）
 [!] Script: $script_file||| [!] 脚本：$script_file
 1. Reinstall surrealra1n||| 1. 重新安装 surrealra1n
 Invalid option. Exiting.||| 无效的选项。退出。
 Checking for DFU devices||| 正在检查 DFU 设备
 UWB may or may not work.||| UWB 可能可用也可能不可用。
 Jailbreak option enabled||| 越狱选项已启用
-3. Switch to main branch||| 3. 切换到 main 分支
 Expected: $sha1_expected||| 期望值：$sha1_expected
 Error: Invalid JSON data||| 错误：无效的 JSON 数据
 Identifier: $identifier2||| 标识符：$identifier2
+4. Switch to main branch||| 4. 切换到 main 分支
 Rosetta 2 is installed.||| 已安装 Rosetta 2。
 Checking for updates...||| 正在检查更新...
 Press enter to continue||| 按回车继续
@@ -345,5 +354,6 @@ Options:||| 选项：
 4. Back||| 4. 返回
 3. Back||| 3. 返回
 5. Back||| 5. 返回
-4. Exit||| 4. 退出
 3. Exit||| 3. 退出
+Exiting||| 正在退出
+5. Exit||| 5. 退出

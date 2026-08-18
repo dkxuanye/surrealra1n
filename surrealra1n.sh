@@ -1,6 +1,6 @@
 #!/bin/bash
-CURRENT_VERSION="v2.0 beta 28"
-VERSION_DISPLAY="v2.0 测试版 28"
+CURRENT_VERSION="v2.0 beta 29"
+VERSION_DISPLAY="v2.0 测试版 29"
 
 if [ "$EUID" -eq 0 ]; then
   echo "错误：请勿使用 sudo 或以 root 身份运行此脚本。"
@@ -66,6 +66,7 @@ sudo rm -rf "tmp"
 sudo rm -rf "tmp1"
 sudo rm -rf "tmp2"
 sudo rm -rf "work"
+sudo rm -rf "tarwork"
 
 dist=0
 
@@ -700,7 +701,7 @@ elif [[ $dist == 3 ]]; then
     curl -L -o bin/hfsplus https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/hfsplus
     curl -L -o bin/zenity https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/zenity
     # iboot patcher oops
-    curl -L -o ibootpatch.c https://gist.githubusercontent.com/pwnerblu/c759c0060b5167a411b3b3adfcd07572/raw/fa95b97d52cdc1a13c8891e644bd4c2451967910/patch.c
+    curl -L -o ibootpatch.c https://gist.githubusercontent.com/pwnerblu/c759c0060b5167a411b3b3adfcd07572/raw/63832ad59d4d27b007a618badf95bd550bd7f2ef/patch.c
     gcc ibootpatch.c -o bin/iBootPatch
     rm -rf ibootpatch.c
     # from spironolactone oops
@@ -801,7 +802,7 @@ elif [[ $dist == 4 ]]; then
     curl -L -o bin/hfsplus https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/hfsplus
     curl -L -o bin/zenity https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/zenity
     # iboot patcher oops
-    curl -L -o ibootpatch.c https://gist.githubusercontent.com/pwnerblu/c759c0060b5167a411b3b3adfcd07572/raw/fa95b97d52cdc1a13c8891e644bd4c2451967910/patch.c
+    curl -L -o ibootpatch.c https://gist.githubusercontent.com/pwnerblu/c759c0060b5167a411b3b3adfcd07572/raw/63832ad59d4d27b007a618badf95bd550bd7f2ef/patch.c
     gcc ibootpatch.c -o bin/iBootPatch
     rm -rf ibootpatch.c
     # from spironolactone oops
@@ -1470,7 +1471,7 @@ IBEC7="iBEC.$BOARDID.RELEASE.im4p"
 KERNEL10="kernelcache.release.$BOARDID2"
 
 INFO_TEXT="surrealra1n - $VERSION_DISPLAY
-适用于部分 checkm8 64 位设备的有线降级工具，iOS 7.0 - 17.3.1
+适用于部分 checkm8 64 位设备的有线降级工具，iOS 7.0 - 17.6.1
 此构建是早期测试版。使用风险自负，且可能会遇到错误。
 
 使用最新的 SHSH 文件（用于有线降级）
@@ -2544,6 +2545,10 @@ elif [[ $VERSION == 16.6* ]]; then
     restore_ramdisk_dmg=$(find_dmg tmp1 largest 118000000)
 elif [[ $VERSION == 17.0* || $VERSION == 17.1* || $VERSION == 17.2* ]]; then
     restore_ramdisk_dmg=$(find_dmg tmp1 largest 131000000)
+elif [[ $VERSION == 17.4* ]]; then
+    restore_ramdisk_dmg=$(find_dmg tmp1 largest 137000000)
+elif [[ $VERSION == 17.5* || $VERSION == 17.6* ]]; then
+    restore_ramdisk_dmg=$(find_dmg tmp1 largest 202000000)
 elif [[ $VERSION == 17.3.1 ]]; then
     restore_ramdisk_dmg="tmp1/087-41420-059.dmg"
 elif [[ $VERSION == 17.3 ]]; then
@@ -2559,7 +2564,7 @@ elif [[ $VERSION == 16.1 ]]; then
 else
     restore_ramdisk_dmg=$(find_dmg tmp1 largest 148000000)
 fi
-cryptex_os=$(find_dmg tmp1 largest 3500000000)
+cryptex_os=$(find_dmg tmp1 largest 3800000000)
 cryptex_os_18=$(find_dmg_arm64e tmp2 largest 2100000000)
 cryptex_app=$(find_dmg tmp1 smallest)
 cryptex_app_18=$(find_dmg tmp2 smallest)
@@ -2605,7 +2610,11 @@ PY
 if [[ $VERSION == 17.* ]]; then
     sudo plutil -replace BuildIdentities.$IDENTITY.Manifest.RestoreDeviceTree.Info.Path -string "Firmware/all_flash/DeviceTree.im4p" tmp2/BuildManifest.plist
 fi
-cp -v tmp1/Firmware/AOP/$AOP14 tmp2/Firmware/AOP/$AOP
+if [[ $VERSION == 16.* || $VERSION == 17.0* || $VERSION == 17.1* || $VERSION == 17.2* || $VERSION == 17.3* || $VERSION == 17.4* ]]; then
+    cp -v tmp1/Firmware/AOP/$AOP14 tmp2/Firmware/AOP/$AOP
+else
+    cp -v tmp1/Firmware/AOP/$AOP tmp2/Firmware/AOP/$AOP
+fi
 cp -v tmp1/Firmware/agx/$GFX tmp2/Firmware/agx/$GFX
 cp -v tmp1/Firmware/ane/$ANE tmp2/Firmware/ane/$ANE
 cp -v tmp1/Firmware/isp_bni/$ISP tmp2/Firmware/isp_bni/$ISP
@@ -2684,11 +2693,21 @@ if [[ $dist == 3 || $dist == 4 ]]; then
     chmod 755 rdwork/usr/sbin/asr
     #
     cp -v rdwork/usr/lib/libimg4.dylib work/libimg4.dylib
-    ./bin/libimg4_patcher work/libimg4.dylib work/libimg4.patch
+    if [[ $VERSION == 16.* || $VERSION == 17.0* || $VERSION == 17.1* || $VERSION == 17.2* || $VERSION == 17.3* ]]; then
+        ./bin/libimg4_patcher work/libimg4.dylib work/libimg4.patch
+    else
+        ./bin/Kernel64Patcher3 work/libimg4.dylib work/libimg4.patch -li
+    fi
     ./bin/ldid -Swork/ents.plist work/libimg4.patch
-    rm -rf rdwork/usr/lib/libimg4.dylib 
-    cp -v work/libimg4.patch rdwork/usr/lib/libimg4.dylib
-    chmod 755 rdwork/usr/lib/libimg4.dylib
+    if [[ $VERSION == 16.* || $VERSION == 17.0* || $VERSION == 17.1* || $VERSION == 17.2* || $VERSION == 17.3* ]]; then
+        rm -rf rdwork/usr/lib/libimg4.dylib 
+        cp -v work/libimg4.patch rdwork/usr/lib/libimg4.dylib
+        chmod 755 rdwork/usr/lib/libimg4.dylib
+    else
+        rm -rf rdwork/usr/lib/libimage4.dylib 
+        cp -v work/libimg4.patch rdwork/usr/lib/libimage4.dylib
+        chmod 755 rdwork/usr/lib/libimage4.dylib
+    fi
     # restored patch start
     if [[ $VERSION == 16.4* || $VERSION == 16.5* || $VERSION == 16.6* ]]; then
         ramdisk_ipsw_url="https://updates.cdn-apple.com/2023SpringFCS/fullrestores/032-68311/B777E36E-32B8-4DEF-91CE-9909B04FD22D/iPhone10,3,iPhone10,6_16.4_20E247_Restore.ipsw"
@@ -2699,6 +2718,9 @@ if [[ $dist == 3 || $dist == 4 ]]; then
     elif [[ $VERSION == 17.1* || $VERSION == 17.2* || $VERSION == 17.3* ]]; then
         ramdisk_ipsw_url="https://updates.cdn-apple.com/2023FallFCS/fullrestores/042-07636/DBDB5860-91CF-4757-B7BD-6402D4445AF2/iPad_64bit_TouchID_ASTC_17.1_21B74_Restore.ipsw"
         ramdisk_dmg="097-22998-092.dmg"
+    elif [[ $VERSION == 17.4* || $VERSION == 17.5* || $VERSION == 17.6* ]]; then
+        ramdisk_ipsw_url="https://updates.cdn-apple.com/2024WinterFCS/fullrestores/052-61449/211A56A4-2B9B-4054-A190-73227405F1C7/iPad_64bit_TouchID_ASTC_17.4_21E219_Restore.ipsw"
+        ramdisk_dmg="096-18092-354.dmg"
     elif [[ $VERSION == 16.1* || $VERSION == 16.2* || $VERSION == 16.3* ]]; then
         ramdisk_ipsw_url="https://updates.cdn-apple.com/2022FallFCS/fullrestores/012-92982/6DF106AB-8868-433F-8C3F-05D50785E81E/iPhone10,3,iPhone10,6_16.1_20B82_Restore.ipsw"
         ramdisk_dmg="078-64668-109.dmg"
@@ -3463,6 +3485,28 @@ exit 0
 
 }
 
+fetch_blobs_a12_a13_prep(){
+# this function isn't needed but ill keep it
+mkdir -p work
+if [[ $IDENTIFIER == iPhone12,8 ]]; then
+    latest_url="https://updates.cdn-apple.com/2026SummerFCS/fullrestores/140-93803/1454C0E0-B7A3-4863-BE7A-6A4E8FF166F0/iPhone12,8_26.6.1_23G83_Restore.ipsw"
+elif [[ $IDENTIFIER == iPhone12,3 || $IDENTIFIER == iPhone12,5 ]]; then
+    latest_url="https://updates.cdn-apple.com/2026SummerFCS/fullrestores/140-93806/8CC6D313-C474-41E5-973C-E4DCF7E127FF/iPhone12,3,iPhone12,5_26.6.1_23G83_Restore.ipsw"
+elif [[ $IDENTIFIER == iPhone12,1 ]]; then
+    latest_url="https://updates.cdn-apple.com/2026SummerFCS/fullrestores/140-75024/5CBDD6F3-E1AB-41C5-8DC1-8FB137A75E9E/iPhone12,1_26.6.1_23G83_Restore.ipsw"
+elif [[ $IDENTIFIER == iPhone11,8 ]]; then
+    latest_url="https://updates.cdn-apple.com/2026WinterFCS/fullrestores/140-97953/5F3051CD-5405-4FEF-889E-C3B78E0F376F/iPhone11,8_18.7.10_22H374_Restore.ipsw"
+elif [[ $IDENTIFIER == iPhone11,2 || $IDENTIFIER == iPhone11,4 || $IDENTIFIER == iPhone11,6 ]]; then
+    latest_url="https://updates.cdn-apple.com/2026WinterFCS/fullrestores/140-97977/CB8B320D-008B-4FC2-8256-56A1DB86C586/iPhone11,2,iPhone11,4,iPhone11,6_18.7.10_22H374_Restore.ipsw"
+elif [[ $IDENTIFIER == iPad11* ]]; then
+    latest_url="https://updates.cdn-apple.com/2026SummerFCS/fullrestores/140-75126/51E6CF98-E76E-45CC-A0BF-978D0D210406/iPad_Spring_2019_26.6.1_23G83_Restore.ipsw"
+fi
+cd work
+sudo ../bin/pzb -g BuildManifest.plist $latest_url
+cd ..
+
+}
+
 do_tethered_restore_a12_a13(){
 
 # fix issue on Linux
@@ -3529,14 +3573,14 @@ elif [[ $VERSION == 16.* ]]; then
         fi
     fi
     read -p "按回车继续"
-elif [[ $VERSION == 17.0* || $VERSION == 17.1* || $VERSION == 17.2* || $VERSION == 17.3* ]]; then
-    echo "iOS 17.x 支持是真正的实验性功能，仅限 17.0 - 17.3.1。"
+elif [[ $VERSION == 17.* ]]; then
+    echo "iOS 17.x 支持是真正的实验性功能。"
     echo "你可能会遇到大量问题（包括某些设备上基带损坏），因为我们必须修补一些东西才能让设备启动。"
     echo "设备将无法激活。设备无法激活时，请不要刷屏 GitHub issues。"
     echo "只有当你正在研究或想要为修复问题做出贡献时才应该这样做，这不适合普通用户。"
     read -p "按回车继续"
-elif [[ $VERSION == 17.* || $VERSION == 18.* || $VERSION == 26.* ]]; then
-    echo "目前暂不支持 A12/A13 降级到 iOS 17-26"
+elif [[ $VERSION == 18.* || $VERSION == 26.* || $VERSION == 27.* ]]; then
+    echo "目前暂不支持 A12/A13 降级到 iOS 18-27"
     exit 1
 elif [[ $VERSION == 13.* || $VERSION == 12.* ]] && [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPad11* ]]; then
     echo "SEP 不兼容"
@@ -4065,6 +4109,147 @@ fi
 
 }
 
+sshrd_build_a12(){
+
+sshrd_path="SSHRD/$IDENTIFIER"
+mkdir -p $sshrd_path
+echo "正在获取 iOS $LATEST_VERSION 的 SHSH 文件"
+rm -rf "shsh"
+mkdir -p shsh
+mkdir -p tarwork
+mkdir -p work
+sudo ./bin/tsschecker -d $IDENTIFIER -s -e $ECID -i $LATEST_VERSION --save-path shsh 
+
+# Find the .shsh2 file in the shsh directory
+SHSH_PATH=$(find shsh -type f -name "*.shsh2" | head -n 1)
+if [[ -z "$SHSH_PATH" ]]; then
+    echo "在 shsh 文件夹中未找到 SHSH 文件。中止"
+    exit 1
+fi
+im4m="work/im4m"
+./bin/img4tool -e -s $SHSH_PATH -m work/im4m
+ramdisk_dmg="090-43874-358.dmg"
+if [[ $IDENTIFIER == iPhone12,8 ]]; then
+    ipsw_url="https://updates.cdn-apple.com/2025SpringFCS/fullrestores/082-15768/008C2862-195B-48EE-B790-997431B752FD/iPhone12,8_18.4_22E240_Restore.ipsw"
+elif [[ $IDENTIFIER == iPhone12,3 || $IDENTIFIER == iPhone12,5 ]]; then
+    ipsw_url="https://updates.cdn-apple.com/2025SpringFCS/fullrestores/082-15843/BDD88763-DC3F-4DB6-B82D-133EAB3E5F49/iPhone12,3,iPhone12,5_18.4_22E240_Restore.ipsw"
+elif [[ $IDENTIFIER == iPhone12,1 ]]; then
+    ipsw_url="https://updates.cdn-apple.com/2025SpringFCS/fullrestores/082-14797/272F08A9-B8B7-4649-9954-D83781B69280/iPhone12,1_18.4_22E240_Restore.ipsw"
+elif [[ $IDENTIFIER == iPhone11,8 ]]; then
+    ipsw_url="https://updates.cdn-apple.com/2025SpringFCS/fullrestores/082-14374/4BFDFFD2-985B-46A1-9444-D7EFB985F545/iPhone11,8_18.4_22E240_Restore.ipsw"
+elif [[ $IDENTIFIER == iPhone11,2 || $IDENTIFIER == iPhone11,4 || $IDENTIFIER == iPhone11,6 ]]; then
+    ipsw_url="https://updates.cdn-apple.com/2025SpringFCS/fullrestores/082-13816/F8D156A2-DBE7-49A4-8C2C-6EF6F6776F06/iPhone11,2,iPhone11,4,iPhone11,6_18.4_22E240_Restore.ipsw"
+elif [[ $IDENTIFIER == iPad11* ]]; then
+    ipsw_url="https://updates.cdn-apple.com/2025SpringFCS/fullrestores/082-14949/21FC3275-F323-4DF7-B410-3C2703F200CB/iPad_Spring_2019_18.4_22E240_Restore.ipsw"
+fi
+curl -L -o work/ssh.tar.gz https://github.com/verygenericname/sshtars/raw/refs/heads/main/ssh.tar.gz
+gzip -d work/ssh.tar.gz
+cd work
+sudo ../bin/pzb -g $ramdisk_dmg $ipsw_url
+sudo ../bin/pzb -g Firmware/$ramdisk_dmg.trustcache $ipsw_url
+sudo ../bin/pzb -g Firmware/agx/$GFX $ipsw_url
+sudo ../bin/pzb -g Firmware/ane/$ANE $ipsw_url
+sudo ../bin/pzb -g Firmware/$IOFW $ipsw_url
+sudo ../bin/pzb -g Firmware/all_flash/$DEVICETREE $ipsw_url
+sudo ../bin/pzb -g Firmware/dfu/$IBSS $ipsw_url
+sudo ../bin/pzb -g $KERNEL $ipsw_url
+cd ..
+./bin/img4 -i work/$IBSS -o work/iBSS.raw
+./bin/iBootPatch -v -b "-v rd=md0 wdt=-1" work/iBSS.raw $sshrd_path/iBSS.patch
+# kernel
+./bin/img4tool -e work/$KERNEL -o work/kernel.raw
+./bin/Kernel64Patcher3 work/kernel.raw work/kernel.patch -ue
+./bin/img4 -i work/kernel.patch -o $sshrd_path/kernel.img4 -M $im4m -A -T rkrn
+# before ramdisk
+./bin/img4 -i work/$GFX -o $sshrd_path/GFX.img4 -M $im4m
+./bin/img4 -i work/$ANE -o $sshrd_path/ANE.img4 -M $im4m
+./bin/img4 -i work/$IOFW -o $sshrd_path/SIO.img4 -M $im4m
+./bin/img4 -i work/$DEVICETREE -o $sshrd_path/DeviceTree.img4 -M $im4m -T rdtr
+# now it's real ramdisk prep
+./bin/img4 -i work/$ramdisk_dmg -o work/ramdisk.dmg
+hdiutil attach work/ramdisk.dmg -mountpoint rdwork
+hdiutil create -size 210m -imagekey diskimage-class=CRawDiskImage -format UDZO -fs HFS+ -layout NONE -srcfolder rdwork -copyuid root work/ramdisk1.dmg
+hdiutil detach -force rdwork
+hdiutil attach work/ramdisk1.dmg -mountpoint rdwork
+cd rdwork
+tar -xvf ../work/ssh.tar
+cd ..
+hdiutil detach -force rdwork
+./bin/img4 -i work/ramdisk1.dmg -o $sshrd_path/ramdisk.img4 -M $im4m -A -T rdsk
+cd tarwork
+tar -xvf ../work/ssh.tar
+cd ..
+find tarwork > work/list.txt
+./bin/img4 -i work/$ramdisk_dmg.trustcache -o work/trustcache.raw
+./bin/trustcache append work/trustcache.raw $(cat work/list.txt)
+./bin/img4 -i work/trustcache.raw -o $sshrd_path/trustcache.img4 -M $im4m -A -T rtsc
+# Done!
+rm -rf work
+rm -rf tarwork
+sleep 4
+echo "SSH ramdisk 创建成功！"
+
+}
+
+sshrd_a12(){
+
+if [[ $dist == 3 || $dist == 4 ]]; then
+    echo "欢迎使用 surrealsshrd v1.0 alpha"
+else
+    echo "A12/A13 SSHRD 需要 macOS！"
+    sleep 2
+    main_menu
+fi
+echo "将使用 iOS 18.4 ramdisk"
+echo "SSHtar 来自 SSHRD_Script：https://github.com/verygenericname/SSHRD_Script"
+sshrd_path="SSHRD/$IDENTIFIER"
+if [[ ! -d $sshrd_path ]] || [[ ! -f $sshrd_path/iBSS.patch ]] || [[ ! -f $sshrd_path/ramdisk.img4 ]] || [[ ! -f $sshrd_path/trustcache.img4 ]] || [[ ! -f $sshrd_path/GFX.img4 ]] || [[ ! -f $sshrd_path/ANE.img4 ]] || [[ ! -f $sshrd_path/SIO.img4 ]] || [[ ! -f $sshrd_path/DeviceTree.img4 ]] || [[ ! -f $sshrd_path/kernel.img4 ]]; then
+    sshrd_build_a12
+fi
+if [[ $IDENTIFIER == iPhone* ]]; then
+    dfu_helper_a11
+else
+    dfu_helper
+fi
+pwn_device
+curl -L -o bin/liter8ctl https://github.com/ahmadkamal09999-tech/usbliter8/raw/refs/heads/main/usbliter8ctl
+python3 bin/liter8ctl boot $sshrd_path/iBSS.patch || true
+echo "usbliter8ctl 可能会出错。"
+echo "只要设备进入 iBSS 恢复模式，这个错误可能也是正常的（屏幕应保持黑屏，但会被识别为恢复模式设备）。"
+sleep 6
+echo "正在检查设备是否处于恢复模式"
+MODE=$(./bin/irecovery -q | grep "^MODE:" | cut -d ':' -f2 | xargs)
+if [[ $MODE == Recovery ]]; then
+    echo "已在恢复模式下检测到设备。"
+else
+    echo "未在恢复模式下检测到设备。退出"
+    exit 1
+fi
+irecovery -f $sshrd_path/ramdisk.img4
+irecovery -c ramdisk
+irecovery -f $sshrd_path/trustcache.img4
+irecovery -c firmware
+irecovery -f $sshrd_path/GFX.img4
+irecovery -c firmware
+irecovery -f $sshrd_path/ANE.img4
+irecovery -c firmware
+irecovery -f $sshrd_path/SIO.img4
+irecovery -c firmware
+irecovery -f $sshrd_path/DeviceTree.img4
+irecovery -c devicetree
+irecovery -f $sshrd_path/kernel.img4
+irecovery -c bootx
+echo "SSH ramdisk 现在应该正在启动！稍后你将连接到 SSH 会话"
+echo "端口：2222 | 主机：sftp://127.0.0.1 | 用户：root | 密码：alpine"
+echo "请注意，目前挂载数据分区可能无法正常工作！"
+sleep 12
+./bin/iproxy 2222 22 &>/dev/null &
+./bin/sshpass -p 'alpine' ssh -o HostKeyAlgorithms=+ssh-rsa -o StrictHostKeyChecking=no -p2222 root@localhost "${1:-}"
+echo "正在退出"
+exit 0
+
+}
+
 main_menu(){
 
 clear
@@ -4074,16 +4259,19 @@ echo "选项："
 echo ""
 echo "1. 降级选项"
 echo "2. 杂项工具"
-echo "3. 切换到 main 分支"
-echo "4. 退出"
-read -p "请输入选项（1-4）： " option
+echo "3. surrealSSHRD（A12/A13）"
+echo "4. 切换到 main 分支"
+echo "5. 退出"
+read -p "请输入选项（1-5）： " option
 if [[ $option == 1 ]]; then
     restore_utils
 elif [[ $option == 2 ]]; then
     misc_utils
 elif [[ $option == 3 ]]; then
-    switch_to_main
+    sshrd_a12
 elif [[ $option == 4 ]]; then
+    switch_to_main
+elif [[ $option == 5 ]]; then
     echo "surrealra1n 正在退出"
     exit 0
 else
