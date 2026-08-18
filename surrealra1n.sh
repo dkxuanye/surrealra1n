@@ -1,6 +1,6 @@
 #!/bin/bash
-CURRENT_VERSION="v2.0 beta 27 re-release 4"
-VERSION_DISPLAY="v2.0 测试版 27 重新发布 4"
+CURRENT_VERSION="v2.0 beta 28"
+VERSION_DISPLAY="v2.0 测试版 28"
 
 if [ "$EUID" -eq 0 ]; then
   echo "错误：请勿使用 sudo 或以 root 身份运行此脚本。"
@@ -138,10 +138,10 @@ if [[ $dist == 3 || $dist == 4 ]]; then
 fi
 
 if [[ $dist == 3 || $dist == 4 ]]; then
-    if [[ "$(printf '%s\n' "10.14" "$macos_ver" | sort -V | head -n1)" == "10.14" ]]; then
+    if [[ "$(printf '%s\n' "11.0" "$macos_ver" | sort -V | head -n1)" == "11.0" ]]; then
         echo "你的 macOS 版本 $macos_ver 受支持。"
     else
-        echo "surrealra1n 仅支持 macOS 10.14 及更高版本。"
+        echo "surrealra1n 仅支持 macOS 11 及更高版本。"
         exit 1
     fi
 fi
@@ -166,7 +166,7 @@ if [[ $dist == 3 || $dist == 4 ]]; then
     fi
 
     # Check for missing brew dependencies
-    BREW_DEPS=("libimobiledevice" "libirecovery" "binutils" "libusb")
+    BREW_DEPS=("libimobiledevice" "libirecovery" "binutils" "libusb" "jq" "aria2")
     for dep in "${BREW_DEPS[@]}"; do
         if ! brew list "$dep" &>/dev/null; then
             echo "未安装 [$dep]。正在安装..."
@@ -207,7 +207,7 @@ pick_file() {
     local p
     p=$($zenity --file-selection --title="$1" 2>/dev/null)
     if [[ -z "$p" ]]; then
-        read -e -r -p "$1 - 请输入绝对路径（留空则取消）：" p </dev/tty
+        read -e -r -p "$1 - 请输入绝对路径（留空则取消）： " p </dev/tty
     fi
     echo "$p"
 }
@@ -217,7 +217,7 @@ pick_file() {
 echo "正在检查所需依赖..."
 
 if [[ $dist == 1 ]]; then
-    DEPENDENCIES=(libusb-1.0-0-dev libusbmuxd-tools libimobiledevice-utils usbmuxd zenity git curl make gcc python3-pip python3-usb)
+    DEPENDENCIES=(libusb-1.0-0-dev libusbmuxd-tools libimobiledevice-utils usbmuxd zenity git curl make gcc python3-pip python3-usb jq bc aria2)
     MISSING_PACKAGES=()
 
     for pkg in "${DEPENDENCIES[@]}"; do
@@ -235,7 +235,7 @@ if [[ $dist == 1 ]]; then
         echo "所有依赖均已安装。" 
     fi
 elif [[ $dist == 2 ]]; then
-    DEPENDENCIES=(libusb libusbmuxd libimobiledevice usbmuxd zenity git curl make gcc base-devel python-pip)
+    DEPENDENCIES=(libusb libusbmuxd libimobiledevice usbmuxd zenity git curl make gcc base-devel python-pip jq bc aria2)
     MISSING_PACKAGES=()
 
 
@@ -253,7 +253,7 @@ elif [[ $dist == 2 ]]; then
         echo "所有依赖均已安装。"
     fi
 elif [[ $dist == 5 ]]; then
-    DEPENDENCIES=(libusb1-devel usbmuxd libimobiledevice-utils zenity git curl make gcc python3-pip python3-pyusb)
+    DEPENDENCIES=(libusb1-devel usbmuxd libimobiledevice-utils zenity git curl make gcc python3-pip python3-pyusb jq bc aria2)
     MISSING_PACKAGES=()
 
     for pkg in "${DEPENDENCIES[@]}"; do
@@ -344,6 +344,255 @@ require_dir() {
     fi
 }
 
+verify_checksum() {
+    local file_path=$1
+    local md5_expected=$2
+    local sha1_expected=$3
+    
+    # Try MD5 first if available
+    if [ -n "$md5_expected" ] && [ "$md5_expected" != "null" ]; then
+        echo "正在验证 MD5 校验和..."
+        local local_md5=$(md5sum "$file_path" | awk '{print $1}')
+        if [ "$local_md5" = "$md5_expected" ]; then
+            echo "MD5 校验和验证成功！"
+            return 0
+        else
+            echo "错误：MD5 校验和不匹配！" >&2
+            echo "期望值：$md5_expected" >&2
+            echo "实际值：$local_md5" >&2
+            return 1
+        fi
+    fi
+    
+    # Fall back to SHA1 if MD5 is not available
+    if [ -n "$sha1_expected" ] && [ "$sha1_expected" != "null" ]; then
+        echo "MD5 不可用，正在验证 SHA1 校验和..."
+        local local_sha1=$(sha1sum "$file_path" | awk '{print $1}')
+        if [ "$local_sha1" = "$sha1_expected" ]; then
+            echo "SHA1 校验和验证成功！"
+            return 0
+        else
+            echo "错误：SHA1 校验和不匹配！" >&2
+            echo "期望值：$sha1_expected" >&2
+            echo "实际值：$local_sha1" >&2
+            return 1
+        fi
+    fi
+    
+    echo "警告：没有可用于验证的有效校验和" >&2
+    return 0
+}
+
+fetch_firmware() {
+    if [[ $1 == "18A5342e" ]] && [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPad11* || $IDENTIFIER == iPhone10* ]]; then
+        local json_url="https://remedgit.github.io/files/14b4.json"
+        local json
+        local url
+        json=$(curl -s -H 'Accept: application/json' "$json_url") || {
+            echo "错误：从 $json_url 获取数据失败" >&2
+            return 1
+        }
+        if ! echo "$json" | jq empty 2>/dev/null; then
+            echo "错误：无效的 JSON 数据" >&2
+            return 1
+        fi
+        url=$(echo "$json" | jq -r --arg dev "$IDENTIFIER" '.[] | select(.devices | index($dev)) | .url' | head -1)
+        if [ -z "$url" ] || [ "$url" = "null" ]; then
+            echo "错误：未找到设备 '$IDENTIFIER' 的固件" >&2
+            return 1
+        fi
+
+        mkdir -p firmware_downloads/$IDENTIFIER
+        IPSW_PATH="firmware_downloads/$IDENTIFIER/18A5342e.ipsw"
+
+        if [ -f "$IPSW_PATH" ]; then
+            echo "IPSW 文件已存在于 $IPSW_PATH"
+            echo "跳过下载..."
+            rm -rf work/BuildManifest.plist
+            unzip -j "$IPSW_PATH" "BuildManifest.plist" -d work
+            BUILD=$(grep -A1 "ProductBuildVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+            VERSION=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+            return 0
+        fi
+
+        echo "正在下载固件..."
+        echo "来源：$url"
+        echo "正在下载到 $IPSW_PATH"
+
+        if command -v aria2c >/dev/null 2>&1; then
+            echo "使用 aria2c 以 16 个连接加速下载..."
+            aria2c -x 16 -s 16 -o "$IPSW_PATH" $url || {
+                echo "错误：下载失败（aria2c）" >&2
+                return 1
+            }
+        else
+            echo "未找到 aria2c，改用 curl..."
+            curl -L -o "$IPSW_PATH" $url || {
+                echo "错误：下载失败（curl）" >&2
+                return 1
+            }
+        fi
+
+        echo "下载完成。"
+        rm -rf work/BuildManifest.plist
+        unzip -j "$IPSW_PATH" "BuildManifest.plist" -d work
+        BUILD=$(grep -A1 "ProductBuildVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+        VERSION=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+        return 0
+    fi
+    
+    local version_request="$1"
+    local api_url="https://api.ipsw.me/v4/ipsw/device/$IDENTIFIER"
+    local json
+    local filter
+    local url md5 identifier2 version2 buildid filesize sha256 sha1 is_signed
+    json=$(curl -s -H 'accept: application/json' "$api_url")
+    if [ -z "$json" ]; then
+        echo "错误：API 返回了空内容" >&2
+        return 1
+    fi
+    if ! echo "$json" | jq empty 2>/dev/null; then
+        echo "错误：API 返回了无效的 JSON，内容：" >&2
+        echo "$json" | head -n 10 >&2
+        return 1
+    fi
+    filter='first(.firmwares[] | select(.version == "'"$version_request"'"))'
+    url=$(echo "$json" | jq -r "$filter | .url")
+    md5=$(echo "$json" | jq -r "$filter | .md5sum")
+    identifier2=$(echo "$json" | jq -r "$filter | .identifier")
+    version2=$(echo "$json" | jq -r "$filter | .version")
+    buildid=$(echo "$json" | jq -r "$filter | .buildid")
+    filesize=$(echo "$json" | jq -r "$filter | .filesize")
+    sha256=$(echo "$json" | jq -r "$filter | .sha256sum")
+    sha1=$(echo "$json" | jq -r "$filter | .sha1sum")
+    is_signed=$(echo "$json" | jq -r "$filter | .signed")
+    # b to gb
+    filesize=$(echo "scale=2; $filesize / 1024 / 1024 / 1024" | bc)
+
+    if [ -z "$url" ] || [ "$url" = "null" ]; then
+        echo "错误：未找到固件（标识符：%s，版本：%s）" >&2
+        return 1
+    fi
+    
+    mkdir -p firmware_downloads/$IDENTIFIER
+    local ipsw_file="firmware_downloads/$IDENTIFIER/${version2}.ipsw"
+
+    # Check if file already exists
+    if [ -f "$ipsw_file" ]; then
+        echo "IPSW 文件已存在于 $ipsw_file"
+        echo "正在验证完整性..."
+        if verify_checksum "$ipsw_file" "$md5" "$sha1"; then
+            echo "文件完整性验证通过。跳过下载。"
+            return 0
+        else
+            echo "文件完整性检查失败。正在重新下载..."
+            rm -f "$ipsw_file"
+        fi
+    fi
+    #if [[ $version2 == $LATEST_VERSION ]]; then
+    #    echo "IPSW is latest, redirecting path"
+    #    IPSW_PATH_LATEST="firmware_downloads/$IDENTIFIER/$LATEST_VERSION.ipsw"
+    #fi
+
+    echo
+    echo "信息："
+    echo "标识符：$identifier2"
+    echo "版本：$version2"
+    echo "BuildID：$buildid"
+    echo "sha1sum：$sha1"
+    echo "md5sum：$md5"
+    echo "sha256sum：$sha256"
+    echo "文件大小：$filesize GB"
+    echo "是否签名：$is_signed"
+    echo "URL：$url"
+
+    echo
+    read -p "固件详细信息已列在上方。按回车继续下载。"
+
+    echo "正在下载固件..."
+    echo "来源：$url"
+    echo "正在下载到 $ipsw_file"
+
+    if command -v aria2c >/dev/null 2>&1; then
+        echo "使用 aria2c 以 16 个连接加速下载..."
+        aria2c -x 16 -s 16 -o "$ipsw_file" $url || {
+            echo "错误：下载失败（aria2c）" >&2
+            return 1
+        }
+    else
+        echo "未找到 aria2c，改用 curl..."
+        curl -L -o "$ipsw_file" $url || {
+            echo "错误：下载失败（curl）" >&2
+            return 1
+        }
+    fi
+
+    echo "下载完成。"
+    
+    if ! verify_checksum "$ipsw_file" "$md5" "$sha1"; then
+        rm -f "$ipsw_file"
+        return 1
+    fi
+
+    echo "文件已保存到：$ipsw_file"
+    return 0
+}
+
+ipsw_selector(){
+    echo "请选择获取 $1 IPSW 的方式。"
+    echo "1. 选择一个 IPSW 文件"
+    echo "2. 在线下载 IPSW 文件"
+    echo "3. 退出"
+    read -p "请输入选项（1-3）： " fw_select_opts
+    if [[ $fw_select_opts == 1 ]]; then
+        if [[ $1 == "target" ]]; then
+            IPSW_PATH=$(pick_file "选择一个 IPSW 文件")
+            if [[ -z "$IPSW_PATH" ]]; then
+                echo "未选择 IPSW。中止。"
+                exit 1
+            fi
+            rm -rf work/BuildManifest.plist
+            unzip -j "$IPSW_PATH" "BuildManifest.plist" -d work
+            BUILD=$(grep -A1 "ProductBuildVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+            VERSION=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+        elif [[ $1 == "base" ]]; then
+            IPSW_PATH_LATEST=$(pick_file "选择适用于 iOS $LATEST_VERSION 的 IPSW 文件")
+            if [[ -z "$IPSW_PATH_LATEST" ]]; then
+                echo "未选择 IPSW。中止。"
+                exit 1
+            fi
+            rm -rf work/BuildManifest.plist
+            unzip -j "$IPSW_PATH_LATEST" "BuildManifest.plist" -d work
+            VERSION_LATEST=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+            if [[ $VERSION_LATEST != $LATEST_VERSION ]]; then
+                echo "IPSW 无效。你必须选择适用于 iOS $LATEST_VERSION 的 IPSW，而不是 iOS $VERSION_LATEST"
+                exit 1
+            fi
+        fi
+    elif [[ $fw_select_opts == 2 ]]; then
+        if [[ $1 == "target" ]]; then
+            if [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPad11* || $IDENTIFIER == iPhone10* ]]; then
+                echo "如果你想下载 iOS14.0 测试版 4（18A5342e）的 IPSW，请在下方输入 18A5342e"
+            fi
+            read -p "你想下载哪个版本： " download_version
+            fetch_firmware $download_version
+            IPSW_PATH="firmware_downloads/$IDENTIFIER/${download_version}.ipsw"
+            rm -rf work/BuildManifest.plist
+            unzip -j "$IPSW_PATH" "BuildManifest.plist" -d work
+            BUILD=$(grep -A1 "ProductBuildVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+            VERSION=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+        elif [[ $1 == "base" ]]; then
+            fetch_firmware $LATEST_VERSION
+            IPSW_PATH_LATEST="firmware_downloads/$IDENTIFIER/$LATEST_VERSION.ipsw"
+            rm -rf work/BuildManifest.plist
+            unzip -j "$IPSW_PATH_LATEST" "BuildManifest.plist" -d work
+            VERSION_LATEST=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+        fi
+    elif [[ $fw_select_opts == 3 ]]; then
+        exit 0
+    fi
+}
+
 #
 
 echo "正在检查更新..."
@@ -358,7 +607,7 @@ if [[ $LATEST_VERSION != $CURRENT_VERSION ]]; then
     echo "$RELEASE_NOTES"
     echo ""
     echo "强烈建议更新以获得最新功能 + 错误修复。"
-    read -p "是否现在更新？(y/n):" update
+    read -p "是否现在更新？(y/n): " update
     if [[ $update == y || $update == Y ]]; then
         rm -rf "updatefiles"
         mkdir updatefiles
@@ -451,7 +700,7 @@ elif [[ $dist == 3 ]]; then
     curl -L -o bin/hfsplus https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/hfsplus
     curl -L -o bin/zenity https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/zenity
     # iboot patcher oops
-    curl -L -o ibootpatch.c https://gist.githubusercontent.com/pwnerblu/c759c0060b5167a411b3b3adfcd07572/raw/6fd046857165306c309ecfa7a2e7af2aeb995de3/patch.c
+    curl -L -o ibootpatch.c https://gist.githubusercontent.com/pwnerblu/c759c0060b5167a411b3b3adfcd07572/raw/fa95b97d52cdc1a13c8891e644bd4c2451967910/patch.c
     gcc ibootpatch.c -o bin/iBootPatch
     rm -rf ibootpatch.c
     # from spironolactone oops
@@ -493,7 +742,7 @@ elif [[ $dist == 3 ]]; then
     curl -L -o bin/Kernel64Patcher https://github.com/edwin170/downr1n/raw/refs/heads/main/binaries/Darwin/Kernel64Patcher
     # fetch pwnerblu fork of Kernel64Patcher and iBootpatch2 for tether booting iOS 14.x on A12 device.
     if [[ $macos_ver == 12.* || $macos_ver == 13.* || $macos_ver == 14.* || $macos_ver == 15.* || $macos_ver == 26.* || $macos_ver == 27.* ]]; then
-        git clone https://github.com/pwnerblu/Kernel64Patcher --recursive
+        git clone https://github.com/pwnerblu/Kernel64Patcher --recursive -b dev
         cd Kernel64Patcher
         make
         cp Kernel64Patcher ../bin/Kernel64Patcher3
@@ -552,7 +801,7 @@ elif [[ $dist == 4 ]]; then
     curl -L -o bin/hfsplus https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/hfsplus
     curl -L -o bin/zenity https://github.com/LukeZGD/Legacy-iOS-Kit/raw/refs/heads/main/bin/macos/zenity
     # iboot patcher oops
-    curl -L -o ibootpatch.c https://gist.githubusercontent.com/pwnerblu/c759c0060b5167a411b3b3adfcd07572/raw/6fd046857165306c309ecfa7a2e7af2aeb995de3/patch.c
+    curl -L -o ibootpatch.c https://gist.githubusercontent.com/pwnerblu/c759c0060b5167a411b3b3adfcd07572/raw/fa95b97d52cdc1a13c8891e644bd4c2451967910/patch.c
     gcc ibootpatch.c -o bin/iBootPatch
     rm -rf ibootpatch.c
     # from spironolactone oops
@@ -594,7 +843,7 @@ elif [[ $dist == 4 ]]; then
     curl -L -o bin/Kernel64Patcher https://github.com/edwin170/downr1n/raw/refs/heads/main/binaries/Darwin/Kernel64Patcher
     # fetch pwnerblu fork of Kernel64Patcher and iBootpatch2 for tether booting iOS 14.x on A12 device.
     if [[ $macos_ver == 12.* || $macos_ver == 13.* || $macos_ver == 14.* || $macos_ver == 15.* || $macos_ver == 26.* || $macos_ver == 27.* ]]; then
-        git clone https://github.com/pwnerblu/Kernel64Patcher --recursive
+        git clone https://github.com/pwnerblu/Kernel64Patcher --recursive -b dev
         cd Kernel64Patcher
         make
         cp Kernel64Patcher ../bin/Kernel64Patcher3
@@ -653,12 +902,12 @@ else
     curl -L -o bin/hfsplus https://github.com/LukeZGD/Semaphorin/raw/refs/heads/main/Linux/hfsplus
     # sshpass
     # iboot patcher oops
-    curl -L -o ibootpatch.c https://gist.githubusercontent.com/pwnerblu/c759c0060b5167a411b3b3adfcd07572/raw/6fd046857165306c309ecfa7a2e7af2aeb995de3/patch.c
+    curl -L -o ibootpatch.c https://gist.githubusercontent.com/pwnerblu/c759c0060b5167a411b3b3adfcd07572/raw/fa95b97d52cdc1a13c8891e644bd4c2451967910/patch.c
     gcc ibootpatch.c -o bin/iBootPatch
     rm -rf ibootpatch.c
     curl -L -o bin/trustcache https://github.com/CRKatri/trustcache/releases/download/v2.0/trustcache_linux_x86_64
     # fetch pwnerblu fork of Kernel64Patcher and iBootpatch2 for tether booting iOS 14.x on A12 device.
-    git clone https://github.com/pwnerblu/Kernel64Patcher --recursive
+    git clone https://github.com/pwnerblu/Kernel64Patcher --recursive -b dev
     cd Kernel64Patcher
     make
     cp Kernel64Patcher ../bin/Kernel64Patcher3
@@ -740,7 +989,7 @@ fi
 
 echo "正在检查 usbliter8ctl 所需的依赖，假设你的系统已安装 Python3"
 # Check required packages
-PACKAGES=("pyusb")
+PACKAGES=("pyusb" "usb")
 for pkg in "${PACKAGES[@]}"; do
     if pip3 show "$pkg" &>/dev/null; then
         version=$(pip3 show "$pkg" | grep Version | awk '{print $2}')
@@ -1196,11 +1445,11 @@ if [[ $IDENTIFIER == iPad5* ]]; then
 elif [[ $IDENTIFIER == iPhone10* ]]; then
     LATEST_VERSION="16.7.16"
 elif [[ $IDENTIFIER == iPhone11* ]]; then
-    LATEST_VERSION="18.7.9"
+    LATEST_VERSION="18.7.10"
 elif [[ $IDENTIFIER == iPhone12* ]]; then
-    LATEST_VERSION="26.6"
+    LATEST_VERSION="26.6.1"
 elif [[ $IDENTIFIER == iPad11* ]]; then
-    LATEST_VERSION="26.6"
+    LATEST_VERSION="26.6.1"
 else
     LATEST_VERSION="12.5.8"
 fi
@@ -1221,7 +1470,7 @@ IBEC7="iBEC.$BOARDID.RELEASE.im4p"
 KERNEL10="kernelcache.release.$BOARDID2"
 
 INFO_TEXT="surrealra1n - $VERSION_DISPLAY
-适用于部分 checkm8 64 位设备的有线降级工具，iOS 7.0 - 16.6.1
+适用于部分 checkm8 64 位设备的有线降级工具，iOS 7.0 - 17.3.1
 此构建是早期测试版。使用风险自负，且可能会遇到错误。
 
 使用最新的 SHSH 文件（用于有线降级）
@@ -1250,13 +1499,13 @@ else
     echo "3. 返回"
 fi
 if [[ -d "surrealra1n.old" ]]; then
-    read -p "请输入选项（1-4）：" misc_utils_options
+    read -p "请输入选项（1-4）： " misc_utils_options
 else
-    read -p "请输入选项（1-3）：" misc_utils_options
+    read -p "请输入选项（1-3）： " misc_utils_options
 fi
 if [[ $misc_utils_options == 1 ]]; then
     echo "警告：你的所有启动文件和其余内容都将被删除（surrealra1n 目录中的任何文件都会被清除），并将全新安装 surrealra1n。"
-    read -p "你确定要重新安装 surrealra1n 吗？(y/N):" surrealra1n_reinstall
+    read -p "你确定要重新安装 surrealra1n 吗？(y/N): " surrealra1n_reinstall
     if [[ $surrealra1n_reinstall == Y || $surrealra1n_reinstall == y ]]; then
         sudo rm -rf ./*
         git clone --branch development https://github.com/pwnerblu/surrealra1n repo --recursive
@@ -1278,7 +1527,7 @@ if [[ $misc_utils_options == 1 ]]; then
 elif [[ $misc_utils_options == 2 ]]; then
     echo "警告：你的所有启动文件和恢复文件都将被删除。如果继续，之后你需要重新生成它们。"
     echo "如果你想获得更多磁盘空间，这可能会很有用。"
-    read -p "你确定要清除这些文件吗？(y/N):" clear_files    
+    read -p "你确定要清除这些文件吗？(y/N): " clear_files    
     if [[ $clear_files == y || $clear_files == Y ]]; then
         sudo rm -rf "boot"
         sudo rm -rf "restorefiles"
@@ -1298,7 +1547,7 @@ elif [[ $misc_utils_options == 3 ]] && [[ -d "surrealra1n.old" ]]; then
     fi
     echo "警告：这将把 surrealra1n 恢复为 surrealra1n.old 中备份的上一版本。"
     echo "此版本 surrealra1n 的任何新功能可能不存在于上一版本中"
-    read -p "你确定要回到上一版本吗？(y/N):" rollback_confirm
+    read -p "你确定要回到上一版本吗？(y/N): " rollback_confirm
     if [[ $rollback_confirm == Y || $rollback_confirm == y ]]; then
         rm -rf "bin"
         rm -rf "futurerestore"
@@ -1373,7 +1622,7 @@ dfu_helper(){
 
 if [[ $MODE == Normal || $MODE == Recovery ]]; then
     echo "你需要将设备置于 DFU 模式。"
-    read -p "需要操作方法说明吗？(y/n):" dfu_instructions
+    read -p "需要操作方法说明吗？(y/n): " dfu_instructions
     if [[ $dfu_instructions == y || $dfu_instructions == Y ]]; then
         echo "说明将在以下时间后开始："
         echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1" && sleep 1
@@ -1447,7 +1696,7 @@ if [[ "$CURRENT_MAJOR" -gt "$MAIN_MAJOR" ]] || \
     echo "由于你的开发版比稳定版更新，切换将需要全新重装。"
     echo "这意味着所有启动文件和恢复文件以及二进制文件都将被删除。"
     echo ""
-    read -p "你确定要切换到稳定版吗？(y/N):" switch_confirm
+    read -p "你确定要切换到稳定版吗？(y/N): " switch_confirm
     if [[ $switch_confirm == Y || $switch_confirm == y ]]; then
         sudo rm -rf ./*
         git clone --branch main https://github.com/pwnerblu/surrealra1n repo --recursive
@@ -1470,7 +1719,7 @@ else
     echo "最新稳定版是 ${MAIN_VERSION}（main 分支）。"
     echo "这将把你升级到稳定版，不会清除你的启动/恢复文件。"
     echo ""
-    read -p "是否要切换到稳定版？(y/N):" switch_confirm
+    read -p "是否要切换到稳定版？(y/N): " switch_confirm
     if [[ $switch_confirm == Y || $switch_confirm == y ]]; then
         rm -rf "surrealra1n.old"
         mkdir -p surrealra1n.old
@@ -1503,7 +1752,7 @@ dfu_helper_a11(){
 
 if [[ $MODE == Normal || $MODE == Recovery ]]; then
     echo "你需要将设备置于 DFU 模式。"
-    read -p "需要操作方法说明吗？(y/n):" dfu_instructions
+    read -p "需要操作方法说明吗？(y/n): " dfu_instructions
     if [[ $dfu_instructions == y || $dfu_instructions == Y ]] && [[ $MODE == Recovery ]]; then
         echo "说明将在以下时间后开始："
         echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1" && sleep 1
@@ -1876,16 +2125,9 @@ echo "1. 选择目标 IPSW"
 echo "2. 选择 SHSH"
 echo "3. 开始恢复"
 echo "4. 返回"
-read -p "请输入选项（1-4）：" untether_options
+read -p "请输入选项（1-4）： " untether_options
 if [[ $untether_options == 1 ]]; then
-    IPSW_PATH=$(pick_file "选择一个 IPSW 文件")
-    if [[ -z "$IPSW_PATH" ]]; then
-        echo "未选择 IPSW。中止。"
-        exit 1
-    fi
-    unzip -j "$IPSW_PATH" "BuildManifest.plist" -d work
-    BUILD=$(grep -A1 "ProductBuildVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
-    VERSION=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+    ipsw_selector target
     restore_untethered_opts
 elif [[ $untether_options == 2 ]]; then
     SHSH_PATH=$(pick_file "选择一个 SHSH2 文件")
@@ -1898,7 +2140,7 @@ elif [[ $untether_options == 2 ]]; then
     restore_untethered_opts
 elif [[ $untether_options == 3 ]]; then
     sep_checker
-    read -p "是否要为此次恢复启用跳过 SHSH 验证？(y/n):" skip_blob_det
+    read -p "是否要为此次恢复启用跳过 SHSH 验证？(y/n): " skip_blob_det
     if [[ $skip_blob_det == y || $skip_blob_det == Y ]]; then
         echo "为此恢复启用 --skip-blob 选项。"
         echo "警告：这将跳过 SHSH 文件验证，请确保你的 SHSH 有效！"
@@ -2272,11 +2514,16 @@ else
     echo "或进行完整恢复，而且这个实验性的 Linux 支持在可靠性上并不等同"
     echo "相比成熟的 macOS 实现。"
     echo ""
-    read -p "输入 YES 继续，输入其他内容则中止：" apfs_consent
+    read -p "输入 YES 继续，输入其他内容则中止： " apfs_consent
     if [[ $apfs_consent != YES ]]; then
         echo "中止。"
         exit 1
     fi
+fi
+
+if [[ $VERSION == 17.* ]] && [[ $dist == 1 || $dist == 2 || $dist == 5 ]]; then
+    echo "目前暂不支持在 Linux 上降级 iOS 17。"
+    exit 1
 fi
 
 IBSS_KEY=$(grep "ibss-$VERSION:" "$KEY_FILE" | cut -d':' -f2 | xargs)
@@ -2295,6 +2542,12 @@ if [[ $VERSION == 16.4* || $VERSION == 16.5* ]]; then
     restore_ramdisk_dmg=$(find_dmg tmp1 largest 116000000)
 elif [[ $VERSION == 16.6* ]]; then
     restore_ramdisk_dmg=$(find_dmg tmp1 largest 118000000)
+elif [[ $VERSION == 17.0* || $VERSION == 17.1* || $VERSION == 17.2* ]]; then
+    restore_ramdisk_dmg=$(find_dmg tmp1 largest 131000000)
+elif [[ $VERSION == 17.3.1 ]]; then
+    restore_ramdisk_dmg="tmp1/087-41420-059.dmg"
+elif [[ $VERSION == 17.3 ]]; then
+    restore_ramdisk_dmg="tmp1/087-41420-057.dmg"
 elif [[ $VERSION == 16.3* || $VERSION == 16.2* ]]; then
     restore_ramdisk_dmg=$(find_dmg tmp1 largest 114000000)
 elif [[ $VERSION == 16.1.2 ]]; then
@@ -2306,7 +2559,7 @@ elif [[ $VERSION == 16.1 ]]; then
 else
     restore_ramdisk_dmg=$(find_dmg tmp1 largest 148000000)
 fi
-cryptex_os=$(find_dmg tmp1 largest 3000000000)
+cryptex_os=$(find_dmg tmp1 largest 3500000000)
 cryptex_os_18=$(find_dmg_arm64e tmp2 largest 2100000000)
 cryptex_app=$(find_dmg tmp1 smallest)
 cryptex_app_18=$(find_dmg tmp2 smallest)
@@ -2349,6 +2602,9 @@ plist["BuildIdentities"][identity]["Manifest"]["KernelCache"]["Info"]["Path"] = 
 with open("tmp2/BuildManifest.plist", "wb") as f:
     plistlib.dump(plist, f)
 PY
+if [[ $VERSION == 17.* ]]; then
+    sudo plutil -replace BuildIdentities.$IDENTITY.Manifest.RestoreDeviceTree.Info.Path -string "Firmware/all_flash/DeviceTree.im4p" tmp2/BuildManifest.plist
+fi
 cp -v tmp1/Firmware/AOP/$AOP14 tmp2/Firmware/AOP/$AOP
 cp -v tmp1/Firmware/agx/$GFX tmp2/Firmware/agx/$GFX
 cp -v tmp1/Firmware/ane/$ANE tmp2/Firmware/ane/$ANE
@@ -2393,10 +2649,27 @@ cp -v tmp1/Firmware/$cryptex_app_name.trustcache tmp2/Firmware/$cryptex_app_name
 cp -v tmp1/Firmware/$cryptex_app_name.root_hash tmp2/Firmware/$cryptex_app_name_18.root_hash
 #
 ./bin/img4tool -e tmp1/$KERNEL -o work/kernel.raw
-./bin/Kernel64Patcher3 work/kernel.raw work/kernelboot.patch -e -o -we # patch cryptex1 validations
+if [[ $VERSION == 16.* ]]; then
+    ./bin/Kernel64Patcher3 work/kernel.raw work/kernelboot.patch -we # patch cryptex1 validations
+else
+    ./bin/Kernel64Patcher3 work/kernel.raw work/kernelboot.patch -we -i -ue # patch cryptex1 validations
+fi
 rm -rf tmp2/$KERNEL
 ./bin/img4 -i work/kernelboot.patch -o tmp2/$KERNEL2 -A -T krnl -J || true
-cp -v tmp1/$KERNEL tmp2/$KERNEL
+if [[ $VERSION == 16.* ]]; then
+    cp -v tmp1/$KERNEL tmp2/$KERNEL
+else
+    # do patch the other Way
+    ./bin/Kernel64Patcher3 work/kernel.raw work/kernel.patch -ue
+    ./bin/img4 -i work/kernel.patch -o tmp2/$KERNEL -A -T krnl -J || true
+    # now patch the devicetree
+    curl -L -o bin/dtpatch.py https://github.com/pwnerblu/usbliter8-fun/raw/refs/heads/main/work-27.0b4-n104/patch_dt2.py
+    ./bin/img4 -i tmp1/Firmware/all_flash/$DEVICETREE -o tmp1/DeviceTree.raw
+    python3 bin/dtpatch.py tmp1/DeviceTree.raw -o tmp1/DeviceTree.patch
+    ./bin/img4 -i tmp1/DeviceTree.patch -o tmp2/Firmware/all_flash/$DEVICETREE -A -T dtre
+    perl -pi -e 's/content-protect/content-protecV/g' tmp1/DeviceTree.raw
+    ./bin/img4 -i tmp1/DeviceTree.raw -o tmp2/Firmware/all_flash/DeviceTree.im4p -A -T rdtr
+fi
 # ramdisk patching: use hdiutil on macOS, hfsplus on Linux
 if [[ $dist == 3 || $dist == 4 ]]; then
     # macOS: use hdiutil to mount/modify the ramdisk DMG
@@ -2420,6 +2693,12 @@ if [[ $dist == 3 || $dist == 4 ]]; then
     if [[ $VERSION == 16.4* || $VERSION == 16.5* || $VERSION == 16.6* ]]; then
         ramdisk_ipsw_url="https://updates.cdn-apple.com/2023SpringFCS/fullrestores/032-68311/B777E36E-32B8-4DEF-91CE-9909B04FD22D/iPhone10,3,iPhone10,6_16.4_20E247_Restore.ipsw"
         ramdisk_dmg="078-23800-379.dmg"
+    elif [[ $VERSION == 17.0* ]]; then
+        ramdisk_ipsw_url="https://updates.cdn-apple.com/2023FallFCS/fullrestores/042-49474/5DF24914-F32D-4940-830F-3D8C8860A75B/iPad_64bit_TouchID_ASTC_17.0_21A329_Restore.ipsw"
+        ramdisk_dmg="097-83622-002.dmg"
+    elif [[ $VERSION == 17.1* || $VERSION == 17.2* || $VERSION == 17.3* ]]; then
+        ramdisk_ipsw_url="https://updates.cdn-apple.com/2023FallFCS/fullrestores/042-07636/DBDB5860-91CF-4757-B7BD-6402D4445AF2/iPad_64bit_TouchID_ASTC_17.1_21B74_Restore.ipsw"
+        ramdisk_dmg="097-22998-092.dmg"
     elif [[ $VERSION == 16.1* || $VERSION == 16.2* || $VERSION == 16.3* ]]; then
         ramdisk_ipsw_url="https://updates.cdn-apple.com/2022FallFCS/fullrestores/012-92982/6DF106AB-8868-433F-8C3F-05D50785E81E/iPhone10,3,iPhone10,6_16.1_20B82_Restore.ipsw"
         ramdisk_dmg="078-64668-109.dmg"
@@ -2502,6 +2781,12 @@ else
     elif [[ $VERSION == 16.1* || $VERSION == 16.2* || $VERSION == 16.3* ]]; then
         ramdisk_ipsw_url="https://updates.cdn-apple.com/2022FallFCS/fullrestores/012-92982/6DF106AB-8868-433F-8C3F-05D50785E81E/iPhone10,3,iPhone10,6_16.1_20B82_Restore.ipsw"
         ramdisk_dmg="078-64668-109.dmg"
+    elif [[ $VERSION == 17.0* ]]; then
+        ramdisk_ipsw_url="https://updates.cdn-apple.com/2023FallFCS/fullrestores/042-49474/5DF24914-F32D-4940-830F-3D8C8860A75B/iPad_64bit_TouchID_ASTC_17.0_21A329_Restore.ipsw"
+        ramdisk_dmg="097-83622-002.dmg"
+    elif [[ $VERSION == 17.1* || $VERSION == 17.2* || $VERSION == 17.3* ]]; then
+        ramdisk_ipsw_url="https://updates.cdn-apple.com/2023FallFCS/fullrestores/042-07636/DBDB5860-91CF-4757-B7BD-6402D4445AF2/iPad_64bit_TouchID_ASTC_17.1_21B74_Restore.ipsw"
+        ramdisk_dmg="097-22998-092.dmg"
     else
         ramdisk_ipsw_url="https://updates.cdn-apple.com/2022FallFCS/fullrestores/012-65861/0A0400A0-2174-4D49-91B7-43FC9DE24272/iPhone10,3,iPhone10,6_16.0_20A362_Restore.ipsw"
         ramdisk_dmg="098-08863-001.dmg"
@@ -2570,10 +2855,11 @@ rm -rf "tmp1"
 rm -rf "tmp2"
 mv -v custom.ipsw $restoredir/custom.ipsw
 rm -rf "work"
-if [[ $dist == 1 || $dist == 2 || $dist == 5 ]]; then
+if [[ $dist == 1 || $dist == 2 || $dist == 5 ]] && [[ $VERSION != 16.0* ]]; then
     # only needed on linux
     sudo rmmod apfs
 fi
+
 }
 
 make_custom_ipsw_a12_ios14(){
@@ -2812,7 +3098,7 @@ rm -rf "work"
 just_boot(){
 
 if [[ ! -f boot/$ECID.txt ]]; then
-    read -p "输入你想启动的版本：" VERSION
+    read -p "输入你想启动的版本： " VERSION
 else
     VERSION=$(cat boot/$ECID.txt) 
 fi
@@ -3078,7 +3364,7 @@ if [[ ! -f "$restoredir/custom.ipsw" ]] && [[ ! -f "$restoredir/ramdisk.im4p" ]]
     fi
 else
     echo "恢复文件已存在"
-    read -p "是否要生成新的？(y/n):" restorefiles_remake
+    read -p "是否要生成新的？(y/n): " restorefiles_remake
     if [[ $restorefiles_remake == Y || $restorefiles_remake == y ]]; then
         rm -rf "$restoredir"
         if [[ $IDENTIFIER == iPhone10* ]] && [[ $VERSION == 16.* ]]; then
@@ -3236,12 +3522,18 @@ elif [[ $VERSION == 16.* ]]; then
         echo "模块。它没有经过与 macOS 实现同等程度的测试，并且"
         echo "失败或中断的恢复可能使设备需要进入恢复模式或重新恢复。"
         echo ""
-        read -p "输入 YES 继续，输入其他内容则中止：" apfs_consent
+        read -p "输入 YES 继续，输入其他内容则中止： " apfs_consent
         if [[ $apfs_consent != YES ]]; then
             echo "中止。"
             exit 1
         fi
     fi
+    read -p "按回车继续"
+elif [[ $VERSION == 17.0* || $VERSION == 17.1* || $VERSION == 17.2* || $VERSION == 17.3* ]]; then
+    echo "iOS 17.x 支持是真正的实验性功能，仅限 17.0 - 17.3.1。"
+    echo "你可能会遇到大量问题（包括某些设备上基带损坏），因为我们必须修补一些东西才能让设备启动。"
+    echo "设备将无法激活。设备无法激活时，请不要刷屏 GitHub issues。"
+    echo "只有当你正在研究或想要为修复问题做出贡献时才应该这样做，这不适合普通用户。"
     read -p "按回车继续"
 elif [[ $VERSION == 17.* || $VERSION == 18.* || $VERSION == 26.* ]]; then
     echo "目前暂不支持 A12/A13 降级到 iOS 17-26"
@@ -3266,6 +3558,27 @@ if [[ $IDENTIFIER == iPhone12,1 || $IDENTIFIER == iPhone12,3 || $IDENTIFIER == i
     sleep 6
 fi
 
+restoredir="restorefiles/$IDENTIFIER/$VERSION"
+
+if [[ ! -f "$restoredir/custom.ipsw" ]]; then
+    echo "恢复文件不存在，正在生成新的"
+    if [[ $VERSION == 16.* || $VERSION == 17.* ]]; then
+        make_custom_ipsw_a12_ios16
+    else
+        make_custom_ipsw_a12_ios14
+    fi
+else
+    echo "恢复文件已存在"
+    read -p "是否要生成新的？(y/n): " restorefiles_remake
+    if [[ $restorefiles_remake == Y || $restorefiles_remake == y ]]; then
+        rm -rf "$restoredir"
+        if [[ $VERSION == 16.* || $VERSION == 17.* ]]; then
+            make_custom_ipsw_a12_ios16
+        else
+            make_custom_ipsw_a12_ios14
+        fi
+    fi
+fi
 if [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPhone12* ]]; then
     dfu_helper_a11
 else
@@ -3273,28 +3586,6 @@ else
 fi
 pwn_device
 det_rsep_flag
-
-restoredir="restorefiles/$IDENTIFIER/$VERSION"
-
-if [[ ! -f "$restoredir/custom.ipsw" ]]; then
-    echo "恢复文件不存在，正在生成新的"
-    if [[ $VERSION == 16.* ]]; then
-        make_custom_ipsw_a12_ios16
-    else
-        make_custom_ipsw_a12_ios14
-    fi
-else
-    echo "恢复文件已存在"
-    read -p "是否要生成新的？(y/n):" restorefiles_remake
-    if [[ $restorefiles_remake == Y || $restorefiles_remake == y ]]; then
-        rm -rf "$restoredir"
-        if [[ $VERSION == 16.* ]]; then
-            make_custom_ipsw_a12_ios16
-        else
-            make_custom_ipsw_a12_ios14
-        fi
-    fi
-fi
 curl -L -o bin/liter8ctl https://github.com/ahmadkamal09999-tech/usbliter8/raw/refs/heads/main/usbliter8ctl
 if [[ $dist == 1 || $dist == 2 || $dist == 5 ]]; then
     python3 bin/liter8ctl boot boot/$IDENTIFIER/iBSS.patch || true
@@ -3324,7 +3615,7 @@ if [[ $IDENTIFIER == iPhone12,8 ]]; then
     sudo LD_LIBRARY_PATH="lib" ./bin/idevicerestore -ey $restoredir/custom.ipsw
     echo "恢复已完成！如有任何错误，请查看上方输出"
     exit 0
-elif [[ $VERSION == 16.* ]] && [[ $IDENTIFIER != iPhone12,8 ]]; then
+elif [[ $VERSION == 16.* || $VERSION == 17.* ]] && [[ $IDENTIFIER != iPhone12,8 ]]; then
     sudo LD_LIBRARY_PATH="lib" ./bin/idevicerestore -ey $restoredir/custom.ipsw
     echo "恢复已完成！如有任何错误，请查看上方输出"
     exit 0
@@ -3562,7 +3853,7 @@ if [[ ! -f "$restoredir/$ipsw_custom" ]]; then
     prepare_seprmvr64_ipsw_legacy
 else
     echo "恢复文件已存在"
-    read -p "是否要生成新的？(y/n):" restorefiles_remake
+    read -p "是否要生成新的？(y/n): " restorefiles_remake
     if [[ $restorefiles_remake == Y || $restorefiles_remake == y ]]; then
         rm -rf "$restoredir"
         prepare_seprmvr64_ipsw_legacy
@@ -3598,8 +3889,6 @@ restore_tethered_opts(){
 
 clear 
 echo "$INFO_TEXT"
-echo "seprmvr64 恢复到 iOS 7 和 9 的功能未被移除。"
-echo "独立的 seprmvr64 恢复选项已被移除，因为该功能已迁移到此菜单"
 echo ""
 echo "选项："
 echo ""
@@ -3607,31 +3896,12 @@ echo "1. 选择目标 IPSW"
 echo "2. 选择基础 IPSW"
 echo "3. 开始恢复"
 echo "4. 返回"
-read -p "请输入选项（1-4）：" tether_options
+read -p "请输入选项（1-4）： " tether_options
 if [[ $tether_options == 1 ]]; then
-    IPSW_PATH=$(pick_file "选择一个 IPSW 文件")
-    if [[ -z "$IPSW_PATH" ]]; then
-        echo "未选择 IPSW。中止。"
-        exit 1
-    fi
-    rm -rf work/BuildManifest.plist
-    unzip -j "$IPSW_PATH" "BuildManifest.plist" -d work
-    BUILD=$(grep -A1 "ProductBuildVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
-    VERSION=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+    ipsw_selector target
     restore_tethered_opts
 elif [[ $tether_options == 2 ]]; then
-    IPSW_PATH_LATEST=$(pick_file "选择适用于 iOS $LATEST_VERSION 的 IPSW 文件")
-    if [[ -z "$IPSW_PATH_LATEST" ]]; then
-        echo "未选择 IPSW。中止。"
-        exit 1
-    fi
-    rm -rf work/BuildManifest.plist
-    unzip -j "$IPSW_PATH_LATEST" "BuildManifest.plist" -d work
-    VERSION_LATEST=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
-    if [[ $VERSION_LATEST != $LATEST_VERSION ]]; then
-        echo "IPSW 无效。你必须选择适用于 iOS $LATEST_VERSION 的 IPSW，而不是 iOS $VERSION_LATEST"
-        exit 1
-    fi
+    ipsw_selector base
     restore_tethered_opts
 elif [[ $tether_options == 3 ]]; then
     if [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPhone12* || $IDENTIFIER == iPad11* ]]; then
@@ -3641,7 +3911,7 @@ elif [[ $tether_options == 3 ]]; then
             echo "surrealra1n 不支持 seprmvr64 恢复到 8.x"
             exit 1
         elif [[ $VERSION == 7.* ]]; then
-            read -p "是否要在本次恢复时顺带越狱？(Y/n):" jailbreak_choice
+            read -p "是否要在本次恢复时顺带越狱？(Y/n): " jailbreak_choice
             if [[ $jailbreak_choice == Y || $jailbreak_choice == y ]]; then
                 echo "越狱选项已启用"
                 JAILBREAK=1
@@ -3731,17 +4001,9 @@ echo ""
 echo "1. 选择 10.3.3 IPSW"
 echo "2. 开始恢复"
 echo "3. 返回"
-read -p "请输入选项（1-3）：" restore_a7_options_choice
+read -p "请输入选项（1-3）： " restore_a7_options_choice
 if [[ $restore_a7_options_choice == 1 ]]; then
-    IPSW_PATH=$(pick_file "选择一个 IPSW 文件")
-    if [[ -z "$IPSW_PATH" ]]; then
-        echo "未选择 IPSW。中止。"
-        exit 1
-    fi
-    rm -rf work/BuildManifest.plist
-    unzip -j "$IPSW_PATH" "BuildManifest.plist" -d work
-    BUILD=$(grep -A1 "ProductBuildVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
-    VERSION=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
+    ipsw_selector target
     if [[ $VERSION == 10.3.3 ]] && [[ $BUILD == 14G60 ]]; then
         restore_a7_options
     else
@@ -3775,12 +4037,6 @@ if [[ $IDENTIFIER == NONE ]]; then
     return
 fi
 
-if [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPhone12* || $IDENTIFIER == iPad11* ]]; then
-    echo "A12/A13 设备支持完全是实验性的。"
-    echo "请做好遇到问题或错误的准备。"
-    read -p "按回车继续"
-fi
-
 clear 
 echo "$INFO_TEXT"
 echo ""
@@ -3791,7 +4047,7 @@ echo "2. 恢复（有线）"
 echo "3. 无栓恢复至 10.3.3（仅部分 A7 设备）"
 echo "4. 仅启动"
 echo "5. 返回"
-read -p "请输入选项（1-5）：" restore_options
+read -p "请输入选项（1-5）： " restore_options
 if [[ $restore_options == 1 ]]; then
     restore_untethered_opts
 elif [[ $restore_options == 2 ]]; then
@@ -3820,7 +4076,7 @@ echo "1. 降级选项"
 echo "2. 杂项工具"
 echo "3. 切换到 main 分支"
 echo "4. 退出"
-read -p "请输入选项（1-4）：" option
+read -p "请输入选项（1-4）： " option
 if [[ $option == 1 ]]; then
     restore_utils
 elif [[ $option == 2 ]]; then
