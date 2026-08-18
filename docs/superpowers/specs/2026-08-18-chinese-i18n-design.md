@@ -72,6 +72,7 @@ Python 脚本执行替换，规则：
 5. **颜色输出函数**：`ok()`/`info()`/`error()` 等包装函数本身不翻译（只透传 `$1`），只翻译调用处参数。
 6. **备份**：替换前生成 `surrealra1n.sh.bak_before_i18n` 备份，可回退。
 7. **error_handler**：除 GitHub 引导段落外全部翻译（"已崩溃"、"退出码"、"行号"、"失败的命令"等）。
+8. **版本号显示**：新增显示用变量 `VERSION_DISPLAY="v2.0 测试版 27 重新发布 4"`，仅用于显示输出（第 59 行、INFO_TEXT、以及译文中的版本显示）。`CURRENT_VERSION` 保持英文原值：第 354 行更新检查 `[[ $LATEST_VERSION != $CURRENT_VERSION ]]` 是字符串相等比较（latest.txt 来自上游、保持英文格式），第 1417-1418 行用 `sed 's/ beta//g'` 解析版本号，逻辑均依赖原格式；改中文会导致"永远提示有新版本"的 bug。所有显示 $CURRENT_VERSION 的 echo 处改用 $VERSION_DISPLAY，逻辑处（更新比较、oldversion.txt 写入、版本解析）保持 $CURRENT_VERSION。
 
 ## 验证
 
