@@ -1,5 +1,6 @@
 #!/bin/bash
 CURRENT_VERSION="v2.0 beta 27 re-release 4"
+VERSION_DISPLAY="v2.0 测试版 27 重新发布 4"
 
 if [ "$EUID" -eq 0 ]; then
   echo "ERROR: Do not run this script with sudo or as root."
@@ -353,7 +354,7 @@ RELEASE_NOTES=$(awk '/^RELEASE NOTES:/{flag=1; next} flag' "update/latest.txt")
 
 if [[ $LATEST_VERSION != $CURRENT_VERSION ]]; then
     echo "A new version of surrealra1n is available: $LATEST_VERSION"
-    echo "RELEASE NOTES:"
+    echo "更新说明："
     echo "$RELEASE_NOTES"
     echo ""
     echo "It is strongly recommended to update to get the latest features + bug fixes."
@@ -739,7 +740,7 @@ fi
 
 echo "Checking for dependencies that are required for usbliter8ctl, assuming Python3 is on your system"
 # Check required packages
-PACKAGES=("pyusb" "usb")
+PACKAGES=("pyusb")
 for pkg in "${PACKAGES[@]}"; do
     if pip3 show "$pkg" &>/dev/null; then
         version=$(pip3 show "$pkg" | grep Version | awk '{print $2}')
@@ -1219,19 +1220,19 @@ IBSS7="iBSS.$BOARDID.RELEASE.im4p"
 IBEC7="iBEC.$BOARDID.RELEASE.im4p"
 KERNEL10="kernelcache.release.$BOARDID2"
 
-INFO_TEXT="surrealra1n - $CURRENT_VERSION
-Tether Downgrader for some checkm8 64bit devices, iOS 7.0 - 16.6.1
-This build is an early beta. Use at your own risk, and expect bugs.
+INFO_TEXT="surrealra1n - $VERSION_DISPLAY
+适用于部分 checkm8 64 位设备的有线降级工具，iOS 7.0 - 16.6.1
+此构建是早期测试版。使用风险自负，且可能会遇到错误。
 
-Uses latest SHSH blobs (for tethered downgrades)
-iSuns9 fork of asr64_patcher is used for patching ASR
-Huge thanks to bodyc1m for iPod touch 6 support, including the Arch Linux/Fedora port they did.
-Huge thanks to Mineek for seprmvr64.
+使用最新的 SHSH 文件（用于有线降级）
+使用 iSuns9 的 asr64_patcher fork 来修补 ASR
+特别感谢 bodyc1m 对 iPod touch 6 的支持，以及他们完成的 Arch Linux/Fedora 移植。
+特别感谢 Mineek 提供 seprmvr64。
 
-Device: $NAME
-ECID: $ECID
+设备：$NAME
+ECID：$ECID
 
-Device is in $MODE mode."
+设备当前处于 $MODE 模式。"
 
 misc_utils(){
 
