@@ -11,7 +11,7 @@ SRC = "surrealra1n.sh"
 OUT = "scripts/i18n_strings.txt"
 
 LINE_RE = re.compile(
-    r'^(?:echo(?: -[a-z]+)?\s+|printf(?: -v\s+\w+)?\s+|read(?: -[a-z](?: \S+)?)*\s+-p\s+|pick_file\s+|--title=)("(?:\\.|[^"\\])*")'
+    r'^(?:(?:[A-Za-z_]\w*=\$\()?pick_file\s+|echo(?: -[a-z]+)?\s+|printf(?: -v\s+\w+)?\s+|read(?: -[a-z](?: \S+)?)*\s+-p\s+|--title=)("(?:\\.|[^"\\])*")'
 )
 
 
