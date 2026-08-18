@@ -9,6 +9,7 @@
    （唯一允许的例外: $CURRENT_VERSION -> $VERSION_DISPLAY，规格第 8 条）
 2. 改动行审计: 被修改的行必须包含 echo/printf/read/pick_file/zenity/INFO_TEXT
    等输出语句关键字（防止误改逻辑代码），且引号数为偶数
+   及 bash 3.2 变量解析隐患（$VAR 紧跟全角字符）
 3. 英文残留扫描（信息性输出，不判失败）: 列出行首为输出命令、引号内仍含
    4 个以上连续英文字母的行，供人工按 4 类判定
 """
@@ -26,6 +27,7 @@ OUTPUT_TOKENS = re.compile(
 RESIDUE_RE = re.compile(
     r'^(\s*(?:echo(?: -[a-z]+)?|printf(?: -v\s+\w+)?|read(?: -[a-z](?: \S+)?)*\s+-p|pick_file|--title=)\s*)("[^"]*[A-Za-z]{4,}[^"]*")'
 )
+BAIL_RE = re.compile(r"\$[A-Za-z_][A-Za-z0-9_]*[^\x00-\x7f]")
 
 
 def main() -> None:
@@ -42,8 +44,11 @@ def main() -> None:
         if not sep or not en or not zh:
             problems.append(f"翻译表格式错误: {line!r}")
             continue
-        ev = set(VAR_RE.findall(en))
-        zv = {("$CURRENT_VERSION" if v == "$VERSION_DISPLAY" else v) for v in VAR_RE.findall(zh)}
+        def norm(v: str) -> str:
+            return v.lstrip("$").strip("{}")
+
+        ev = {norm(v) for v in VAR_RE.findall(en)}
+        zv = {("CURRENT_VERSION" if norm(v) == "VERSION_DISPLAY" else norm(v)) for v in VAR_RE.findall(zh)}
         if ev != zv:
             problems.append(
                 f"变量不一致: {en[:60]!r}\n"
@@ -57,6 +62,8 @@ def main() -> None:
         problems.append(f"行数变化: {len(old)} -> {len(new)}")
     changed = 0
     for i, (o, n) in enumerate(zip(old, new), 1):
+        if BAIL_RE.search(n):
+            problems.append(f"第 {i} 行变量紧跟全角字符（bash 3.2 解析隐患）: {n[:80]!r}")
         if o == n:
             continue
         changed += 1

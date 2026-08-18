@@ -744,7 +744,7 @@ PACKAGES=("pyusb")
 for pkg in "${PACKAGES[@]}"; do
     if pip3 show "$pkg" &>/dev/null; then
         version=$(pip3 show "$pkg" | grep Version | awk '{print $2}')
-        echo "$pkg：$version"
+        echo "${pkg}：${version}"
     else
         echo "$pkg 未安装"
         echo "正在运行：pip3 install $pkg"
@@ -1433,7 +1433,7 @@ echo "最新稳定版：$MAIN_VERSION"
 echo ""
 
 if [[ "$CURRENT_MAJOR" == "$MAIN_MAJOR" && "$CURRENT_MINOR" == "$MAIN_MINOR" && "$CURRENT_PATCH" == "$MAIN_PATCH" ]]; then
-    echo "你当前已经处于与你当前版本等效的稳定版（$MAIN_VERSION）。"
+    echo "你当前已经处于与你当前版本等效的稳定版（${MAIN_VERSION}）。"
     echo "无需操作。"
     read -p "按回车返回"
     main_menu
@@ -1442,8 +1442,8 @@ fi
 
 if [[ "$CURRENT_MAJOR" -gt "$MAIN_MAJOR" ]] || \
    [[ "$CURRENT_MAJOR" -eq "$MAIN_MAJOR" && "$CURRENT_MINOR" -gt "$MAIN_MINOR" ]]; then
-    echo "警告：你当前使用的是 $VERSION_DISPLAY（开发分支）。"
-    echo "最新稳定版是 $MAIN_VERSION（main 分支）。"
+    echo "警告：你当前使用的是 ${VERSION_DISPLAY}（开发分支）。"
+    echo "最新稳定版是 ${MAIN_VERSION}（main 分支）。"
     echo "由于你的开发版比稳定版更新，切换将需要全新重装。"
     echo "这意味着所有启动文件和恢复文件以及二进制文件都将被删除。"
     echo ""
@@ -1459,15 +1459,15 @@ if [[ "$CURRENT_MAJOR" -gt "$MAIN_MAJOR" ]] || \
         cp -av repo/. ./
         chmod +x surrealra1n.sh
         rm -rf "repo"
-        echo "surrealra1n 已切换为稳定版 $MAIN_VERSION！请重新运行脚本。"
+        echo "surrealra1n 已切换为稳定版 ${MAIN_VERSION}！请重新运行脚本。"
         exit 0
     else
         echo "已取消切换到稳定版。"
         main_menu
     fi
 else
-    echo "你当前使用的是 $VERSION_DISPLAY（开发分支）。"
-    echo "最新稳定版是 $MAIN_VERSION（main 分支）。"
+    echo "你当前使用的是 ${VERSION_DISPLAY}（开发分支）。"
+    echo "最新稳定版是 ${MAIN_VERSION}（main 分支）。"
     echo "这将把你升级到稳定版，不会清除你的启动/恢复文件。"
     echo ""
     read -p "是否要切换到稳定版？(y/N):" switch_confirm
@@ -1489,7 +1489,7 @@ else
         cp -av repo/. ./
         chmod +x surrealra1n.sh
         rm -rf "repo"
-        echo "surrealra1n 已切换为稳定版 $MAIN_VERSION！请重新运行脚本。"
+        echo "surrealra1n 已切换为稳定版 ${MAIN_VERSION}！请重新运行脚本。"
         exit 0
     else
         echo "已取消切换到稳定版。"
@@ -2224,7 +2224,7 @@ apfs_mount() {
     fi
     echo "$loopdev $mnt" >> "$APFS_TRACK_FILE"
     if ! sudo mount -t apfs -o "$opts" "$loopdev" "$mnt"; then
-        echo "[!] 将 $img（$loopdev）作为 APFS $mode 挂载失败。"
+        echo "[!] 将 ${img}（${loopdev}）作为 APFS ${mode} 挂载失败。"
         echo "详情请检查 'dmesg | grep -i apfs'。"
         cleanup_apfs
         exit 1
@@ -2490,7 +2490,7 @@ else
         cp -v work/libimg4.patch work/rdmnt/usr/lib/libimg4.dylib
         chmod 755 work/rdmnt/usr/lib/libimg4.dylib
     else
-        echo "[!] 恢复 ramdisk（$restore_ramdisk_dmg）中的文件系统无法识别。"
+        echo "[!] 恢复 ramdisk（${restore_ramdisk_dmg}）中的文件系统无法识别。"
         echo "预期是 HFS+（iOS 16.0.x）或 APFS（iOS 16.1+）文件系统。出于安全考虑，中止操作。"
         exit 1
     fi
@@ -2519,7 +2519,7 @@ else
     elif [[ $ramdisk2_fs == "HFS" ]]; then
         ./bin/hfsplus work/ramdisk2.raw extract usr/local/bin/restored_external work/restored_external
     else
-        echo "[!] restored_external ramdisk（work/$ramdisk_dmg）中的文件系统无法识别。"
+        echo "[!] restored_external ramdisk（work/${ramdisk_dmg}）中的文件系统无法识别。"
         echo "预期是 HFS+ 或 APFS 文件系统。出于安全考虑，中止操作。"
         exit 1
     fi
@@ -2818,7 +2818,7 @@ else
 fi
 bootdir="boot/$IDENTIFIER/$VERSION"
 if [[ ! -d $bootdir ]]; then
-    echo "请先有线恢复至 iOS $VERSION，然后再尝试有线引导。"
+    echo "请先有线恢复至 iOS ${VERSION}，然后再尝试有线引导。"
     exit 1
 fi
 

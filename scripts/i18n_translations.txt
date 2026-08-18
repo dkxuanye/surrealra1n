@@ -42,28 +42,28 @@ Any new features from this surrealra1n release may not exist in the previous ver
          If loading fails below, enroll the module signature or disable Secure Boot.||| 如果下面的加载失败，请注册模块签名或禁用 Secure Boot。
 This script only supports Debian-based, Arch-based, Fedora-based and macOS systems.||| 此脚本仅支持基于 Debian、Arch、Fedora 的系统以及 macOS。
 surrealra1n has been restored to the previous version! Please run the script again.||| surrealra1n 已恢复为上一版本！请重新运行脚本。
-surrealra1n has been switched to stable $MAIN_VERSION! Please run the script again.||| surrealra1n 已切换为稳定版 $MAIN_VERSION！请重新运行脚本。
+surrealra1n has been switched to stable $MAIN_VERSION! Please run the script again.||| surrealra1n 已切换为稳定版 ${MAIN_VERSION}！请重新运行脚本。
 a failed or interrupted restore may leave the device requiring recovery or restore.||| 失败或中断的恢复可能使设备需要进入恢复模式或重新恢复。
 Invalid IPSW. You must select IPSW for iOS $LATEST_VERSION, not iOS $VERSION_LATEST||| IPSW 无效。你必须选择适用于 iOS $LATEST_VERSION 的 IPSW，而不是 iOS $VERSION_LATEST
 WARNING: Secure Boot is enabled. Loading an unsigned kernel module may be blocked.||| 警告：Secure Boot 已启用。加载未签名的内核模块可能会被阻止。
-You are already on the stable equivalent of your current version ($MAIN_VERSION).||| 你当前已经处于与你当前版本等效的稳定版（$MAIN_VERSION）。
+You are already on the stable equivalent of your current version ($MAIN_VERSION).||| 你当前已经处于与你当前版本等效的稳定版（${MAIN_VERSION}）。
 Unrecognized distro; treating as Fedora-based (zypper detected, using dnf flow).||| 无法识别的发行版；按基于 Fedora 处理（检测到 zypper，使用 dnf 流程）。
 Could not detect a compatible package manager (apt-get, pacman, dnf, or zypper).||| 无法检测到兼容的包管理器（apt-get、pacman、dnf 或 zypper）。
 Externally managed environment detected, retrying with --break-system-packages||| 检测到外部管理环境，使用 --break-system-packages 重试
     Check 'dmesg | grep -i apfs'. If Secure Boot is enabled, enroll the module||| 请检查 'dmesg | grep -i apfs'。如果启用了 Secure Boot，请注册模块签名
     Make sure loop devices are available (e.g. 'modprobe loop') and try again.||| 请确保 loop 设备可用（例如 'modprobe loop'），然后重试。
-[!] Unrecognized filesystem in restored_external ramdisk (work/$ramdisk_dmg).||| [!] restored_external ramdisk（work/$ramdisk_dmg）中的文件系统无法识别。
+[!] Unrecognized filesystem in restored_external ramdisk (work/$ramdisk_dmg).||| [!] restored_external ramdisk（work/${ramdisk_dmg}）中的文件系统无法识别。
 Sideloading outside of TrollStore may or may not work, your mileage may vary.||| 在 TrollStore 之外侧载可能会也可能不会生效，效果因人而异。
 It is strongly recommended to update to get the latest features + bug fixes.||| 强烈建议更新以获得最新功能 + 错误修复。
 WARNING: iOS 16.1+ restores on Linux are experimental. Proceed with caution.||| 警告：在 Linux 上进行 iOS 16.1+ 恢复是实验性的。请谨慎操作。
 Disconnect your device from the computer, then connect it to your Pi Pico||| 将设备从电脑断开，然后将其连接到你的 Pi Pico
-Please do a tethered restore to iOS $VERSION, then try tether boot again.||| 请先有线恢复至 iOS $VERSION，然后再尝试有线引导。
+Please do a tethered restore to iOS $VERSION, then try tether boot again.||| 请先有线恢复至 iOS ${VERSION}，然后再尝试有线引导。
     The ramdisk was NOT packed; check 'dmesg | grep -i apfs' and re-run.||| ramdisk 未被打包；请检查 'dmesg | grep -i apfs' 并重新运行。
 This means ALL boot files, restore files, and binaries will be deleted.||| 这意味着所有启动文件和恢复文件以及二进制文件都将被删除。
 This will upgrade you to stable without wiping your boot/restore files.||| 这将把你升级到稳定版，不会清除你的启动/恢复文件。
 You cannot set a Passcode or use Touch ID because of BPR being enforced||| 由于强制启用了 BPR，你无法设置锁屏密码或使用 Touch ID
-[!] Unrecognized filesystem in restore ramdisk ($restore_ramdisk_dmg).||| [!] 恢复 ramdisk（$restore_ramdisk_dmg）中的文件系统无法识别。
-WARNING: You are currently on $CURRENT_VERSION (development branch).||| 警告：你当前使用的是 $VERSION_DISPLAY（开发分支）。
+[!] Unrecognized filesystem in restore ramdisk ($restore_ramdisk_dmg).||| [!] 恢复 ramdisk（${restore_ramdisk_dmg}）中的文件系统无法识别。
+WARNING: You are currently on $CURRENT_VERSION (development branch).||| 警告：你当前使用的是 ${VERSION_DISPLAY}（开发分支）。
 If you see the error: No such device (it may have been disconnected)||| 如果你看到错误：No such device（设备可能已断开连接）
 Release the power button now, but keep holding volume down button.||| 现在松开电源键，但继续按住音量减键。
 Here is the following things that may happen on seprmvr64 restore:||| 以下是进行 seprmvr64 恢复时可能发生的情况：
@@ -94,7 +94,7 @@ A new version of surrealra1n is available: $LATEST_VERSION||| 发现 surrealra1n
 seprmvr64 restores to 8.x are not supported in surrealra1n||| surrealra1n 不支持 seprmvr64 恢复到 8.x
 Xcode Command Line Tools are not installed. Installing...||| 未安装 Xcode 命令行工具。正在安装...
 surrealra1n has been updated! Please run the script again||| surrealra1n 已更新！请重新运行脚本
-The latest stable version is $MAIN_VERSION (main branch).||| 最新稳定版是 $MAIN_VERSION（main 分支）。
+The latest stable version is $MAIN_VERSION (main branch).||| 最新稳定版是 ${MAIN_VERSION}（main 分支）。
 Restore has completed! Read above if there are any errors||| 恢复已完成！如有任何错误，请查看上方输出
 Building the APFS kernel module for kernel $(uname -r)...||| 正在为内核 $(uname -r) 构建 APFS 内核模块...
 Kernel headers for $(uname -r) are missing, installing...||| 缺少适用于 $(uname -r) 的内核头文件，正在安装...
@@ -109,7 +109,7 @@ Would you like instructions on how to do this? (y/n): ||| 需要操作方法说�
 Found APFS kernel module built for kernel $(uname -r).||| 已找到为内核 $(uname -r) 构建的 APFS 内核模块。
 Restore has finished! Read above if there's any errors||| 恢复已完成！如有任何错误，请查看上方输出
 3. Restore to 10.3.3 untethered (some A7 devices only)||| 3. 无栓恢复至 10.3.3（仅部分 A7 设备）
-Latest stable version is $MAIN_VERSION (main branch).||| 最新稳定版是 $MAIN_VERSION（main 分支）。
+Latest stable version is $MAIN_VERSION (main branch).||| 最新稳定版是 ${MAIN_VERSION}（main 分支）。
 A newer beta is available. Please update to continue.||| 有更新的测试版可用。请更新后继续。
 You are running surrealra1n on an Apple Silicon Mac.||| 你正在 Apple Silicon Mac 上运行 surrealra1n。
 Device will be unable to activate after the restore.||| 恢复后设备将无法激活。
@@ -121,7 +121,7 @@ Clearing boot files/restore files has been canceled||| 已取消清除启动文�
 [!] No device detected in normal or recovery mode.||| [!] 未在正常或恢复模式下检测到设备。
 Are you sure you want to switch to stable? (y/N): ||| 你确定要切换到稳定版吗？(y/N): 
 Press enter to continue once Device is in Recovery||| 设备进入恢复模式后按回车继续
-[!] Failed to mount $img ($loopdev) as APFS $mode.||| [!] 将 $img（$loopdev）作为 APFS $mode 挂载失败。
+[!] Failed to mount $img ($loopdev) as APFS $mode.||| [!] 将 ${img}（${loopdev}）作为 APFS ${mode} 挂载失败。
 SEP is partially incompatible, read the following:||| SEP 部分不兼容，请阅读以下内容：
 This means: Precise findings for AirTags and such.||| 这意味着：AirTags 等的精确查找将不可用。
 3. Password protected Wi-Fi networks will not work||| 3. 受密码保护的 Wi-Fi 网络将无法使用
@@ -129,7 +129,7 @@ seprmvr64 restores to iOS 7 and 9 are not removed.||| seprmvr64 恢复到 iOS 7 
 This OTA restore will use $LATEST_VERSION baseband||| 此 OTA 恢复将使用 $LATEST_VERSION 基带
 Missing packages detected: ${MISSING_PACKAGES[*]}||| 检测到缺少软件包：${MISSING_PACKAGES[*]}
 2. Clear all created boot files and restore files||| 2. 清除所有已创建的启动文件和恢复文件
-You are on $CURRENT_VERSION (development branch).||| 你当前使用的是 $VERSION_DISPLAY（开发分支）。
+You are on $CURRENT_VERSION (development branch).||| 你当前使用的是 ${VERSION_DISPLAY}（开发分支）。
 Put your device into recovery mode, then continue||| 将设备置于恢复模式，然后继续
 [!] APFS ramdisk verification failed after write.||| [!] 写入后 APFS ramdisk 验证失败。
 surrealra1n only supports macOS 10.14 and later.||| surrealra1n 仅支持 macOS 10.14 及更高版本。
@@ -282,7 +282,7 @@ Device is pwned!||| 设备已破解！
 [+] ECID: $ECID||| [+] ECID：$ECID
 Removing powerd||| 正在移除 powerd
 IPSW is invalid||| IPSW 无效
-$pkg: $version||| $pkg：$version
+$pkg: $version||| ${pkg}：${version}
 2. Select SHSH||| 2. 选择 SHSH
 Sending iBSS||| 正在发送 iBSS
 Sending iBEC||| 正在发送 iBEC
