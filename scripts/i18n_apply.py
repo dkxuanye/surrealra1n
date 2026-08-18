@@ -9,6 +9,7 @@
 2. 按字符串长度从长到短排序替换（长文本优先，避免短串误伤长串中的子串）
 3. 逐条统计替换次数，0 次替换的条目输出警告（提示表与原文不符）
 """
+import re
 import shutil
 import sys
 
@@ -26,7 +27,7 @@ def load_table() -> list[tuple[str, str]]:
         en, sep, zh = line.partition("|||")
         if not sep:
             raise SystemExit(f"翻译表缺少分隔符 |||: {line!r}")
-        zh = zh.strip()
+        zh = zh.lstrip()
         if not en or not zh:
             raise SystemExit(f"翻译表格式错误（英文或译文为空）: {line!r}")
         entries.append((en, zh))
@@ -39,6 +40,11 @@ def main() -> None:
     shutil.copyfile(src, backup)
     print(f"已备份原文件 -> {backup}")
     text = open(src, encoding="utf-8").read()
+    if re.search(r"[\u4e00-\u9fff]", text):
+        raise SystemExit(
+            f"目标文件已包含中文，可能已翻译过。\n"
+            f"请先从备份恢复英文原版后再运行（备份: {backup}）"
+        )
     stats = []
     for en, zh in load_table():
         n = text.count(en)
@@ -52,6 +58,7 @@ def main() -> None:
     print(f"翻译表条目: {len(stats)}，成功替换 {done} 条，共替换 {total} 处")
     if done < len(stats):
         print("存在未匹配的条目，请检查警告信息后重试（文件已回写，注意从备份恢复）")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
