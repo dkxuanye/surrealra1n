@@ -1,6 +1,0 @@
-#!/bin/bash
-# 模拟 idevice_id -l：Normal 状态下列出设备
-if [[ "$MOCK_STATE" == "Normal" ]]; then
-    echo "00008101-000228D83EC0001E"
-fi
-exit 0

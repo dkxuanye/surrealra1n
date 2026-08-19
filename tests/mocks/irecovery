@@ -1,20 +1,18 @@
 #!/bin/bash
-# 模拟 irecovery -q：MOCK_STATE=DFU|Recovery|Normal|NONE
-# MOCK_DFU_AFTER=n：第 n 次调用起转为 DFU（用于测试“引导过程中进入 DFU”）
-# MOCK_MODEL：Recovery 模式下输出的板型（默认 d79ap）
-state="$MOCK_STATE"
-if [[ -n "${MOCK_DFU_AFTER:-}" ]]; then
-    counter_file="${MOCK_COUNTER_FILE:-/tmp/dfu_guide_mock_counter}"
-    n=$(cat "$counter_file" 2>/dev/null || echo 0)
-    n=$((n + 1))
-    echo "$n" > "$counter_file"
-    if (( n >= MOCK_DFU_AFTER )); then
-        state="DFU"
-    fi
+# 模拟 irecovery：-q 查询；-n 重启（写入 MOCK_STATE_FILE 并递增 MOCK_COUNTER_FILE）
+if [[ "$1" == "-q" ]]; then
+    case "${MOCK_STATE:-}" in
+        DFU)      echo "CPID: ${MOCK_CPID:-0x8030}"
+                  echo "PRODUCT: ${MOCK_PRODUCT:-iPhone12,8}"
+                  echo "MODE: DFU" ;;
+        Recovery) echo "CPID: ${MOCK_CPID:-0x8030}"
+                  echo "PRODUCT: ${MOCK_PRODUCT:-iPhone12,8}"
+                  echo "MODE: Recovery" ;;
+        *)        exit 1 ;;
+    esac
+elif [[ "$1" == "-n" ]]; then
+    echo "Recovery" > "${MOCK_STATE_FILE:-/tmp/dfu_guide_mock_state}"
+    n=$(cat "${MOCK_COUNTER_FILE:-/tmp/dfu_guide_mock_counter}" 2>/dev/null || echo 0)
+    echo "$((n + 1))" > "${MOCK_COUNTER_FILE:-/tmp/dfu_guide_mock_counter}"
 fi
-case "$state" in
-    DFU)      echo "MODE: DFU" ;;
-    Recovery) echo "MODE: Recovery"
-              echo "MODEL: ${MOCK_MODEL:-d79ap}" ;;
-    *)        exit 1 ;;
-esac
+exit 0

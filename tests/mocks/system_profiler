@@ -1,5 +1,6 @@
 #!/bin/bash
-# 模拟 lsusb（Linux 分支），逻辑同 system_profiler mock
+# 模拟 system_profiler SPUSBDataType：状态来自 MOCK_STATE 或 MOCK_STATE_FILE；
+# MOCK_DFU_AFTER=n 表示计数达到 n 后转为 DFU（模拟引导过程中进入 DFU）
 state="${MOCK_STATE:-}"
 if [[ -f "${MOCK_STATE_FILE:-/tmp/dfu_guide_mock_state}" ]]; then
     state=$(cat "${MOCK_STATE_FILE:-/tmp/dfu_guide_mock_state}")
@@ -11,7 +12,8 @@ if [[ -n "${MOCK_DFU_AFTER:-}" ]]; then
     fi
 fi
 case "$state" in
-    DFU)      echo "Bus 001 Device 002: ID 05ac:1227 Apple, Inc." ;;
-    Recovery) echo "Bus 001 Device 002: ID 05ac:1281 Apple, Inc." ;;
-    Normal)   echo "Bus 001 Device 002: ID 05ac:12a8 Apple, Inc." ;;
+    DFU)      echo "          Product ID: 0x1227" ;;
+    Recovery) echo "          Product ID: 0x1281" ;;
+    Normal)   echo "          Product ID: 0x12a8" ;;
 esac
+echo "          Vendor ID: 0x05ac"

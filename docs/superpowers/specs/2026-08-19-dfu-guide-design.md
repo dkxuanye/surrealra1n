@@ -13,17 +13,33 @@ surrealra1n 的恢复/降级流程需要设备进入 DFU 模式，现有 `dfu_he
 
 ## 架构与组件
 
-每个函数单一职责：
+每个函数单一职责（实现参照 Downr1n downr1n.sh _dfuhelper 的成熟流程）：
 
 | 函数 | 职责 |
 |---|---|
-| `detect_device_state()` | 输出设备状态：`DFU` / `Recovery` / `Normal` / `NONE` |
-| `identify_model()` | 输出机型（如 iPhone12,8），供按键组合决策；拿不到时按有无 Home 键询问用户 |
-| `guide_to_dfu()` | 分步按键引导（按机型分支）+ 倒计时 |
-| `wait_for_dfu()` | 轮询验证进入 DFU（`irecovery -q` 的 MODE + USB VID/PID 兜底） |
+| `get_device_mode()` | 输出设备状态：`dfu` / `recovery` / `normal` / `none`（USB VID/PID 判定：12a8/12aa/12ab=normal、1281=recovery、1227=dfu） |
+| `_info()` | 查询设备信息：recovery 用 irecovery -q（CPID/PRODUCT），normal 用 ideviceinfo（ProductType） |
+| `step()` | 倒计时步骤：每秒显示提示；检测到 DFU 立即结束；10 秒步骤在设备出现时提前结束 |
+| `_dfuhelper()` | 引导流程：`irecovery -n` 重启设备 → 重启期间按住按键 → 实时检测 → 失败自动重试（默认 3 次） |
 | `main()` | 菜单：1. 引导进 DFU 2. 仅检测状态 3. 退出 |
 
-依赖：仅项目已有的 `./bin/irecovery`、`idevice_id`、`ideviceinfo`，无新依赖。
+依赖：仅项目已有的 `./bin/irecovery`、`ideviceinfo`（正常模式取机型），无新依赖。
+
+## 按键组合判定（CPID + 机型）
+
+- `irecovery -q` 取 CPID（恢复/DFU 模式）；正常模式无 CPID 时用 ProductType 前缀回退
+- **iPad（ProductType 含 iPad）→ 电源 + 返回键(Home)**
+- **A10-A13（CPID `0x801*` 或 `0x8030`，即 iPhone 7 及以后）→ 电源 + 音量减**（注：A13 的 CPID 是 0x8030，不匹配 `0x801*`，必须单独列出——实机验证的关键坑）
+- 其他（A7-A9）→ 电源 + 返回键(Home)
+- 正常模式无 CPID 时：iPhone10,*-iPhone2x,* → 音量减；其余 → Home
+
+## 引导流程（Downr1n 流程）
+
+1. 已在 DFU → 直接成功
+2. 判定按键组合
+3. `irecovery -n` 让设备重启（关键步骤：从恢复/正常状态重启期间按住按键才能可靠进 DFU）
+4. `step 4 "按住 ..."` → `step 10 "松开 电源键, 继续按住 ..."`（实时检测 DFU，提前结束）
+5. 检测到 DFU → 成功退出 0；仍是 recovery 或未出现 → 重试（默认 3 次）；超限 → 失败退出 1
 
 ## 检测逻辑
 
