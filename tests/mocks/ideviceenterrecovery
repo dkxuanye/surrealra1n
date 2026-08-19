@@ -1,0 +1,6 @@
+#!/bin/bash
+# 模拟 ideviceenterrecovery <udid>：切换到恢复模式（写入 MOCK_STATE_FILE 并递增计数）
+echo "Recovery" > "${MOCK_STATE_FILE:-/tmp/dfu_guide_mock_state}"
+n=$(cat "${MOCK_COUNTER_FILE:-/tmp/dfu_guide_mock_counter}" 2>/dev/null || echo 0)
+echo "$((n + 1))" > "${MOCK_COUNTER_FILE:-/tmp/dfu_guide_mock_counter}"
+exit 0

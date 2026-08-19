@@ -87,10 +87,13 @@ prep_countdown() {
 
 # 正常模式 → 恢复模式（自动工具优先，失败给手动指引并等待）
 enter_recovery() {
-    local waited=0 mode tool=""
+    local waited=0 mode tool udid
     echo "正在切换到恢复模式..."
+    udid=$(idevice_id -l 2>/dev/null | head -1)
     if command -v ideviceenterrecovery >/dev/null 2>&1; then
-        tool="ideviceenterrecovery"
+        tool="ideviceenterrecovery $udid"
+    elif [[ -x "$(ls /usr/local/Cellar/libimobiledevice/*/bin/ideviceenterrecovery 2>/dev/null | head -1)" ]]; then
+        tool="$(ls /usr/local/Cellar/libimobiledevice/*/bin/ideviceenterrecovery 2>/dev/null | head -1) $udid"
     elif [[ -x "$IDEVICERESTORE" ]]; then
         tool="$IDEVICERESTORE -e"
     elif command -v idevicerestore >/dev/null 2>&1; then
