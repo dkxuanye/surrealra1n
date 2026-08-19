@@ -84,6 +84,34 @@ prep_countdown() {
     printf '\e[0m\n'
 }
 
+# 正常模式 → 恢复模式（自动工具优先，失败给手动指引并等待）
+enter_recovery() {
+    local waited=0 mode
+    echo "正在切换到恢复模式..."
+    if command -v ideviceenterrecovery >/dev/null 2>&1; then
+        ideviceenterrecovery >/dev/null 2>&1
+    elif command -v idevicerestore >/dev/null 2>&1; then
+        idevicerestore -e >/dev/null 2>&1
+    else
+        echo "无法自动进入恢复模式，请手动操作："
+        echo "按住「音量减 + 电源键」，直到屏幕出现恢复模式画面后松开。"
+    fi
+    while (( waited < 15 )); do
+        mode=$(get_device_mode | head -1)
+        if [[ "$mode" == "recovery" ]]; then
+            return 0
+        fi
+        if [[ "$DFU_GUIDE_NO_COUNTDOWN" == "1" ]]; then
+            waited=$((waited + 1))
+            continue
+        fi
+        sleep 1
+        waited=$((waited + 1))
+    done
+    echo "未检测到恢复模式，请手动进入恢复模式后重试。"
+    return 1
+}
+
 # 引导进 DFU（Downr1n _dfuhelper 流程，带重试上限）
 _dfuhelper() {
     local attempts=0 cpid deviceid step_one step_two
@@ -99,6 +127,9 @@ _dfuhelper() {
         attempts=$((attempts + 1))
         echo ""
         echo "第 ${attempts} 次尝试（共 ${DFU_GUIDE_MAX_RETRIES} 次）："
+        if [[ "$(get_device_mode | head -1)" == "normal" ]]; then
+            enter_recovery || continue
+        fi
         cpid=$(_info recovery CPID | xargs)
         deviceid=$(_info recovery PRODUCT | xargs)
         if [[ -z "$deviceid" ]]; then
