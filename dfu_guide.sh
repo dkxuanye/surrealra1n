@@ -71,6 +71,19 @@ step() {
     printf '\e[0m\n'
 }
 
+# 准备倒计时（可跳过）
+prep_countdown() {
+    local i
+    if [[ "$DFU_GUIDE_NO_COUNTDOWN" == "1" ]]; then
+        return
+    fi
+    for i in 3 2 1; do
+        printf '\r\e[K\e[1;33m请准备：%d' "$i"
+        sleep 1
+    done
+    printf '\e[0m\n'
+}
+
 # 引导进 DFU（Downr1n _dfuhelper 流程，带重试上限）
 _dfuhelper() {
     local attempts=0 cpid deviceid step_one step_two
@@ -105,8 +118,9 @@ _dfuhelper() {
             step_two="松开 电源键, 继续按住 返回键(Home)"
         fi
         echo "按键组合：$step_one"
-        echo "请将手指放在按键上做好准备，然后按回车开始（设备将重启，按键期间请勿松开）："
+        echo "按回车开始引导，请同时将手指放在按键上做好准备："
         read -r _ || true
+        prep_countdown
         "$IRECOVERY" -n 2>/dev/null
         step 4 "$step_one"
         step 10 "$step_two"
