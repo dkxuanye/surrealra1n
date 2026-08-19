@@ -105,6 +105,8 @@ _dfuhelper() {
             step_two="松开 电源键, 继续按住 返回键(Home)"
         fi
         echo "按键组合：$step_one"
+        echo "请将手指放在按键上做好准备，然后按回车开始（设备将重启，按键期间请勿松开）："
+        read -r _ || true
         "$IRECOVERY" -n 2>/dev/null
         step 4 "$step_one"
         step 10 "$step_two"
