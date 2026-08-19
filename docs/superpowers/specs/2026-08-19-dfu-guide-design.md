@@ -41,7 +41,7 @@ surrealra1n 的恢复/降级流程需要设备进入 DFU 模式，现有 `dfu_he
 
 机型识别：
 - Normal：`ideviceinfo` 取 `ProductType`
-- Recovery：`irecovery -q` 取 `PRODUCT`
+- Recovery：`irecovery -q` 取 `PRODUCT`（板型，如 d79ap），用板型→按键映射表判断（iPhone 5s/6/6s/SE1 板型 n51ap/n53ap/n61ap/n56ap/n66ap/n71ap/n69ap → Home 键；d* 板型（iPhone 7 及以后）→ 音量减；j* 板型（surrealra1n 支持的 A7-A13 iPad 全部带 Home）→ Home 键）
 - 两者都拿不到：按有无 Home 键询问用户
 
 按键组合映射（覆盖 A7-A13，按"DFU 进入是否使用 Home 键"判定）：
