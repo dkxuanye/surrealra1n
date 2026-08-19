@@ -1,0 +1,3 @@
+#!/bin/bash
+# 模拟 USB 枚举：测试中不产生 VID/PID 匹配
+exit 0

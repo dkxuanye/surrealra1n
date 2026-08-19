@@ -1,0 +1,6 @@
+#!/bin/bash
+# 模拟 ideviceinfo -k ProductType（仅 Normal 状态返回）
+if [[ "$MOCK_STATE" == "Normal" ]] && [[ "$1" == "-k" && "$2" == "ProductType" ]]; then
+    echo "iPhone12,8"
+fi
+exit 0
