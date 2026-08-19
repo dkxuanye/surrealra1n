@@ -127,9 +127,6 @@ _dfuhelper() {
         attempts=$((attempts + 1))
         echo ""
         echo "第 ${attempts} 次尝试（共 ${DFU_GUIDE_MAX_RETRIES} 次）："
-        if [[ "$(get_device_mode | head -1)" == "normal" ]]; then
-            enter_recovery || continue
-        fi
         cpid=$(_info recovery CPID | xargs)
         deviceid=$(_info recovery PRODUCT | xargs)
         if [[ -z "$deviceid" ]]; then
@@ -149,6 +146,9 @@ _dfuhelper() {
             step_two="松开 电源键, 继续按住 返回键(Home)"
         fi
         echo "按键组合：$step_one"
+        if [[ "$(get_device_mode | head -1)" == "normal" ]]; then
+            enter_recovery || continue
+        fi
         echo "按回车开始引导，请同时将手指放在按键上做好准备："
         read -r _ || true
         prep_countdown
