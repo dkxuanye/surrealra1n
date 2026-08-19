@@ -19,6 +19,7 @@ DFU_GUIDE_NO_COUNTDOWN="${DFU_GUIDE_NO_COUNTDOWN:-0}"
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 IRECOVERY="${IRECOVERY:-$SCRIPT_DIR/bin/irecovery}"
+IDEVICERESTORE="${IDEVICERESTORE:-$SCRIPT_DIR/bin/idevicerestore}"
 
 trap 'echo ""; echo "已取消"; exit 130' INT
 
@@ -86,12 +87,18 @@ prep_countdown() {
 
 # 正常模式 → 恢复模式（自动工具优先，失败给手动指引并等待）
 enter_recovery() {
-    local waited=0 mode
+    local waited=0 mode tool=""
     echo "正在切换到恢复模式..."
     if command -v ideviceenterrecovery >/dev/null 2>&1; then
-        ideviceenterrecovery >/dev/null 2>&1
+        tool="ideviceenterrecovery"
+    elif [[ -x "$IDEVICERESTORE" ]]; then
+        tool="$IDEVICERESTORE -e"
     elif command -v idevicerestore >/dev/null 2>&1; then
-        idevicerestore -e >/dev/null 2>&1
+        tool="idevicerestore -e"
+    fi
+    if [[ -n "$tool" ]]; then
+        echo "正在使用 ${tool} 切换..."
+        $tool >/dev/null 2>&1
     else
         echo "无法自动进入恢复模式，请手动操作："
         echo "按住「音量减 + 电源键」，直到屏幕出现恢复模式画面后松开。"

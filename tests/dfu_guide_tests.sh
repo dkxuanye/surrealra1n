@@ -24,7 +24,8 @@ check() { # check <名称> <期望包含> <实际输出> <期望退出码> <实�
 run() { # run <MOCK_STATE> <stdin内容> <参数...>  → 全局 out/rc
     local state="$1" input="$2"
     shift 2
-    out=$(IRECOVERY="$MOCKS/irecovery" PATH="$MOCKS:$PATH" MOCK_STATE="$state" \
+    out=$(IRECOVERY="$MOCKS/irecovery" IDEVICERESTORE="$MOCKS/idevicerestore" \
+        PATH="$MOCKS:$PATH" MOCK_STATE="$state" \
         MOCK_STATE_FILE="$STATEDIR/state" MOCK_COUNTER_FILE="$STATEDIR/counter" \
         MOCK_PRODUCT="${MOCK_PRODUCT:-}" MOCK_DFU_AFTER="${MOCK_DFU_AFTER:-}" \
         DFU_GUIDE_MAX_RETRIES=3 DFU_GUIDE_NO_COUNTDOWN=1 \
@@ -77,6 +78,10 @@ check "正常模式+6s（Home 组合）" "返回键" "$out" 1 "$rc"
 reset_state
 MOCK_PRODUCT=iPad11,2 run Recovery "" boot
 check "恢复模式+iPad（Home 组合）" "返回键" "$out" 1 "$rc"
+
+reset_state
+MOCK_DFU_AFTER=1 run Normal "" boot
+check "正常模式自动切恢复后引导成功" "已进入 DFU 模式" "$out" 0 "$rc"
 
 # --- 菜单 ---
 reset_state

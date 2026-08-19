@@ -1,0 +1,8 @@
+#!/bin/bash
+# 模拟 idevicerestore -e：切换到恢复模式（写入 MOCK_STATE_FILE 并递增计数）
+if [[ "$1" == "-e" ]]; then
+    echo "Recovery" > "${MOCK_STATE_FILE:-/tmp/dfu_guide_mock_state}"
+    n=$(cat "${MOCK_COUNTER_FILE:-/tmp/dfu_guide_mock_counter}" 2>/dev/null || echo 0)
+    echo "$((n + 1))" > "${MOCK_COUNTER_FILE:-/tmp/dfu_guide_mock_counter}"
+fi
+exit 0
