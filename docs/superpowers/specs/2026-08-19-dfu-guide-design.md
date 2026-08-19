@@ -44,9 +44,10 @@ surrealra1n 的恢复/降级流程需要设备进入 DFU 模式，现有 `dfu_he
 - Recovery：`irecovery -q` 取 `PRODUCT`
 - 两者都拿不到：按有无 Home 键询问用户
 
-按键组合映射（覆盖 A7-A13）：
-- 有 Home 键（iPhone6,1~iPhone8 系、SE1、带 Home 的 iPad）：按住电源+Home 10 秒 → 松开电源 → 继续按住 Home 直到 DFU
-- 无 Home 键（iPhone X/XR/XS/11/SE2/SE3/12/13、无 Home 的 iPad）：按住电源+音量减 10 秒 → 松开电源 → 继续按住音量减直到 DFU
+按键组合映射（覆盖 A7-A13，按"DFU 进入是否使用 Home 键"判定）：
+- 使用 Home 键（iPhone 6s 及更早、SE1、iPod touch、带 Home 的 iPad 含 iPad Air 3/iPad 8/9 代）：按住电源+Home 10 秒 → 松开电源 → 继续按住 Home 直到 DFU
+- 使用音量减（iPhone 7/8/8+/X 及以后所有 iPhone 含 SE2/SE3、无 Home 的 iPad Pro/Air 4+/mini 6+）：按住电源+音量减 10 秒 → 松开电源 → 继续按住音量减直到 DFU
+  （注：iPhone 8/8+ 虽有实体 Home 键但为固态按键，DFU 进入使用电源+音量减，与 iPhone 7 相同）
 
 验证循环：每 1 秒轮询 `irecovery -q`，`MODE: DFU` 即成功；兜底 USB VID/PID = 1227；默认超时 120 秒，`DFU_GUIDE_TIMEOUT` 环境变量可覆盖。
 
@@ -80,7 +81,10 @@ surrealra1n 的恢复/降级流程需要设备进入 DFU 模式，现有 `dfu_he
 | 引导超时（120s 未进入） | 提示检查按键操作，建议重试 | 1 |
 | 检测不到设备 | 提示检查连接线/USB 口，循环等待或退出 | 1 |
 | irecovery 不存在 | 提示运行依赖检查 | 1 |
-| 用户中途 Ctrl+C / 选退出 | 干净退出 | 130 / 2 |
+| 用户 Ctrl+C | 干净退出 | 130 |
+| 菜单选 3 退出 | 显示"正在退出" | 2 |
+
+菜单选项 2（仅检测设备状态）执行后刷新状态并返回菜单（不退出）。
 
 ## 测试
 
