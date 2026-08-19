@@ -1,3 +1,7 @@
 #!/bin/bash
-# 模拟 USB 枚举：测试中不产生 VID/PID 匹配
+# 模拟 USB 枚举：MOCK_USB_PID 非空时输出 ioreg 风格 idProduct（十进制）
+if [[ -n "${MOCK_USB_PID:-}" ]]; then
+    echo '"idProduct" = '"$MOCK_USB_PID"
+    echo '"idVendor" = 1452'
+fi
 exit 0

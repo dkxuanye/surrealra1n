@@ -81,11 +81,9 @@ has_home_button() {
     case "$1" in
         iPod* | iPhone1,* | iPhone2,* | iPhone3,* | iPhone4,* | iPhone5,* | iPhone6,* | iPhone7,* | iPhone8,*)
             return 0 ;;
-        iPhone10,1 | iPhone10,2 | iPhone10,4 | iPhone10,5)
-            return 0 ;;
         iPhone*)
             return 1 ;;
-        iPad1,* | iPad2,* | iPad3,* | iPad4,* | iPad5,* | iPad6,* | iPad7,* | iPad11,6 | iPad11,7 | iPad12,1 | iPad12,2)
+        iPad1,* | iPad2,* | iPad3,* | iPad4,* | iPad5,* | iPad6,* | iPad7,* | iPad11,3 | iPad11,4 | iPad11,6 | iPad11,7 | iPad12,1 | iPad12,2)
             return 0 ;;
         iPad*)
             return 1 ;;
@@ -143,16 +141,22 @@ guide_to_dfu() {
     echo "③ 保持按住，等待自动进入 DFU 模式..."
 }
 
-# 轮询验证进入 DFU（irecovery + USB VID/PID 兜底）
+# 打印设备状态描述
+print_state() {
+    case "$1" in
+        DFU)      echo "设备状态：DFU 模式（已就绪）" ;;
+        Recovery) echo "设备状态：恢复模式" ;;
+        Normal)   echo "设备状态：正常模式" ;;
+        *)        echo "设备状态：未检测到设备" ;;
+    esac
+}
+
+# 轮询验证进入 DFU（依赖 detect_device_state 的 irecovery + USB VID/PID 检测）
 wait_for_dfu() {
     local waited=0 state
     while (( waited < DFU_GUIDE_TIMEOUT )); do
         state=$(detect_device_state)
         if [[ "$state" == "DFU" ]]; then
-            echo "✅ 设备已进入 DFU 模式！"
-            return 0
-        fi
-        if usb_devices | grep -qiE "idProduct.*(1227|4647)|$DFU_VID:$DFU_PID_DFU"; then
             echo "✅ 设备已进入 DFU 模式！"
             return 0
         fi
@@ -169,12 +173,7 @@ main() {
     local action="${1:-menu}" state opt
     state=$(detect_device_state)
     if [[ "$action" == "check" ]]; then
-        case "$state" in
-            DFU)      echo "设备状态：DFU 模式（已就绪）" ;;
-            Recovery) echo "设备状态：恢复模式" ;;
-            Normal)   echo "设备状态：正常模式" ;;
-            *)        echo "设备状态：未检测到设备" ;;
-        esac
+        print_state "$state"
         return 0
     fi
     if [[ "$state" == "DFU" ]]; then
@@ -198,8 +197,8 @@ main() {
         read -p "请输入选项（1-3）：" opt || return 0
         case "$opt" in
             1) guide_to_dfu; wait_for_dfu; return $? ;;
-            2) main check; return 0 ;;
-            3) echo "正在退出"; return 0 ;;
+            2) state=$(detect_device_state); print_state "$state" ;;
+            3) echo "正在退出"; return 2 ;;
             *) echo "无效的选项。" ;;
         esac
     done

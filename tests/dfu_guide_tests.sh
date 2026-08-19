@@ -24,6 +24,7 @@ run() { # run <MOCK_STATE> <stdin内容> <参数...>  → 全局 out/rc
     local state="$1" input="$2"
     shift 2
     out=$(IRECOVERY="$MOCKS/irecovery" PATH="$MOCKS:$PATH" MOCK_STATE="$state" \
+        MOCK_USB_PID="${MOCK_USB_PID:-}" \
         DFU_GUIDE_TIMEOUT=3 DFU_GUIDE_NO_COUNTDOWN=1 \
         bash "$ROOT/dfu_guide.sh" "$@" 2>&1 <<<"$input")
     rc=$?
@@ -63,10 +64,19 @@ rm -f /tmp/dfu_guide_mock_counter
 run NONE "n" boot
 check "无机型时询问 Home 键（n）" "音量减键" "$out" 1 "$rc"
 
+# --- USB VID/PID 兜底检测 ---
+unset MOCK_USB_PID
+MOCK_USB_PID=4647 run NONE "" check
+check "VID/PID 兜底：DFU" "DFU 模式" "$out" 0 "$rc"
+
+MOCK_USB_PID=4737 run NONE "" check
+check "VID/PID 兜底：Recovery" "恢复模式" "$out" 0 "$rc"
+unset MOCK_USB_PID
+
 # --- 菜单 ---
 rm -f /tmp/dfu_guide_mock_counter
 run Normal "3"
-check "菜单退出" "正在退出" "$out" 0 "$rc"
+check "菜单退出" "正在退出" "$out" 2 "$rc"
 
 echo ""
 echo "通过 ${PASS}，失败 ${FAIL}"
