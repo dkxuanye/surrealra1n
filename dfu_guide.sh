@@ -83,7 +83,7 @@ has_home_button() {
             return 0 ;;
         iPhone*)
             return 1 ;;
-        iPad1,* | iPad2,* | iPad3,* | iPad4,* | iPad5,* | iPad6,* | iPad7,* | iPad11,3 | iPad11,4 | iPad11,6 | iPad11,7 | iPad12,1 | iPad12,2)
+        iPad1,* | iPad2,* | iPad3,* | iPad4,* | iPad5,* | iPad6,* | iPad7,* | iPad11,1 | iPad11,2 | iPad11,3 | iPad11,4 | iPad11,6 | iPad11,7 | iPad12,1 | iPad12,2)
             return 0 ;;
         iPad*)
             return 1 ;;
