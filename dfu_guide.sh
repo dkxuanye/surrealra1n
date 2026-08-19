@@ -19,6 +19,7 @@ DFU_GUIDE_NO_COUNTDOWN="${DFU_GUIDE_NO_COUNTDOWN:-0}"
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 IRECOVERY="${IRECOVERY:-$SCRIPT_DIR/bin/irecovery}"
+IDEVICEENTER="${IDEVICEENTER:-$SCRIPT_DIR/bin/ideviceenterrecovery}"
 IDEVICERESTORE="${IDEVICERESTORE:-$SCRIPT_DIR/bin/idevicerestore}"
 
 trap 'echo ""; echo "已取消"; exit 130' INT
@@ -90,10 +91,10 @@ enter_recovery() {
     local waited=0 mode tool udid
     echo "正在切换到恢复模式..."
     udid=$(idevice_id -l 2>/dev/null | head -1)
-    if command -v ideviceenterrecovery >/dev/null 2>&1; then
+    if [[ -x "$IDEVICEENTER" ]]; then
+        tool="$IDEVICEENTER $udid"
+    elif command -v ideviceenterrecovery >/dev/null 2>&1; then
         tool="ideviceenterrecovery $udid"
-    elif [[ -x "$(ls /usr/local/Cellar/libimobiledevice/*/bin/ideviceenterrecovery 2>/dev/null | head -1)" ]]; then
-        tool="$(ls /usr/local/Cellar/libimobiledevice/*/bin/ideviceenterrecovery 2>/dev/null | head -1) $udid"
     elif [[ -x "$IDEVICERESTORE" ]]; then
         tool="$IDEVICERESTORE -e"
     elif command -v idevicerestore >/dev/null 2>&1; then

@@ -1,3 +1,4 @@
 bin/*
 !bin/notice.txt
+!bin/ideviceenterrecovery
 apfs/  

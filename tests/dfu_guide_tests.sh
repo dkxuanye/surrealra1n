@@ -24,7 +24,8 @@ check() { # check <名称> <期望包含> <实际输出> <期望退出码> <实�
 run() { # run <MOCK_STATE> <stdin内容> <参数...>  → 全局 out/rc
     local state="$1" input="$2"
     shift 2
-    out=$(IRECOVERY="$MOCKS/irecovery" IDEVICERESTORE="$MOCKS/idevicerestore" \
+    out=$(IRECOVERY="$MOCKS/irecovery" IDEVICEENTER="$MOCKS/ideviceenterrecovery" \
+        IDEVICERESTORE="$MOCKS/idevicerestore" \
         PATH="$MOCKS:$PATH" MOCK_STATE="$state" \
         MOCK_STATE_FILE="$STATEDIR/state" MOCK_COUNTER_FILE="$STATEDIR/counter" \
         MOCK_PRODUCT="${MOCK_PRODUCT:-}" MOCK_DFU_AFTER="${MOCK_DFU_AFTER:-}" \
