@@ -102,11 +102,10 @@ enter_recovery() {
     if [[ -n "$tool" ]]; then
         echo "正在使用 ${tool} 切换..."
         $tool >/dev/null 2>&1
-    else
-        echo "无法自动进入恢复模式，请手动操作："
-        echo "按住「音量减 + 电源键」，直到屏幕出现恢复模式画面后松开。"
     fi
-    while (( waited < 15 )); do
+    echo "如果设备没有自动进入恢复模式，请手动操作："
+    echo "按住「音量减 + 电源键」，直到屏幕出现恢复模式画面后松开。"
+    while (( waited < 20 )); do
         mode=$(get_device_mode | head -1)
         if [[ "$mode" == "recovery" ]]; then
             return 0
