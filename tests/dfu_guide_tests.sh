@@ -24,7 +24,7 @@ run() { # run <MOCK_STATE> <stdin内容> <参数...>  → 全局 out/rc
     local state="$1" input="$2"
     shift 2
     out=$(IRECOVERY="$MOCKS/irecovery" PATH="$MOCKS:$PATH" MOCK_STATE="$state" \
-        MOCK_USB_PID="${MOCK_USB_PID:-}" \
+        MOCK_USB_PID="${MOCK_USB_PID:-}" MOCK_MODEL="${MOCK_MODEL:-}" \
         DFU_GUIDE_TIMEOUT=3 DFU_GUIDE_NO_COUNTDOWN=1 \
         bash "$ROOT/dfu_guide.sh" "$@" 2>&1 <<<"$input")
     rc=$?
@@ -63,6 +63,16 @@ check "无机型时询问 Home 键（y）" "Home 键" "$out" 1 "$rc"
 rm -f /tmp/dfu_guide_mock_counter
 run NONE "n" boot
 check "无机型时询问 Home 键（n）" "音量减键" "$out" 1 "$rc"
+
+# --- 恢复模式板型自动识别 ---
+rm -f /tmp/dfu_guide_mock_counter
+run Recovery "" boot
+check "恢复模式板型自动识别（d79ap→音量减）" "音量减键" "$out" 1 "$rc"
+
+rm -f /tmp/dfu_guide_mock_counter
+MOCK_MODEL=n69ap run Recovery "" boot
+check "恢复模式板型自动识别（n69ap→Home）" "Home 键" "$out" 1 "$rc"
+unset MOCK_MODEL
 
 # --- USB VID/PID 兜底检测 ---
 unset MOCK_USB_PID

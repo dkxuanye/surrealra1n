@@ -68,7 +68,7 @@ identify_model() {
     local product
     if command -v ideviceinfo >/dev/null 2>&1; then
         product=$(ideviceinfo -k ProductType 2>/dev/null | xargs)
-        if [[ -n "$product" ]]; then
+        if [[ "$product" =~ ^(iPhone|iPad|iPod)[0-9]+,[0-9]+$ ]]; then
             echo "$product"
             return
         fi
@@ -92,6 +92,22 @@ has_home_button() {
     esac
 }
 
+# 从板型判断是否有 Home 键（恢复模式用）：0=有，1=无，2=未知
+has_home_button_from_board() {
+    case "$1" in
+        n51ap | n53ap | n61ap | n56ap | n66ap | n71ap | n69ap)
+            return 0 ;;
+        d*)
+            return 1 ;;
+        n841ap | n842ap | n104ap | n131ap | n142ap | n143ap | n151ap | n171ap | n172ap | n19ap)
+            return 1 ;;
+        j*)
+            return 0 ;;
+        *)
+            return 2 ;;
+    esac
+}
+
 # 倒计时（可跳过）
 countdown() {
     local i
@@ -106,7 +122,7 @@ countdown() {
 
 # 分步引导文案（借鉴 rkeytools 的 stepText 分步设计）
 guide_to_dfu() {
-    local product home=1 second="音量减键" home_ans
+    local product home=1 second="音量减键" home_ans board
     product=$(identify_model)
     if [[ -n "$product" ]]; then
         has_home_button "$product"
@@ -115,9 +131,18 @@ guide_to_dfu() {
             home=1
         fi
     else
-        read -p "检测不到设备机型。你的设备有 Home 键吗？(y/n): " home_ans
-        if [[ "$home_ans" == y || "$home_ans" == Y ]]; then
-            home=0
+        board=$("$IRECOVERY" -q 2>/dev/null | grep "^MODEL:" | cut -d ':' -f2 | xargs)
+        if [[ -n "$board" ]]; then
+            has_home_button_from_board "$board"
+            home=$?
+        else
+            home=2
+        fi
+        if [[ $home -eq 2 ]]; then
+            read -p "检测不到设备机型。你的设备有 Home 键吗？(y/n): " home_ans
+            if [[ "$home_ans" == y || "$home_ans" == Y ]]; then
+                home=0
+            fi
         fi
     fi
     if [[ $home -eq 0 ]]; then
@@ -127,6 +152,8 @@ guide_to_dfu() {
     echo "=== 引导设备进入 DFU 模式 ==="
     if [[ -n "$product" ]]; then
         echo "设备：$product"
+    elif [[ -n "$board" ]]; then
+        echo "设备：${board}（恢复模式，板型识别）"
     else
         echo "设备：未知机型（${second}方案）"
     fi
