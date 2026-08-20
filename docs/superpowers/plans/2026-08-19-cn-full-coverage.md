@@ -69,19 +69,46 @@ OUTPUT_TOKENS = re.compile(
 )
 ```
 
-- [ ] **Step 4: 验证**
+- [ ] **Step 4: 重建备份（curl_l 函数插入导致行偏移，verify 需基准对齐）**
+
+对 `surrealra1n.sh.bak_before_i18n` 应用同样的改动（sed 替换 + 函数插入），使备份与当前文件的"非翻译差异"一致：
+
+Run:
+```bash
+sed -i '' 's/^\([[:space:]]*\)curl -L /\1curl_l /' surrealra1n.sh.bak_before_i18n
+python3 - <<'EOF'
+text = open("surrealra1n.sh.bak_before_i18n", encoding="utf-8").read()
+old_fn = 'CURRENT_VERSION="v2.0 beta 29"\nVERSION_DISPLAY="v2.0 测试版 29"'
+fn = old_fn + '''
+
+# GitHub 下载加速：GITHUB_PROXY 非空时自动为 github.com URL 加前缀
+curl_l() {
+    local url last
+    for last in "$@"; do :; done
+    if [[ -n "${GITHUB_PROXY:-}" && "$last" == https://github.com/* ]]; then
+        set -- "${@:1:$#-1}" "${GITHUB_PROXY}${last}"
+    fi
+    curl -L "$@"
+}'''
+assert text.count(old_fn) == 1
+open("surrealra1n.sh.bak_before_i18n", "w", encoding="utf-8").write(text.replace(old_fn, fn))
+print("备份已重建")
+EOF
+```
+
+- [ ] **Step 5: 验证**
 
 Run:
 ```bash
 bash -n surrealra1n.sh
 python3 scripts/i18n_verify.py
 ```
-Expected: bash -n 无输出；verify 最后一行 `全部检查通过`。
+Expected: bash -n 无输出；verify 最后一行 `全部检查通过`，改动行数保持 515。
 
-- [ ] **Step 5: 提交**
+- [ ] **Step 6: 提交**
 
 ```bash
-git add surrealra1n.sh scripts/i18n_verify.py
+git add surrealra1n.sh scripts/i18n_verify.py surrealra1n.sh.bak_before_i18n
 git commit -m "feat: proxy-aware github downloads via curl_l"
 ```
 
