@@ -1,0 +1,14 @@
+#!/bin/bash
+# 模拟 xcode-select：-p 成功；MOCK_CLT_FAIL=n 前 n 次失败
+if [[ "$1" == "-p" ]]; then
+    n=$(cat "${MOCK_CLT_COUNTER:-/tmp/setup_cn_clt_counter}" 2>/dev/null || echo 0)
+    if [[ -n "${MOCK_CLT_FAIL:-}" ]]; then
+        n=$((n + 1))
+        echo "$n" > "${MOCK_CLT_COUNTER:-/tmp/setup_cn_clt_counter}"
+        if (( n <= MOCK_CLT_FAIL )); then
+            exit 1
+        fi
+    fi
+    echo "/Library/Developer/CommandLineTools"
+fi
+exit 0

@@ -1,0 +1,20 @@
+#!/bin/bash
+# 模拟 brew：MOCK_BREW_INSTALLED=初始已装；MOCK_BREW_FAIL=失败包；安装成功写入 MOCK_BREW_STATE
+case "$1" in
+    --prefix)
+        echo "${MOCK_BREW_PREFIX:-/usr/local}" ;;
+    list)
+        if echo "${MOCK_BREW_INSTALLED:-} $(cat "${MOCK_BREW_STATE:-/tmp/setup_cn_brew_state}" 2>/dev/null)" | grep -qF "$2"; then
+            exit 0
+        fi
+        exit 1 ;;
+    install)
+        echo "brew install $2" >> "${MOCK_BREW_LOG:-/tmp/setup_cn_brew_log}"
+        if echo "${MOCK_BREW_FAIL:-}" | grep -qF "$2"; then
+            echo "Error: $2 install failed (mock)" >&2
+            exit 1
+        fi
+        echo "$2" >> "${MOCK_BREW_STATE:-/tmp/setup_cn_brew_state}"
+        exit 0 ;;
+esac
+exit 0

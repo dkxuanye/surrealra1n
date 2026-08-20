@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "git $*" >> "${MOCK_GIT_LOG:-/tmp/setup_cn_git_log}"
+exit 0
