@@ -223,7 +223,14 @@ print_summary() {
 main() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --mirror) MIRROR="${2:-}"; shift 2 ;;
+            --mirror)
+                if [[ $# -lt 2 ]]; then
+                    printr "缺少参数: --mirror <tuna|ustc>"
+                    usage
+                    exit 1
+                fi
+                MIRROR="$2"
+                shift 2 ;;
             --dry-run) DRY_RUN=1; shift ;;
             --help|-h) usage; exit 0 ;;
             *) printr "未知参数: $1"; usage; exit 1 ;;

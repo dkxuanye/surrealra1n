@@ -33,7 +33,7 @@ run() { # run <额外环境变量串> <参数...>  → 全局 out/rc
         MOCK_UNAME=\"\${MOCK_UNAME:-}\" \
         HOMEBREW_BOTTLE_DOMAIN=\"\${MOCK_HBB_DOMAIN:-}\" HOMEBREW_API_DOMAIN=\"\${MOCK_API_DOMAIN:-}\" \
         $extra \
-        bash \"$ROOT/setup_cn.sh\" \"\$@\" 2>&1" )
+        bash \"$ROOT/setup_cn.sh\" \"\$@\" </dev/null 2>&1" )
     rc=$?
 }
 
