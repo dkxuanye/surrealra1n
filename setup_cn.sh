@@ -3,6 +3,8 @@
 # 用法:
 #   ./setup_cn.sh               默认清华 TUNA 镜像
 #   ./setup_cn.sh --mirror ustc 切换中科大 USTC
+#   ./setup_cn.sh --proxy <前缀> GitHub 下载代理前缀（默认 https://ghfast.top/）
+#   ./setup_cn.sh --no-proxy    跳过 GitHub 加速配置（自备代理）
 #   ./setup_cn.sh --dry-run     只打印将执行的操作（演练）
 #   ./setup_cn.sh --help        帮助
 #
@@ -195,11 +197,17 @@ set_github_proxy() {
 
 # [6/7] pip3 清华源
 set_pip_mirror() {
+    local current
     if [[ -n "${PIP_INDEX_URL_USER:-}" && "$PIP_INDEX_URL_USER" != "$PIP_INDEX_URL" ]]; then
         printy "检测到已配置 pip 源=${PIP_INDEX_URL_USER}，跳过覆盖"
         return 0
     fi
-    if pip3 config get global.index-url 2>/dev/null | grep -qF "$PIP_INDEX_URL"; then
+    current=$(pip3 config get global.index-url 2>/dev/null)
+    if [[ -n "$current" && "$current" != "$PIP_INDEX_URL" ]]; then
+        printy "检测到已配置 pip 源=${current}，跳过覆盖"
+        return 0
+    fi
+    if [[ "$current" == "$PIP_INDEX_URL" ]]; then
         printg "✅ pip3 已使用清华源"
     else
         run pip3 config set global.index-url "$PIP_INDEX_URL"
@@ -271,7 +279,14 @@ main() {
                 fi
                 MIRROR="$2"
                 shift 2 ;;
-            --proxy) GH_PROXY="${2:-}"; shift 2 ;;
+            --proxy)
+                if [[ $# -lt 2 ]]; then
+                    printr "缺少参数: --proxy <前缀>"
+                    usage
+                    exit 1
+                fi
+                GH_PROXY="$2"
+                shift 2 ;;
             --no-proxy) NO_PROXY=1; shift ;;
             --dry-run) DRY_RUN=1; shift ;;
             --help|-h) usage; exit 0 ;;

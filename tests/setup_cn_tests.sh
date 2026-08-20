@@ -179,6 +179,9 @@ fi
 reset_env
 MOCK_PIP_INDEX="https://pypi.tuna.tsinghua.edu.cn/simple" run ""
 check "pip3 已配置跳过" "pip3 已使用清华源" "$out" 0 "$rc"
+reset_env
+MOCK_PIP_INDEX="https://mirrors.aliyun.com/pypi/simple/" run ""
+check "pip 非清华源跳过" "跳过覆盖" "$out" 0 "$rc"
 
 echo ""
 echo "通过 ${PASS}，失败 ${FAIL}"
