@@ -14,7 +14,10 @@ set -u
 
 MIRROR="tuna"
 DRY_RUN=0
+NO_PROXY=0
 DEPS=(libimobiledevice libirecovery libusb binutils jq aria2)
+GH_PROXY="${SETUP_CN_GH_PROXY:-https://ghfast.top/}"
+PIP_INDEX_URL="https://pypi.tuna.tsinghua.edu.cn/simple"
 ZSHRC="${SETUP_CN_ZSHRC:-$HOME/.zshrc}"
 BREW=""
 
@@ -167,7 +170,44 @@ set_mirrors() {
     printg "✅ 镜像配置完成（${MIRROR_NAME}）"
 }
 
-# [5/5] 依赖安装（已装跳过，单个失败不中断）
+# [5/7] GitHub 下载加速（GITHUB_PROXY 环境变量 + git insteadOf）
+set_github_proxy() {
+    if [[ $NO_PROXY -eq 1 ]]; then
+        printy "已跳过 GitHub 代理配置（--no-proxy）"
+        return 0
+    fi
+    if [[ -n "${GITHUB_PROXY:-}" && "$GITHUB_PROXY" != "$GH_PROXY" ]]; then
+        printy "检测到已配置 GITHUB_PROXY=${GITHUB_PROXY}，跳过覆盖"
+        return 0
+    fi
+    append_zshrc "export GITHUB_PROXY=$GH_PROXY"
+    export GITHUB_PROXY="$GH_PROXY"
+    # git insteadOf（幂等）
+    local key="url.${GH_PROXY}https://github.com/.insteadOf"
+    if git config --global --get-all "$key" >/dev/null 2>&1; then
+        printg "✅ git insteadOf 已配置"
+    else
+        run git config --global "$key" "https://github.com/"
+        printg "✅ git insteadOf 配置完成"
+    fi
+    printg "✅ GitHub 下载加速配置完成（${GH_PROXY}）"
+}
+
+# [6/7] pip3 清华源
+set_pip_mirror() {
+    if [[ -n "${PIP_INDEX_URL_USER:-}" && "$PIP_INDEX_URL_USER" != "$PIP_INDEX_URL" ]]; then
+        printy "检测到已配置 pip 源=${PIP_INDEX_URL_USER}，跳过覆盖"
+        return 0
+    fi
+    if pip3 config get global.index-url 2>/dev/null | grep -qF "$PIP_INDEX_URL"; then
+        printg "✅ pip3 已使用清华源"
+    else
+        run pip3 config set global.index-url "$PIP_INDEX_URL"
+        printg "✅ pip3 清华源配置完成"
+    fi
+}
+
+# [7/7] 依赖安装（已装跳过，单个失败不中断）
 install_deps() {
     local dep failed=0
     if ! find_brew; then
@@ -231,6 +271,8 @@ main() {
                 fi
                 MIRROR="$2"
                 shift 2 ;;
+            --proxy) GH_PROXY="${2:-}"; shift 2 ;;
+            --no-proxy) NO_PROXY=1; shift ;;
             --dry-run) DRY_RUN=1; shift ;;
             --help|-h) usage; exit 0 ;;
             *) printr "未知参数: $1"; usage; exit 1 ;;
@@ -242,6 +284,8 @@ main() {
     ensure_xcode_clt
     install_homebrew
     set_mirrors
+    set_github_proxy
+    set_pip_mirror
     install_deps
     print_summary
 }
