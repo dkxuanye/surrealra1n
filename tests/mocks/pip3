@@ -1,0 +1,13 @@
+#!/bin/bash
+# 模拟 pip3 config：get 返回 MOCK_PIP_INDEX（未配置时 exit 1）；set 记录日志
+if [[ "$1" == "config" && "$2" == "get" ]]; then
+    if [[ -n "${MOCK_PIP_INDEX:-}" ]]; then
+        echo "$MOCK_PIP_INDEX"
+        exit 0
+    fi
+    exit 1
+fi
+if [[ "$1" == "config" && "$2" == "set" ]]; then
+    echo "pip3 $*" >> "${MOCK_PIP_LOG:-/tmp/setup_cn_pip_log}"
+fi
+exit 0

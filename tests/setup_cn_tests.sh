@@ -32,14 +32,17 @@ run() { # run <额外环境变量串> <参数...>  → 全局 out/rc
         MOCK_BREW_PREFIX=\"\${MOCK_BREW_PREFIX:-}\" MOCK_CLT_FAIL=\"\${MOCK_CLT_FAIL:-}\" \
         MOCK_UNAME=\"\${MOCK_UNAME:-}\" \
         HOMEBREW_BOTTLE_DOMAIN=\"\${MOCK_HBB_DOMAIN:-}\" HOMEBREW_API_DOMAIN=\"\${MOCK_API_DOMAIN:-}\" \
+        GITHUB_PROXY=\"\${MOCK_GH_PROXY:-}\" PIP_INDEX_URL_USER=\"\${MOCK_PIP_INDEX:-}\" \
+        MOCK_GIT_INSTEADOF=\"\${MOCK_GIT_INSTEADOF:-}\" MOCK_PIP_LOG=\"$TMPD/pip.log\" \
+        SETUP_CN_GH_PROXY=\"\${MOCK_GH_PROXY_URL:-https://ghfast.top/}\" \
         $extra \
         bash \"$ROOT/setup_cn.sh\" \"\$@\" </dev/null 2>&1" )
     rc=$?
 }
 
 reset_env() {
-    unset MOCK_BREW_INSTALLED MOCK_BREW_FAIL MOCK_BREW_PREFIX MOCK_CLT_FAIL MOCK_UNAME MOCK_HBB_DOMAIN
-    rm -f "$TMPD/zshrc" "$TMPD/brew.log" "$TMPD/git.log" "$TMPD/curl.log" "$TMPD/clt" "$TMPD/brew_state"
+    unset MOCK_BREW_INSTALLED MOCK_BREW_FAIL MOCK_BREW_PREFIX MOCK_CLT_FAIL MOCK_UNAME MOCK_HBB_DOMAIN MOCK_GH_PROXY MOCK_PIP_INDEX MOCK_GIT_INSTEADOF
+    rm -f "$TMPD/zshrc" "$TMPD/brew.log" "$TMPD/git.log" "$TMPD/curl.log" "$TMPD/clt" "$TMPD/brew_state" "$TMPD/pip.log"
 }
 
 # --- 场景 1：非 macOS ---
@@ -124,13 +127,58 @@ check "CLT 补装后继续" "Xcode 命令行工具已安装" "$out" 0 "$rc"
 reset_env
 MOCK_HBB_DOMAIN="https://mirrors.aliyun.com/homebrew/homebrew-bottles" run ""
 check "已有镜像配置被保留" "跳过镜像覆盖" "$out" 0 "$rc"
-if [[ ! -f "$TMPD/zshrc" ]]; then
-    echo "PASS: 已有配置时未写 zshrc"
+if ! grep -qF "HOMEBREW_BOTTLE_DOMAIN" "$TMPD/zshrc" 2>/dev/null; then
+    echo "PASS: 已有镜像配置时未覆盖 HOMEBREW_BOTTLE_DOMAIN"
     PASS=$((PASS + 1))
 else
-    echo "FAIL: 已有配置时仍写 zshrc"
+    echo "FAIL: 已有镜像配置时仍写 HOMEBREW_BOTTLE_DOMAIN"
     FAIL=$((FAIL + 1))
 fi
+
+# --- 场景 11：默认 GitHub 代理写入（幂等）---
+reset_env
+run ""
+run ""
+lines=$(grep -c "^export GITHUB_PROXY=" "$TMPD/zshrc" 2>/dev/null || echo 0)
+check "代理写入 zshrc" "export GITHUB_PROXY=https://ghfast.top/" "$(cat "$TMPD/zshrc" 2>/dev/null)" 0 0
+if [[ "$lines" == "1" ]]; then
+    echo "PASS: GITHUB_PROXY 无重复行"
+    PASS=$((PASS + 1))
+else
+    echo "FAIL: GITHUB_PROXY 重复行数 $lines"
+    FAIL=$((FAIL + 1))
+fi
+
+# --- 场景 12：--no-proxy 不写 GITHUB_PROXY ---
+reset_env
+run "" "--no-proxy"
+if ! grep -qF "GITHUB_PROXY" "$TMPD/zshrc" 2>/dev/null; then
+    echo "PASS: --no-proxy 未写 GITHUB_PROXY"
+    PASS=$((PASS + 1))
+else
+    echo "FAIL: --no-proxy 仍写 GITHUB_PROXY"
+    FAIL=$((FAIL + 1))
+fi
+
+# --- 场景 13：git insteadOf 已配置则跳过 ---
+reset_env
+MOCK_GIT_INSTEADOF="https://github.com/" run ""
+check "insteadOf 跳过" "git insteadOf 已配置" "$out" 0 "$rc"
+
+# --- 场景 14：pip3 清华源（未配置→写入；已配置→跳过）---
+reset_env
+run ""
+check "pip3 写入清华源" "pip3 清华源配置完成" "$out" 0 "$rc"
+if grep -qF "pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple" "$TMPD/pip.log" 2>/dev/null; then
+    echo "PASS: pip3 set 已调用"
+    PASS=$((PASS + 1))
+else
+    echo "FAIL: pip3 set 未调用"
+    FAIL=$((FAIL + 1))
+fi
+reset_env
+MOCK_PIP_INDEX="https://pypi.tuna.tsinghua.edu.cn/simple" run ""
+check "pip3 已配置跳过" "pip3 已使用清华源" "$out" 0 "$rc"
 
 echo ""
 echo "通过 ${PASS}，失败 ${FAIL}"
