@@ -606,57 +606,6 @@ ipsw_selector(){
 
 #
 
-echo "正在检查更新..."
-rm -rf update/latest.txt
-curl_l -o update/latest.txt https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt
-LATEST_VERSION=$(head -n 1 "update/latest.txt" | tr -d '\r\n')
-RELEASE_NOTES=$(awk '/^RELEASE NOTES:/{flag=1; next} flag' "update/latest.txt")
-
-if [[ $LATEST_VERSION != $CURRENT_VERSION ]]; then
-    echo "发现 surrealra1n 新版本：$LATEST_VERSION"
-    echo "更新说明："
-    echo "$RELEASE_NOTES"
-    echo ""
-    echo "强烈建议更新以获得最新功能 + 错误修复。"
-    read -p "是否现在更新？(y/n): " update
-    if [[ $update == y || $update == Y ]]; then
-        rm -rf "updatefiles"
-        mkdir updatefiles
-        rm -rf "updatefiles/repo"
-        git clone --branch development https://github.com/pwnerblu/surrealra1n updatefiles/repo --recursive
-        if [[ ! -d updatefiles/repo ]]; then
-            echo "克隆仓库失败。"
-            exit 1
-        fi
-        rm -rf "surrealra1n.old"
-        mkdir -p surrealra1n.old # make folder to back up old surrealra1n installation
-        echo "$CURRENT_VERSION" > surrealra1n.old/oldversion.txt
-        echo "正在备份你当前的 surrealra1n 安装..."
-        mv -v bin surrealra1n.old/
-        mv -v futurerestore surrealra1n.old/
-        mv -v keys surrealra1n.old/
-        mv -v surrealra1n.sh surrealra1n.old/
-        rm -rf "bin"
-        rm -rf "futurerestore"
-        rm -rf "keys"
-        echo "正在复制新文件..."
-        cp -av updatefiles/repo/. ./
-        chmod +x surrealra1n.sh
-
-        rm -rf "updatefiles"
-        echo "surrealra1n 已更新！请重新运行脚本"
-        exit 0
-    else
-        echo "你已拒绝更新。"
-        echo "此版本的 surrealra1n 已不再受支持，建议尽快更新。"
-        outdated=1
-        read -p "按回车继续"
-    fi
-else
-    echo "surrealra1n 已是最新版本。"
-    sleep 1
-fi
-
 echo "正在检查现有二进制文件..."
 
 #!/bin/bash
