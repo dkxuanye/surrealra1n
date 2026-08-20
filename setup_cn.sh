@@ -30,7 +30,7 @@ printy() { printf "\e[33;1m%s\e[m\n" "$1"; }
 printr() { printf "\e[31;1m%s\e[m\n" "$1"; }
 
 usage() {
-    echo "用法: ./setup_cn.sh [--mirror tuna|ustc] [--dry-run] [--help]"
+    echo "用法: ./setup_cn.sh [--mirror tuna|ustc] [--proxy <前缀>] [--no-proxy] [--dry-run] [--help]"
 }
 
 # 执行命令；dry-run 时只打印
@@ -84,7 +84,7 @@ set_mirror_vars() {
     esac
 }
 
-# [1/5] 系统检测
+# [1/7] 系统检测
 check_os() {
     if [[ "$(uname)" != "Darwin" ]]; then
         printr "仅支持 macOS"
@@ -93,7 +93,7 @@ check_os() {
     printg "✅ 系统检测通过（macOS）"
 }
 
-# [2/5] Xcode 命令行工具
+# [2/7] Xcode 命令行工具
 ensure_xcode_clt() {
     if xcode-select -p >/dev/null 2>&1; then
         printg "✅ Xcode 命令行工具已安装"
@@ -112,7 +112,7 @@ ensure_xcode_clt() {
     printg "✅ Xcode 命令行工具已安装"
 }
 
-# [3/5] Homebrew 安装（镜像脚本 + 预置镜像变量）
+# [3/7] Homebrew 安装（镜像脚本 + 预置镜像变量）
 install_homebrew() {
     if find_brew; then
         printg "✅ Homebrew 已安装"
@@ -149,7 +149,7 @@ append_zshrc() {
     fi
 }
 
-# [4/5] 镜像配置（zshrc 幂等 + brew remote 切换）
+# [4/7] 镜像配置（zshrc 幂等 + brew remote 切换）
 set_mirrors() {
     if [[ -n "${HOMEBREW_BOTTLE_DOMAIN:-}" && "$HOMEBREW_BOTTLE_DOMAIN" != "$BOTTLE_URL" ]]; then
         printy "检测到已配置 HOMEBREW_BOTTLE_DOMAIN=${HOMEBREW_BOTTLE_DOMAIN}，跳过镜像覆盖"
