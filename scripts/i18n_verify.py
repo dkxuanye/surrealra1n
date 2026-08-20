@@ -22,7 +22,7 @@ TABLE = "scripts/i18n_translations.txt"
 
 VAR_RE = re.compile(r"\$\([^)]*\)|\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*")
 OUTPUT_TOKENS = re.compile(
-    r"\b(?:echo|printf|read|pick_file|zenity|title|INFO_TEXT|CURRENT_VERSION|VERSION_DISPLAY)\b"
+    r"\b(?:echo|printf|read|pick_file|zenity|title|INFO_TEXT|CURRENT_VERSION|VERSION_DISPLAY|curl_l|GITHUB_PROXY)\b"
 )
 RESIDUE_RE = re.compile(
     r'^(\s*(?:echo(?: -[a-z]+)?|printf(?: -v\s+\w+)?|read(?: -[a-z](?: \S+)?)*\s+-p|pick_file|--title=)\s*)("[^"]*[A-Za-z]{4,}[^"]*")'
