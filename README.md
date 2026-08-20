@@ -20,6 +20,39 @@ Extract the zip file and open a terminal window to the folder that contains surr
 
 
 
+# 国内用户加速（China users）
+
+国内网络访问 Homebrew / GitHub 较慢，运行前先执行一键配置脚本：
+
+```
+./setup_cn.sh
+```
+
+该脚本会自动完成：
+
+| 步骤 | 说明 |
+|---|---|
+| 系统检测 / Xcode CLT | 检查 macOS 与命令行工具 |
+| Homebrew 安装 | 使用清华 TUNA / 中科大 USTC 镜像（`--mirror ustc` 切换） |
+| Homebrew 镜像配置 | HOMEBREW_API_DOMAIN / BOTTLE_DOMAIN / NO_AUTO_UPDATE 写入 ~/.zshrc |
+| GitHub 下载加速 | 106 处二进制下载走代理前缀（默认 ghfast.top）+ git insteadOf 全局配置 |
+| pip3 清华源 | pyusb 等 Python 依赖安装加速 |
+| 安装全部依赖 | libimobiledevice / libirecovery / libusb / binutils / jq / aria2 |
+
+常用参数：
+
+```
+./setup_cn.sh                          # 默认清华镜像 + ghfast.top 代理
+./setup_cn.sh --mirror ustc            # 切换中科大镜像
+./setup_cn.sh --proxy https://gh-proxy.com/   # 切换 GitHub 代理前缀（默认服务失效时）
+./setup_cn.sh --no-proxy               # 跳过 GitHub 加速（已自备代理工具）
+./setup_cn.sh --dry-run                # 演练，不执行任何操作
+```
+
+注意：ghfast.top 为第三方加速服务，若失效请用 `--proxy` 切换其他前缀，或 `--no-proxy` 后自行开启 Clash 等代理工具。Apple 服务器（IPSW 下载 / SHSH / FDR）无法镜像，如遇速度问题请更换网络环境。
+
+
+
 # Thanks to:
 
 libimobiledevice team, tihmstar, LukeeGD/LukeZGD, xerub, plooshi, etc! (for the tools it has to download)
