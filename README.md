@@ -33,7 +33,7 @@ Extract the zip file and open a terminal window to the folder that contains surr
 | 步骤 | 说明 |
 |---|---|
 | 系统检测 / Xcode CLT | 检查 macOS 与命令行工具 |
-| Homebrew 安装 | 使用清华 TUNA / 中科大 USTC 镜像（`--mirror ustc` 切换） |
+| Homebrew 安装 | 使用 HomebrewCN 一键安装脚本（Gitee，交互选择镜像源） |
 | Homebrew 镜像配置 | HOMEBREW_API_DOMAIN / BOTTLE_DOMAIN / NO_AUTO_UPDATE 写入 ~/.zshrc |
 | GitHub 下载加速 | 106 处二进制下载走代理前缀（默认 ghfast.top）+ git insteadOf 全局配置 |
 | pip3 清华源 | pyusb 等 Python 依赖安装加速 |
