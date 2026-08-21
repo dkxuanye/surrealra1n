@@ -23,6 +23,7 @@ PIP_INDEX_URL="https://pypi.tuna.tsinghua.edu.cn/simple"
 ZSHRC="${SETUP_CN_ZSHRC:-$HOME/.zshrc}"
 BREW=""
 
+MIRROR_NAME="" BREW_URL="" CORE_URL="" INSTALL_URL="" API_URL="" BOTTLE_URL=""
 
 trap 'echo ""; echo "已取消"; exit 130' INT
 
@@ -66,6 +67,7 @@ set_mirror_vars() {
             MIRROR_NAME="清华 TUNA"
             BREW_URL="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git"
             CORE_URL="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git"
+            INSTALL_URL="https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/install.sh"
             API_URL="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"
             BOTTLE_URL="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
             ;;
@@ -73,6 +75,7 @@ set_mirror_vars() {
             MIRROR_NAME="中科大 USTC"
             BREW_URL="https://mirrors.ustc.edu.cn/brew.git"
             CORE_URL="https://mirrors.ustc.edu.cn/homebrew-core.git"
+            INSTALL_URL="https://mirrors.ustc.edu.cn/brew/install.sh"
             API_URL="https://mirrors.ustc.edu.cn/homebrew-bottles/api"
             BOTTLE_URL="https://mirrors.ustc.edu.cn/homebrew-bottles"
             ;;
@@ -117,23 +120,21 @@ install_homebrew() {
         printg "✅ Homebrew 已安装"
         return 0
     fi
-    printy "正在安装 Homebrew（HomebrewCN 中国一键安装脚本）..."
-    echo "脚本会询问镜像源选择，请按提示操作（推荐选 1 清华 或 2 中科大）。"
+    printy "正在安装 Homebrew（${MIRROR_NAME} 镜像）..."
     if [[ $DRY_RUN -eq 1 ]]; then
-        echo "[演练] export HOMEBREW_NO_AUTO_UPDATE=1 + 镜像环境变量"
-        echo "[演练] /bin/zsh -c \"\$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)\""
+        echo "[演练] curl -fsSL ${INSTALL_URL} | NONINTERACTIVE=1 bash"
+        echo "[演练] 安装完成后自动配置镜像源"
         return 0
     fi
-    # 预置镜像环境变量：避免 HomebrewCN 安装后自身 brew update 从 ghcr.io
-    # 下载 portable-ruby（无代理时极慢）
-    export HOMEBREW_NO_AUTO_UPDATE=1
     export HOMEBREW_API_DOMAIN="$API_URL"
     export HOMEBREW_BOTTLE_DOMAIN="$BOTTLE_URL"
-    /bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)"
+    export HOMEBREW_BREW_GIT_REMOTE="$BREW_URL"
+    export HOMEBREW_CORE_GIT_REMOTE="$CORE_URL"
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL "$INSTALL_URL")"
     local rc=$?
     if [[ $rc -ne 0 ]] || ! find_brew; then
         printr "❌ Homebrew 安装失败，请手动安装："
-        echo "  /bin/zsh -c \"\$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)\""
+        echo "  /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
         exit 1
     fi
     printg "✅ Homebrew 安装完成"
@@ -161,13 +162,15 @@ set_mirrors() {
     append_zshrc "export HOMEBREW_NO_AUTO_UPDATE=1"
     if find_brew; then
         run git -C "$("$BREW" --prefix)/Homebrew" remote set-url origin "$BREW_URL"
+        if [[ -d "$("$BREW" --prefix)/Library/Taps/homebrew/homebrew-core/.git" ]]; then
+            run git -C "$("$BREW" --prefix)/Library/Taps/homebrew/homebrew-core" remote set-url origin "$CORE_URL"
+        fi
     fi
     export HOMEBREW_API_DOMAIN="$API_URL"
     export HOMEBREW_BOTTLE_DOMAIN="$BOTTLE_URL"
     export HOMEBREW_NO_AUTO_UPDATE=1
     printg "✅ 镜像配置完成（${MIRROR_NAME}）"
 }
-
 
 # [5/7] GitHub 下载加速（GITHUB_PROXY 环境变量 + git insteadOf）
 set_github_proxy() {
