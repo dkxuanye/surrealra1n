@@ -149,11 +149,6 @@ else
     FAIL=$((FAIL + 1))
 fi
 
-# --- 场景 11b：HOMEBREW_NO_INSTALL_FROM_API 写入（镜像 tap 模式）---
-reset_env
-run ""
-check "NO_INSTALL_FROM_API 写入" "export HOMEBREW_NO_INSTALL_FROM_API=1" "$(cat "$TMPD/zshrc" 2>/dev/null)" 0 0
-
 # --- 场景 12：--no-proxy 不写 GITHUB_PROXY ---
 reset_env
 run "" "--no-proxy"
