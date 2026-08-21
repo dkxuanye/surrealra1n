@@ -1,4 +1,20 @@
 bin/*
 !bin/notice.txt
 !bin/ideviceenterrecovery
-apfs/  
+apfs/
+
+# 本地文件，不推送
+docs/
+*.log
+ipsw/
+boot/
+restorefiles/
+shsh/
+updatefiles/
+tmp/
+tmp1/
+tmp2/
+work/
+surrealra1n.old/
+knownhosts/
+.DS_Store
