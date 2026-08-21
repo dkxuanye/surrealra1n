@@ -161,14 +161,32 @@ set_mirrors() {
     append_zshrc "export HOMEBREW_NO_AUTO_UPDATE=1"
     if find_brew; then
         run git -C "$("$BREW" --prefix)/Homebrew" remote set-url origin "$BREW_URL"
-        if [[ -d "$("$BREW" --prefix)/Library/Taps/homebrew/homebrew-core/.git" ]]; then
-            run git -C "$("$BREW" --prefix)/Library/Taps/homebrew/homebrew-core" remote set-url origin "$CORE_URL"
-        fi
+        ensure_core_tap
     fi
     export HOMEBREW_API_DOMAIN="$API_URL"
     export HOMEBREW_BOTTLE_DOMAIN="$BOTTLE_URL"
     export HOMEBREW_NO_AUTO_UPDATE=1
+    export HOMEBREW_NO_INSTALL_FROM_API=1
     printg "✅ 镜像配置完成（${MIRROR_NAME}）"
+}
+
+# homebrew-core tap 使用镜像并禁用 API 模式：
+# brew 6.x API 模式会从 raw.githubusercontent.com 拉取个别 formula 文件（不受
+# HOMEBREW_API_DOMAIN/BOTTLE_DOMAIN 覆盖，无代理时卡死）；改为镜像 git tap +
+# HOMEBREW_NO_INSTALL_FROM_API=1 后，formula 全部本地读取。
+ensure_core_tap() {
+    local core_tap
+    if ! find_brew; then
+        return 0
+    fi
+    core_tap="$("$BREW" --prefix)/Library/Taps/homebrew/homebrew-core"
+    if [[ ! -d "$core_tap/.git" ]]; then
+        printy "正在从镜像克隆 homebrew-core（首次约几分钟）..."
+        run git clone "$CORE_URL" "$core_tap"
+    else
+        run git -C "$core_tap" remote set-url origin "$CORE_URL"
+    fi
+    append_zshrc "export HOMEBREW_NO_INSTALL_FROM_API=1"
 }
 
 # [5/7] GitHub 下载加速（GITHUB_PROXY 环境变量 + git insteadOf）
