@@ -120,9 +120,15 @@ install_homebrew() {
     printy "正在安装 Homebrew（HomebrewCN 中国一键安装脚本）..."
     echo "脚本会询问镜像源选择，请按提示操作（推荐选 1 清华 或 2 中科大）。"
     if [[ $DRY_RUN -eq 1 ]]; then
+        echo "[演练] export HOMEBREW_NO_AUTO_UPDATE=1 + 镜像环境变量"
         echo "[演练] /bin/zsh -c \"\$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)\""
         return 0
     fi
+    # 预置镜像环境变量：避免 HomebrewCN 安装后自身 brew update 从 ghcr.io
+    # 下载 portable-ruby（无代理时极慢）
+    export HOMEBREW_NO_AUTO_UPDATE=1
+    export HOMEBREW_API_DOMAIN="$API_URL"
+    export HOMEBREW_BOTTLE_DOMAIN="$BOTTLE_URL"
     /bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)"
     local rc=$?
     if [[ $rc -ne 0 ]] || ! find_brew; then
