@@ -5,9 +5,10 @@ CURRENT_VERSION="v2.1 beta"
 # that points at https://github.com/ is prefixed with it (e.g. https://ghfast.top/).
 GITHUB_PROXY="${GITHUB_PROXY:-}"
 
-# Skip the startup update check. Set to 1 to avoid contacting GitHub and to
-# never be prompted to update:  SKIP_UPDATE_CHECK=1 ./surrealra1n.sh
-SKIP_UPDATE_CHECK="${SKIP_UPDATE_CHECK:-0}"
+# Skip the startup update check. Offline-first: defaults to 1 (skip, no GitHub
+# contact, never prompted). Set to 0 to enable the check:
+#   SKIP_UPDATE_CHECK=0 ./surrealra1n.sh
+SKIP_UPDATE_CHECK="${SKIP_UPDATE_CHECK:-1}"
 
 if [ "$EUID" -eq 0 ]; then
   echo "错误：请勿使用 sudo 或以 root 身份运行此脚本。"
@@ -659,15 +660,26 @@ ipsw_selector(){
 
 if [[ $SKIP_UPDATE_CHECK != 1 ]]; then
     echo "正在检查更新..."
-    rm -rf update/latest.txt
     LATEST_VERSION=""
     RELEASE_NOTES=""
+    # 离线优先：下载失败时回退到本地已有的 update/latest.txt（若有）
+    local_update_file="update/latest.txt.local"
+    if [[ -f update/latest.txt ]]; then
+        cp -f update/latest.txt "$local_update_file" 2>/dev/null || true
+    fi
+    rm -rf update/latest.txt
     if download_with_retry "https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt" "update/latest.txt" 128 && [[ -s update/latest.txt ]]; then
         LATEST_VERSION=$(head -n 1 "update/latest.txt" | tr -d '\r\n')
         RELEASE_NOTES=$(awk '/^RELEASE NOTES:/{flag=1; next} flag' "update/latest.txt")
+    elif [[ -s "$local_update_file" ]]; then
+        echo "[!] 无法联网检查更新，使用本地缓存的更新信息。"
+        cp -f "$local_update_file" update/latest.txt 2>/dev/null || true
+        LATEST_VERSION=$(head -n 1 "$local_update_file" | tr -d '\r\n')
+        RELEASE_NOTES=$(awk '/^RELEASE NOTES:/{flag=1; next} flag' "$local_update_file")
     else
         echo "[!] 无法检查更新（离线或网络问题），已跳过。"
     fi
+    rm -f "$local_update_file"
 
     if [[ -z "$LATEST_VERSION" ]]; then
         echo "surrealra1n 已跳过更新检查。"
