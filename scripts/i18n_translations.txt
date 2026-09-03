@@ -1,0 +1,429 @@
+SEP is compatible but Touch ID will break, device may take 3-5 minutes to boot, and may hang for 30 seconds when it reaches the Touch ID part of Setup. Deep sleep issues are also very likely|||SEP 兼容，但 Touch ID 将失效，设备启动可能需要 3-5 分钟，并且在设置中进入 Touch ID 环节时可能会卡住 30 秒。也很可能出现深度睡眠问题。
+You will need to tether restore to iOS 13.4 - 13.7 first, activate the device (may have to activate via Finder/iTunes/Legacy iOS Kit), then tether restore to the desired version.|||你需要先有线恢复至 iOS 13.4 - 13.7，激活设备（可能需要通过 Finder/iTunes/Legacy iOS Kit 激活），然后有线恢复至目标版本。
+WARNING: All of your boot files, and other things will be deleted (if any files are in the surrealra1n directory, they will be erased), and surrealra1n will be fresh installed.|||警告：你的所有启动文件和其余内容都将被删除（surrealra1n 目录中的任何文件都会被清除），并将全新安装 surrealra1n。
+This error is normal on Linux as long as the Device enters iBSS recovery mode (screen Should remain blank but be detected as Recovery mode device).|||只要设备进入 iBSS 恢复模式，这个错误在 Linux 上是正常的（屏幕应保持黑屏，但会被识别为恢复模式设备）。
+The error may be normal as long as the Device enters iBSS recovery mode (screen Should remain blank but be detected as Recovery mode device).|||只要设备进入 iBSS 恢复模式，这个错误可能也是正常的（屏幕应保持黑屏，但会被识别为恢复模式设备）。
+You may experience a ton of issues (including broken baseband on certain devices), as we have to patch things to get the device booted.|||你可能会遇到大量问题（包括某些设备上基带损坏），因为我们必须修补一些东西才能让设备启动。
+WARNING: All of your boot files and restore files will be deleted. You will need to re-create them afterwards if you proceed.|||警告：你的所有启动文件和恢复文件都将被删除。如果继续，之后你需要重新生成它们。
+If your device is on iOS 16.4 or later, do not boot this ramdisk. Create a ramdisk with at least iOS 16.4 as ramdisk version.|||如果你的设备运行 iOS 16.4 或更高版本，请勿启动此 ramdisk。请创建 ramdisk 版本至少为 iOS 16.4 的 ramdisk。
+    Install them manually (Debian/Ubuntu: linux-headers-$(uname -r), Arch: linux-headers, Fedora: kernel-devel) and re-run.|||请手动安装它们（Debian/Ubuntu：linux-headers-$(uname -r)，Arch：linux-headers，Fedora：kernel-devel），然后重新运行。
+You should only do this if you are researching or wanting to contribute fixing problems, this is not for the Average user.|||只有当你正在研究或想要为修复问题做出贡献时才应该这样做，这不适合普通用户。
+[!] Warning: $output is too small (${file_size} bytes, minimum ${min_size}), retrying... (attempt $attempt/$max_attempts)|||[!] 警告：$output 太小（${file_size} 字节，最小 ${min_size}），正在重试...（第 $attempt/$max_attempts 次）
+Issue description should mention all relevant details to such issue if possible, and also a full terminal log attached.|||问题描述应尽可能提及所有相关细节，并附上完整的终端日志。
+You will need to tether restore to 14.0 beta 4 first, activate the device, then tether restore to the desired version.|||你需要先有线恢复至 14.0 测试版 4，激活设备，然后有线恢复至目标版本。
+An SHSH blob is selected. Please ensure this blob is valid for iOS $VERSION, otherwise the restore will likely fail|||已选择一个 SHSH blob。请确保此 blob 对 iOS $VERSION 有效，否则恢复很可能会失败
+4. Battery life may be affected on iOS 7/8, because we use a workaround there to make deep sleep panics not occur|||4. iOS 7/8 上电池续航可能会受影响，因为我们在那里使用了变通方法来避免深度睡眠崩溃
+[!] Warning: Failed to download $output (curl exit $curl_exit), retrying... (attempt $attempt/$max_attempts)|||[!] 警告：下载 $output 失败（curl 退出码 ${curl_exit}），正在重试...（第 $attempt/$max_attempts 次）
+Developer mode will also be enabled with this restore automatically, you do not need to manually enable it.|||此恢复还会自动启用开发者模式，你无需手动启用。
+A12/A13 tether downgrades are for advanced users only. If you don't know what you're doing, DO not proceed|||A12/A13 有线降级仅供高级用户使用。如果你不清楚自己在做什么，请勿继续
+SEP is compatible but Touch ID will break, device may take 3-5 minutes to boot, and may hang during Setup|||SEP 兼容，但 Touch ID 将失效，设备启动可能需要 3-5 分钟，并且可能在设置过程中卡住
+This version of surrealra1n is no longer supported, so it is recommended to update as soon as possible.|||此版本的 surrealra1n 已不再受支持，因此建议尽快更新。
+[!] Issues THAT DO NOT CONTAIN PROPER LOGS, DETAILS, OR ANYTHING RELEVANT, WILL BE CLOSED AS INVALID.|||[!] 那些不包含正当日志、细节或任何相关信息的 issue 将被关闭并视为无效。
+You will need to exit, re-run surrealra1n.sh, and when it prompts for an update, update surrealra1n.|||你需要退出并重新运行 surrealra1n.sh，当其提示更新时，更新 surrealra1n。
+10.3.3 is also not OTA signed for this device, so you cannot restore to 10.3.3 without saved blobs|||10.3.3 对这台设备也已不再 OTA 签名，因此如果没有保存的 blob，你将无法恢复至 10.3.3
+Checking for dependencies that are required for usbliter8ctl, assuming Python3 is on your system|||正在检查 usbliter8ctl 所需的依赖，假设你的系统已安装 Python3
+Boot files have been created successfully! You may now boot, assuming the restore has succeeded.|||启动文件已成功创建！假设恢复已成功，你现在可以启动设备了。
+On iPhone 11 models, it will be basically fully functional except for UWB, Face ID, and Passcode|||在 iPhone 11 机型上，除 UWB、Face ID 和密码外基本能完全正常使用
+This error is normal on Linux as long as the Device actually starts booting after iBSS is sent.|||只要设备在发送 iBSS 后确实开始启动，这个错误在 Linux 上就是正常的。
+Since iOS 16 should activate normally, there is so need to head to iOS 13.x or iOS 14.0 beta 4.|||由于 iOS 16 应能正常激活，因此无需前往 iOS 13.x 或 iOS 14.0 测试版 4。
+Device will be unable to activate. Do not flood GitHub issues when your device cannot activate.|||设备将无法激活。当你的设备无法激活时，请不要在 GitHub 上大量刷 issue。
+If your device is on 16.3.1 and lower, it might be best to create a ramdisk for below iOS 16.4.|||如果你的设备运行 16.3.1 或更低版本，最好为 iOS 16.4 以下的版本创建 ramdisk。
+Since your development version is newer than stable, switching will require a clean reinstall.|||由于你的开发版本比稳定版更新，切换将需要一次全新安装。
+Ctrl + Shift + A -> Ctrl + Shift + C, then paste the entire log into the issue you're opening|||Ctrl + Shift + A -> Ctrl + Shift + C，然后将整个日志粘贴到你打开的 issue 中
+[!] Warning: $output appears to be an HTML page, retrying... (attempt $attempt/$max_attempts)|||[!] 警告：$output 似乎是一个 HTML 页面，正在重试...（第 $attempt/$max_attempts 次）
+com.apple.commcenter.device_specific_nobackup.plist did not save correctly. Cannot continue.|||com.apple.commcenter.device_specific_nobackup.plist 未能正确保存。无法继续。
+WARNING: This will restore surrealra1n to the previous version backed up in surrealra1n.old.|||警告：这将把 surrealra1n 恢复到备份在 surrealra1n.old 中的上一个版本。
+You can upgrade to the latest version at any time later if you want to be on latest again.|||如果你之后想回到最新版本，可以随时升级。
+Insert the IP of your device, go to Settings/Wi-Fi/Wi-Fi network/Information/IP Address: |||输入你设备的 IP 地址，前往 设置/无线局域网/已连接的 Wi-Fi/信息/IP 地址：
+Make sure your Pi Pico has the custom firmware required to pwn the device with usbliter8.|||请确保你的 Pi Pico 已刷入使用 usbliter8 破解设备所需的定制固件。
+Press enter to continue once device is pwned successfully AND reconnected to the computer|||设备成功破解并且重新连接到电脑后，按回车继续
+Also, 14.3 iBoot workaround does not work on 13.x and lower. SEP is totally incompatible|||此外，14.3 iBoot 变通方法在 13.x 及更低版本上无效。SEP 完全不兼容
+surrealra1n has been switched to development $DEV_VERSION! Please run the script again.|||surrealra1n 已切换到开发版 ${DEV_VERSION}！请重新运行脚本。
+or a full restore, and this experimental Linux support is NOT equivalent in reliability|||或进行完整恢复，而且这种实验性的 Linux 支持在可靠性方面并不等同
+Failed to clone repository. You will need to fetch surrealra1n from releases on GitHub|||克隆仓库失败。你需要从 GitHub 的 releases 页面获取 surrealra1n
+    Expected an HFS+ (iOS 16.0.x) or APFS (iOS 16.1+) filesystem. Aborting for safety.|||预期的是 HFS+（iOS 16.0.x）或 APFS（iOS 16.1+）文件系统。为安全起见中止。
+This build patches the APFS restore ramdisk with the experimental linux-apfs-rw kernel|||此构建使用实验性的 linux-apfs-rw 内核修补 APFS 恢复 ramdisk
+module. It has not received the same level of testing as the macOS implementation, and|||模块。它没有像 macOS 实现那样经过同等程度的测试，而且
+[!] Homebrew is not installed. You will need to install Homebrew from https://brew.sh|||[!] 未安装 Homebrew。你需要从 https://brew.sh 安装 Homebrew
+    See the build output above; the module needs kernel headers matching $(uname -r).|||请参见上面的构建输出；该模块需要与 $(uname -r) 匹配的内核头文件。
+This functionality is brand new and has NOT received the same level of testing as the|||此功能是全新的，尚未经过与现有实现同等程度的测试
+macOS implementation. It patches the APFS restore ramdisk by building and loading the|||macOS 实现。它通过构建并加载实验性的 linux-apfs-rw 内核模块来修补 APFS 恢复 ramdisk，
+experimental linux-apfs-rw kernel module, whose write support can potentially corrupt|||其写入支持可能损坏 ramdisk。失败或中断的恢复可能使你的设备需要恢复
+the ramdisk. A failed or interrupted restore may leave your device requiring recovery|||ramdisk。失败或中断的恢复可能使你的设备需要恢复
+Haptic home button will not work, and AssistiveTouch home button will also not appear|||触觉主屏幕按钮将无法工作，AssistiveTouch 主屏幕按钮也不会出现
+Any new features from this surrealra1n release may not exist in the previous version|||此 surrealra1n 版本中的任何新功能在上一个版本中可能都不存在
+         If loading fails below, enroll the module signature or disable Secure Boot.|||如果下方加载失败，请注册模块签名或禁用 Secure Boot。
+This script only supports Debian-based, Arch-based, Fedora-based and macOS systems.|||此脚本仅支持基于 Debian、Arch、Fedora 的系统以及 macOS。
+Invalid IPSW. You must select IPSW for iOS $LATEST_VERSION, not iOS $VERSION_LATEST|||IPSW 无效。你必须选择适用于 iOS $LATEST_VERSION 的 IPSW，而不是 iOS $VERSION_LATEST
+surrealra1n has been restored to the previous version! Please run the script again.|||surrealra1n 已恢复到上一个版本！请重新运行脚本。
+surrealra1n has been switched to stable $MAIN_VERSION! Please run the script again.|||surrealra1n 已切换到稳定版 ${MAIN_VERSION}！请重新运行脚本。
+a failed or interrupted restore may leave the device requiring recovery or restore.|||失败或中断的恢复可能使设备需要恢复或重新恢复。
+WARNING: Secure Boot is enabled. Loading an unsigned kernel module may be blocked.|||警告：已启用 Secure Boot。加载未签名内核模块可能会被阻止。
+If you want to Download iOS14.0 beta4(18A5342e) IPSW, Please enter 18A5342e below|||如果你想下载 iOS14.0 测试版 4（18A5342e）的 IPSW，请在下方输入 18A5342e
+You are already on the stable equivalent of your current version ($MAIN_VERSION).|||你当前已经处于对应版本 $MAIN_VERSION 的稳定版。
+Unrecognized distro; treating as Fedora-based (zypper detected, using dnf flow).|||无法识别的发行版；按 Fedora 系处理（检测到 zypper，使用 dnf 流程）。
+Could not detect a compatible package manager (apt-get, pacman, dnf, or zypper).|||无法检测到兼容的包管理器（apt-get、pacman、dnf 或 zypper）。
+Saving activation records cannot be done when the device is in recovery, or DFU.|||当设备处于恢复模式或 DFU 模式时，无法保存激活记录。
+Title should be a brief and clear summary of the issue you are trying to report|||标题应为你要报告的问题的简明清晰的摘要
+SSH ramdisk should now be booting! In a moment, you will connect to SSH session|||SSH ramdisk 现在应该正在启动！稍后你将连接至 SSH 会话
+Externally managed environment detected, retrying with --break-system-packages|||检测到外部管理环境，使用 --break-system-packages 重试
+Your device must be in normal mode, and jailbroken to save activation records.|||要保存激活记录，你的设备必须处于正常模式并已越狱。
+    Check 'dmesg | grep -i apfs'. If Secure Boot is enabled, enroll the module|||检查 'dmesg | grep -i apfs'。如果已启用 Secure Boot，请注册模块
+    Make sure loop devices are available (e.g. 'modprobe loop') and try again.|||请确保 loop 设备可用（例如 'modprobe loop'），然后重试。
+FakeVar will not activate normally. This functionality is not for an end-user.|||FakeVar 将无法正常激活。此功能不面向普通用户。
+SSHtars are from SSHRD_Script: https://github.com/verygenericname/SSHRD_Script|||SSH tar 来自 SSHRD_Script：https://github.com/verygenericname/SSHRD_Script
+[!] Unrecognized filesystem in restored_external ramdisk (work/$ramdisk_dmg).|||[!] restored_external ramdisk 中的文件系统无法识别（work/${ramdisk_dmg}）。
+Sideloading outside of TrollStore may or may not work, your mileage may vary.|||在 TrollStore 之外侧载可能可用也可能不可用，效果因人而异。
+Cmd + A -> Cmd + C, then paste the entire log into your issue you're opening|||Cmd + A -> Cmd + C，然后将整个日志粘贴到你打开的 issue 中
+It is strongly recommended to update to get the latest features + bug fixes.|||强烈建议更新以获得最新的功能与 bug 修复。
+WARNING: iOS 16.1+ restores on Linux are experimental. Proceed with caution.|||警告：Linux 上 iOS 16.1+ 的恢复是实验性的，请谨慎操作。
+Development versions are unstable and may contain bugs or breaking changes.|||开发版本不稳定，可能包含 bug 或不兼容变更。
+A8X iOS 11 downgrades are NOT supported yet in surrealra1n $CURRENT_VERSION|||surrealra1n $CURRENT_VERSION 尚不支持 A8X iOS 11 降级
+Make sure your computer and device is connected to the same Wi-Fi network.|||请确保你的电脑和设备连接到同一个 Wi-Fi 网络。
+If your device is running 16.3.1 or lower, it may be okay to use this one.|||如果你的设备运行 16.3.1 或更低版本，使用这个可能没问题。
+Disconnect your device from the computer, then connect it to your Pi Pico|||从电脑上断开你的设备，然后将其连接到你的 Pi Pico
+Please do a tethered restore to iOS $VERSION, then try tether boot again.|||请先对 iOS $VERSION 进行有线恢复，然后再次尝试有线启动。
+Firmware details are listed above. Press Enter to proceed with download.|||固件详细信息已列在上方。按回车继续下载。
+    The ramdisk was NOT packed; check 'dmesg | grep -i apfs' and re-run.|||ramdisk 尚未打包；请检查 'dmesg | grep -i apfs' 并重新运行。
+If your device is running 16.4 or later, it may be okay to use this one.|||如果你的设备运行 16.4 或更高版本，使用这个可能没问题。
+This means ALL boot files, restore files, and binaries will be deleted.|||这意味着所有启动文件、恢复文件和二进制文件都将被删除。
+This will upgrade you to stable without wiping your boot/restore files.|||这将把你升级到稳定版，而不会清除你的启动/恢复文件。
+You cannot set a Passcode or use Touch ID because of BPR being enforced|||由于强制启用了 BPR，你无法设置密码或使用 Touch ID
+[!] Unrecognized filesystem in restore ramdisk ($restore_ramdisk_dmg).|||[!] 恢复 ramdisk 中的文件系统无法识别（${restore_ramdisk_dmg}）。
+The ramdisk that currently exists for $IDENTIFIER is for $sshrdversion|||当前为 $IDENTIFIER 存在的 ramdisk 是用于 $sshrdversion 的
+WARNING: You are currently on $CURRENT_VERSION (development branch).|||警告：你当前处于 ${CURRENT_VERSION}（开发分支）。
+If you see the error: No such device (it may have been disconnected)|||如果你看到错误：No such device（设备可能已断开连接）
+Port: 2222 | Host: sftp://127.0.0.1 | User: root | Password: alpine|||端口：2222 | 主机：sftp://127.0.0.1 | 用户：root | 密码：alpine
+[!] Error: Failed to download $output after $max_attempts attempts|||[!] 错误：$max_attempts 次尝试后仍无法下载 $output
+Release the power button now, but keep holding volume down button.|||现在松开电源键，但继续按住音量减键。
+Here is the following things that may happen on seprmvr64 restore:|||以下是 seprmvr64 恢复时可能发生的以下情况：
+Unrecognized distro; treating as Debian-based (apt-get detected).|||无法识别的发行版；按基于 Debian 处理（检测到 apt-get）。
+Are you sure you want to go back to the previous version? (y/N): |||你确定要回到上一个版本吗？（y/N）：
+Legacy iOS Kit *does* support iPhone X restores with blobs though|||不过 Legacy iOS Kit *确实*支持使用 blob 恢复 iPhone X
+14.2 and lower downgrades are unsupported, except for 14.0 beta 4|||不支持 14.2 及更低的降级，但 14.0 测试版 4 除外
+Keep in mind, mounting data partition may not work at the moment!|||请记住，目前挂载数据分区可能无法使用！
+activation_record.plist did not save correctly. Cannot continue.|||activation_record.plist 未能正确保存。无法继续。
+Make sure your device is jailbroken, and has openSSH installed!|||请确保你的设备已越狱，并且已安装 openSSH！
+WARNING: This skips blob validation, ENSURE your SHSH is valid!|||警告：这会跳过 blob 验证，请确保你的 SHSH 有效！
+    signature with mokutil or disable Secure Boot, then re-run.|||使用 mokutil 注册签名或禁用 Secure Boot，然后重新运行。
+Unrecognized distro; treating as Arch-based (pacman detected).|||无法识别的发行版；按基于 Arch 处理（检测到 pacman）。
+Unrecognized distro; treating as Fedora-based (dnf detected).|||无法识别的发行版；按基于 Fedora 处理（检测到 dnf）。
+[*] Device is not in normal mode. Trying recovery/DFU mode...|||[*] 设备不在正常模式。正在尝试恢复/DFU 模式...
+surrealra1n has been reinstalled! Please run the script again|||surrealra1n 已重新安装！请重新运行脚本
+[!] Could not find or install kernel headers for $(uname -r).|||[!] 无法找到或安装适用于 $(uname -r) 的内核头文件。
+    Expected an HFS+ or APFS filesystem. Aborting for safety.|||预期的是 HFS+ 或 APFS 文件系统。为安全起见中止。
+    The linux-apfs-rw write may have corrupted the container.|||linux-apfs-rw 的写入可能已损坏该容器。
+FakeVar is created! You can boot into FakeVar with Just Boot.|||FakeVar 已创建！你可以使用 Just Boot 启动进入 FakeVar。
+Rollback feature is not supported if you update from a beta.|||如果你从测试版更新而来，则不支持回滚功能。
+Would you like to enable skip-blob for this restore? (y/n): |||你是否要为此恢复启用 skip-blob？（y/n）：
+A12/A13 downgrades are only supported on macOS 12 and later.|||A12/A13 降级仅在 macOS 12 及更高版本受支持。
+iOS 18-27 A12/A13 downgrades are not supported at the moment|||目前不支持 iOS 18-27 的 A12/A13 降级
+Would you like to jailbreak as part of this restore? (Y/n): |||你是否想将此恢复的一部分也进行越狱？（Y/n）：
+Please re-run surrealra1n after the installation completes.|||安装完成后请重新运行 surrealra1n。
+Release the power button now, but keep holding home button.|||现在松开电源键，但继续按住主屏幕按钮。
+WARNING: You are about to switch to the development branch.|||警告：你即将切换到开发分支。
+[!] Failed to build the APFS kernel module (linux-apfs-rw).|||[!] 构建 APFS 内核模块（linux-apfs-rw）失败。
+You may also stay on iOS 13 if desired more than iOS 14/15.|||如果你更希望使用 iOS 13 而不是 iOS 14/15，也可以保持 iOS 13。
+A new version of surrealra1n is available: $LATEST_VERSION|||surrealra1n 有新版本可用：$LATEST_VERSION
+10.3.3 tether downgrades are not supported on this device.|||此设备不支持 10.3.3 有线降级。
+seprmvr64 restores to 8.x are not supported in surrealra1n|||surrealra1n 不支持恢复至 8.x 的 seprmvr64
+[!] To attach this log into your issue, do the following:|||[!] 要将此日志附加到你的 issue，请执行以下操作：
+Xcode Command Line Tools are not installed. Installing...|||未安装 Xcode 命令行工具。正在安装...
+surrealra1n has been updated! Please run the script again|||surrealra1n 已更新！请重新运行脚本
+The latest stable version is $MAIN_VERSION (main branch).|||最新稳定版是 ${MAIN_VERSION}（main 分支）。
+Restore has completed! Read above if there are any errors|||恢复已完成！如有任何错误，请查看上方输出
+Building the APFS kernel module for kernel $(uname -r)...|||正在为内核 $(uname -r) 构建 APFS 内核模块...
+Kernel headers for $(uname -r) are missing, installing...|||缺少适用于 $(uname -r) 的内核头文件，正在安装...
+iOS 17 downgrade is not supported on Linux at the moment.|||目前 Linux 上不支持 iOS 17 降级。
+Your device may have deep sleep issues after this restore|||此恢复后你的设备可能会出现深度睡眠问题
+Restore has completed! Read above if there is any errors|||恢复已完成！如有任何错误，请查看上方输出
+The device will be unable to activate after the restore.|||恢复后设备将无法激活。
+Restore has finished! Read above if there are any errors|||恢复已结束！如有任何错误，请查看上方输出
+Using aria2c with 16 connections for faster download...|||使用 aria2c 以 16 个连接加速下载...
+Error: Firmware not found (IDENTIFIER: %s, version: %s)|||错误：未找到固件（标识符：%s，版本：%s）
+Are you sure you want to reinstall surrealra1n? (y/N): |||你确定要重新安装 surrealra1n 吗？（y/N）：
+You may choose to continue attempting to pwn with Linux|||你可以选择继续尝试在 Linux 上破解
+Are you sure you want to switch to development? (y/N): |||你确定要切换到开发版吗？（y/N）：
+And we will not provide bypassing activation with this.|||而且我们不会为此提供绕过激活。
+Warning: No valid checksums available for verification|||警告：没有可用于验证的有效校验和
+If you have a MacBook, use surrealra1n on that instead|||如果你有 MacBook，请改用它在上面运行 surrealra1n
+Would you like instructions on how to do this? (y/n): |||你需要关于如何操作的方法说明吗？（y/n）：
+Found APFS kernel module built for kernel $(uname -r).|||已找到为内核 $(uname -r) 构建的 APFS 内核模块。
+Restore has finished! Read above if there's any errors|||恢复已结束！如有任何错误，请查看上方输出
+3. Restore to 10.3.3 untethered (some A7 devices only)|||3. 非有线恢复至 10.3.3（仅部分 A7 设备）
+IC-Info.sisv did not save correctly. Cannot continue.|||IC-Info.sisv 未能正确保存。无法继续。
+Latest stable version is $MAIN_VERSION (main branch).|||最新稳定版是 ${MAIN_VERSION}（main 分支）。
+A newer beta is available. Please update to continue.|||有更新的测试版可用。请更新后再继续。
+You are running surrealra1n on an Apple Silicon Mac.|||你正在 Apple Silicon Mac 上运行 surrealra1n。
+Device will be unable to activate after the restore.|||恢复后设备将无法激活。
+ERROR: Do not run this script with sudo or as root.|||错误：请勿使用 sudo 或以 root 身份运行此脚本。
+Backing up your current surrealra1n installation...|||正在备份你当前的 surrealra1n 安装...
+Are you sure you want to clear these files? (y/N): |||你确定要清除这些文件吗？（y/N）：
+Clearing boot files/restore files has been canceled|||清除启动文件/恢复文件已取消
+[!] Failed to clone linux-apfs-rw (network issue?).|||[!] 克隆 linux-apfs-rw 失败（网络问题？）。
+Which iOS version for SSHRD would you like to make?|||你想为 SSHRD 制作哪个 iOS 版本的 ramdisk？
+    https://github.com/pwnerblu/surrealra1n/issues|||https://github.com/pwnerblu/surrealra1n/issues
+Error: Firmware not found for device '$IDENTIFIER'|||错误：未找到设备 '$IDENTIFIER' 的固件
+[!] No device detected in normal or recovery mode.|||[!] 未在正常或恢复模式下检测到设备。
+Are you sure you want to switch to stable? (y/N): |||你确定要切换到稳定版吗？（y/N）：
+Press enter to continue once Device is in Recovery|||设备进入恢复模式后按回车继续
+[!] Failed to mount $img ($loopdev) as APFS $mode.|||[!] 无法将 ${img}（${loopdev}）作为 APFS $mode 挂载。
+SEP is partially incompatible, read the following:|||SEP 部分不兼容，请阅读以下内容：
+This means: Precise findings for AirTags and such.|||这意味着：AirTags 等物品的精确查找功能。
+3. Password protected Wi-Fi networks will not work|||3. 受密码保护的 Wi-Fi 网络将无法使用
+This OTA restore will use $LATEST_VERSION baseband|||此 OTA 恢复将使用 $LATEST_VERSION 基带
+Missing packages detected: ${MISSING_PACKAGES[*]}|||检测到缺少软件包：${MISSING_PACKAGES[*]}
+2. Clear all created boot files and restore files|||2. 清除所有已创建的启动文件和恢复文件
+You are on $CURRENT_VERSION (development branch).|||你处于 ${CURRENT_VERSION}（开发分支）。
+Put your device into recovery mode, then continue|||将你的设备置于恢复模式，然后继续
+[!] APFS ramdisk verification failed after write.|||[!] 写入后 APFS ramdisk 校验失败。
+[!] It is recommended to report this issue here:|||[!] 建议在此处报告此问题：
+futurerestore segfaulted (exit 139), retrying...|||futurerestore 段错误（退出码 139），正在重试...
+VPNs may not work, and potentially other issues.|||VPN 可能无法使用，还可能有其他问题。
+14.1 downgrades are not supported on this device|||此设备不支持 14.1 降级
+This may be useful if you want more disk space.|||如果你想要更多磁盘空间，这可能会很有用。
+Checking if this device is in pwned DFU already|||正在检查此设备是否已处于破解 DFU 状态
+No SHSH file found in the shsh folder. Aborting|||在 shsh 文件夹中未找到 SHSH 文件。中止
+File integrity check failed. Re-downloading...|||文件完整性检查失败。正在重新下载...
+Checking if this device has pwned successfully|||正在检查此设备是否已成功破解
+futurerestore failed with exit code $EXIT_CODE|||futurerestore 失败，退出码 $EXIT_CODE
+    Check your internet connection and re-run.|||检查你的网络连接并重新运行。
+Type YES to continue, anything else to abort: |||输入 YES 继续，输入其他任何内容则中止：
+surrealra1n only supports macOS 11 and later.|||surrealra1n 仅支持 macOS 11 及更高版本。
+MD5 not available, verifying SHA1 checksum...|||MD5 不可用，正在验证 SHA1 校验和...
+Please select a method to obtain the $1 ipsw.|||请选择获取 $1 IPSW 的方式。
+3. Go back to previous version of surrealra1n|||3. 回到 surrealra1n 的上一个版本
+Enabling --skip-blob option for this restore.|||为此恢复启用 --skip-blob 选项。
+[!] Failed to get a free loop device for $img|||[!] 无法为 $img 获取空闲 loop 设备
+    Check 'dmesg | grep -i apfs' for details.|||检查 'dmesg | grep -i apfs' 以获取详细信息。
+Latest IPSW does not exist: $IPSW_PATH_LATEST|||最新 IPSW 不存在：$IPSW_PATH_LATEST
+Restore files does not exist, making new ones|||恢复文件不存在，正在生成新的
+Would you like to remake the ramdisk? (y/n): |||你是否要重建 ramdisk？（y/n）：
+$1 - enter absolute path (blank to cancel): |||$1 - 请输入绝对路径（留空则取消）：
+Device has not entered DFU mode successfully|||设备未能成功进入 DFU 模式
+SEP is incompatible. Restore cannot continue|||SEP 不兼容。恢复无法继续
+[!] surrealra1n has crashed due to an issue|||[!] surrealra1n 因出现问题而崩溃
+You are running surrealra1n on Intel macOS.|||你正在 Intel macOS 上运行 surrealra1n。
+Your macOS version $macos_ver is supported.|||你的 macOS 版本 $macos_ver 受支持。
+File integrity verified. Skipping download.|||文件完整性验证通过。跳过下载。
+Fetching latest development version info...|||正在获取最新开发版本信息...
+Would you like to switch to stable? (Y/n): |||你是否想切换到稳定版？（Y/n）：
+You will have some issues with the restore:|||你在恢复时会遇到一些问题：
+Fetching shsh blobs for iOS $LATEST_VERSION|||正在获取 iOS $LATEST_VERSION 的 shsh blob
+Here's the recommended way to report this:|||以下是推荐的报告方式：
+Your surrealra1n version: $CURRENT_VERSION|||你的 surrealra1n 版本：$CURRENT_VERSION
+Error: Failed to fetch data from $json_url|||错误：从 $json_url 获取数据失败
+Error: API returned invalid JSON, content:|||错误：API 返回了无效的 JSON，内容：
+Which version would you like to download: |||你想下载哪个版本：
+A7 devices may have issues pwning on Linux|||A7 设备在 Linux 上破解可能会出现问题
+Device is not pwned yet, attempting to pwn|||设备尚未破解，正在尝试破解
+You need to put your device into DFU mode.|||你需要将你的设备置于 DFU 模式。
+[!] Failed to load the APFS kernel module.|||[!] 加载 APFS 内核模块失败。
+13.x restores below 13.4 are not supported|||不支持 13.4 以下的 13.x 恢复
+Device has been detected in Recovery mode.|||已检测到设备处于恢复模式。
+Enter your user password when prompted to|||在提示时输入你的用户密码
+Rosetta 2 is not installed. Installing...|||未安装 Rosetta 2。正在安装...
+SEP is compatible but Touch ID will break|||SEP 兼容，但 Touch ID 将失效
+Injecting activation files into rootfs...|||正在将激活文件注入 rootfs...
+surrealra1n reinstall has been canceled.|||surrealra1n 重新安装已取消。
+The device has entered DFU successfully!|||设备已成功进入 DFU 模式！
+Latest development version: $DEV_VERSION|||最新开发版本：$DEV_VERSION
+Switch to development has been canceled.|||切换到开发版已取消。
+to the established macOS implementation.|||相较于成熟的 macOS 实现。
+iOS 16.0-16.5.1 restores are unsupported|||不支持 iOS 16.0-16.5.1 的恢复
+Would you like to make new ones? (y/n): |||你是否要生成新的？（y/n）：
+iOS 17.x support is really experimental.|||iOS 17.x 的支持确实是实验性的。
+Device not detected in Recovery. Exiting|||未在恢复模式检测到设备。退出
+Xcode Command Line Tools are installed.|||已安装 Xcode 命令行工具。
+All dependencies are already installed.|||所有依赖均已安装。
+Enter the SSH Password of your device: |||输入你设备的 SSH 密码：
+And iOS 16.7.x restores are unsupported|||并且不支持 iOS 16.7.x 的恢复
+[$dep] is not installed. Installing...|||[$dep] 未安装。正在安装...
+IPSW file already exists at $IPSW_PATH|||IPSW 文件已存在于 $IPSW_PATH
+IPSW file already exists at $ipsw_file|||IPSW 文件已存在于 $ipsw_file
+ideviceinfo failed after two attempts.|||ideviceinfo 尝试两次后仍失败。
+[*] Device is in Recovery or DFU mode.|||[*] 设备处于恢复或 DFU 模式。
+Fetching latest stable version info...|||正在获取最新稳定版本信息...
+Input the version you'd like to boot: |||输入你想启动的版本：
+Latest IPSW is not selected. Aborting.|||未选择最新 IPSW。中止。
+Checking if device is in Recovery mode|||正在检查设备是否处于恢复模式
+Checking for required dependencies...|||正在检查所需依赖...
+Would you like to update now? (y/n): |||你现在要更新吗？（y/n）：
+And potentially other broken features|||以及其他可能损坏的功能
+iOS 16.0.x A12/A13 downgrade on Linux|||Linux 上 iOS 16.0.x 的 A12/A13 降级
+SHA1 checksum verified successfully!|||SHA1 校验和验证成功！
+Select iOS $LATEST_VERSION IPSW file|||选择适用于 iOS $LATEST_VERSION 的 IPSW 文件
+Latest stable version: $MAIN_VERSION|||最新稳定版：$MAIN_VERSION
+SHSH blob does not exist: $SHSH_PATH|||SHSH blob 不存在：$SHSH_PATH
+5. Potentially other broken features|||5. 其他可能损坏的功能
+SSH ramdisk is created successfully!|||SSH ramdisk 已成功创建！
+[!] Failed command: $failed_command|||[!] 失败的命令：$failed_command
+MD5 checksum verified successfully!|||MD5 校验和验证成功！
+Switch to stable has been canceled.|||切换到稳定版已取消。
+Installing missing dependencies...|||正在安装缺失的依赖...
+[!] Required directory missing: $1|||[!] 缺少所需目录：$1
+[+] Device Identifier: $IDENTIFIER|||[+] 设备标识符：$IDENTIFIER
+Error: API returned empty content|||错误：API 返回了空内容
+Checking for existing binaries...|||正在检查现有二进制文件...
+Device has not pwned successfully|||设备未能成功破解
+Put your device into DFU mode now|||现在将你的设备置于 DFU 模式
+Current version: $CURRENT_VERSION|||当前版本：$CURRENT_VERSION
+Hold volume down + power buttons.|||按住音量减键和电源键。
+Loading the APFS kernel module...|||正在加载 APFS 内核模块...
+Haptic home button will not work.|||触觉主屏幕按钮将无法工作。
+This surrealra1n beta has expired|||此 surrealra1n 测试版已过期
+Welcome to surrealsshrd v1.0 beta|||欢迎使用 surrealsshrd v1.0 测试版
+iPad mini 3 is not supported yet|||iPad mini 3 尚不受支持
+Activation records are now saved|||激活记录现已保存
+No SHSH blob selected. Aborting.|||未选择 SHSH blob。中止。
+Unsupported Linux distribution.|||不支持的 Linux 发行版。
+Detected distro family: $DISTRO|||检测到系统发行版：$DISTRO
+All dependencies are installed.|||所有依赖均已安装。
+Error: Download failed (aria2c)|||错误：下载失败（aria2c）
+aria2c not found, using curl...|||未找到 aria2c，改用 curl...
+2. Download an IPSW file Online|||2. 在线下载 IPSW 文件
+SSH will connect as $CONNECT_AS|||SSH 将以 $CONNECT_AS 身份连接
+IPSW does not exist: $IPSW_PATH|||IPSW 不存在：$IPSW_PATH
+APFS ramdisk write verified OK.|||APFS ramdisk 写入校验通过。
+Please select an option (1-2): |||请选择一个选项（1-2）：
+Error: SHA1 checksum mismatch!|||错误：SHA1 校验和不匹配！
+Please input an option (1-3): |||请输入选项（1-3）：
+Please input an option (1-4): |||请输入选项（1-4）：
+iPhone X is not supported yet.|||iPhone X 尚不受支持。
+9.3.x restores are unsupported|||不支持 9.3.x 的恢复
+Please input an option (1-5): |||请输入选项（1-5）：
+[!] Required file missing: $1|||[!] 缺少所需文件：$1
+Error: MD5 checksum mismatch!|||错误：MD5 校验和不匹配！
+Error: Download failed (curl)|||错误：下载失败（curl）
+You have declined the update.|||你已拒绝更新。
+SEP is partially incompatible|||SEP 部分不兼容
+USB accessories will not work|||USB 配件将无法使用
+Proceed to do the following:|||请继续执行以下操作：
+1. Restore (with SHSH blobs)|||1. 恢复（使用 SHSH blob）
+surrealSSHRD requires macOS.|||surrealSSHRD 需要 macOS。
+No IPSW selected. Aborting.|||未选择 IPSW。中止。
+Failed to clone repository.|||克隆仓库失败。
+Rollback has been canceled.|||回滚已取消。
+Instructions will begin in:|||说明将在以下时间开始：
+Restore files already exist|||恢复文件已存在
+usbliter8ctl may error out.|||usbliter8ctl 可能会出错。
+1. Create FakeVar (iOS 18+)|||1. 创建 FakeVar（iOS 18+）
+surrealra1n is up to date.|||surrealra1n 是最新版本。
+Running: pip3 install $pkg|||运行：pip3 install $pkg
+Hold power + home buttons.|||按住电源键和主屏幕按钮。
+Device is now in DFU mode!|||设备现在处于 DFU 模式！
+Skipping removal of powerd|||跳过移除 powerd
+6. Baseband will not work.|||6. 基带将无法工作。
+[!] Exit code: $exit_code|||[!] 退出码：$exit_code
+Press any key to continue|||按任意键继续
+Verifying MD5 checksum...|||正在验证 MD5 校验和...
+Downloading to $IPSW_PATH|||正在下载到 $IPSW_PATH
+Downloading to $ipsw_file|||正在下载到 $ipsw_file
+File saved to: $ipsw_file|||文件已保存到：$ipsw_file
+Found necessary binaries.|||已找到所需二进制文件。
+iMessage/SMS may not work|||iMessage/SMS 可能无法使用
+1. Touch ID will not work|||1. Touch ID 将无法工作
+2. Passcode will not work|||2. 密码将无法工作
+Jailbreak option disabled|||越狱选项已禁用
+3. surrealSSHRD (A12/A13)|||3. surrealSSHRD（A12/A13）
+[!] Script: $script_file|||[!] 脚本：$script_file
+Expected: $sha1_expected|||期望值：$sha1_expected
+Error: Invalid JSON data|||错误：无效的 JSON 数据
+Identifier: $identifier2|||标识符：$identifier2
+1. Reinstall surrealra1n|||1. 重新安装 surrealra1n
+Invalid option. Exiting.|||无效选项。退出。
+Checking for DFU devices|||正在检查 DFU 设备
+UWB may or may not work.|||UWB 可能可用也可能不可用。
+Jailbreak option enabled|||越狱选项已启用
+Select an option (1-3): |||请选择一个选项（1-3）：
+4. Switch to main branch|||4. 切换到 main 分支
+Rosetta 2 is installed.|||已安装 Rosetta 2。
+Expected: $md5_expected|||期望值：$md5_expected
+Downloading firmware...|||正在下载固件...
+Checking for updates...|||正在检查更新...
+Press enter to continue|||按回车继续
+Downloading binaries...|||正在下载二进制文件...
+[!] Line: $line_number|||[!] 行号：$line_number
+Homebrew is installed.|||已安装 Homebrew。
+Verifying integrity...|||正在验证完整性...
+Filesize: $filesize GB|||文件大小：$filesize GB
+1. Select an IPSW file|||1. 选择一个 IPSW 文件
+Press enter to go back|||按回车返回
+Device should now boot|||设备现在应该可以启动
+Touch ID will not work|||Touch ID 将无法工作
+Setting permissions...|||正在设置权限...
+surrealra1n is exiting|||surrealra1n 正在退出
+Is signed: $is_signed|||是否签名：$is_signed
+Binaries do not exist|||二进制文件不存在
+Skipping gaster reset|||跳过 gaster 重置
+1. Select Target IPSW|||1. 选择目标 IPSW
+1. Select 10.3.3 IPSW|||1. 选择 10.3.3 IPSW
+2. Restore (Tethered)|||2. 恢复（有线）
+[$dep] is installed.|||[$dep] 已安装。
+Skipping download...|||跳过下载...
+Copying new files...|||正在复制新文件...
+Select an SHSH2 file|||选择一个 SHSH2 文件
+1. Downgrade Options|||1. 降级选项
+Actual: $local_sha1|||实际值：$local_sha1
+Select an IPSW file|||选择一个 IPSW 文件
+Sending Kernelcache|||正在发送 Kernelcache
+SEP is incompatible|||SEP 不兼容
+2. Select Base IPSW|||2. 选择基础 IPSW
+Actual: $local_md5|||实际值：$local_md5
+Download complete.|||下载完成。
+Version: $version2|||版本：$version2
+sha256sum: $sha256|||sha256sum：$sha256
+$pkg not installed|||$pkg 未安装
+Unsupported device|||不支持的设备
+Sending DeviceTree|||正在发送 DeviceTree
+Sending trustcache|||正在发送 trustcache
+BuildID: $buildid|||BuildID：$buildid
+No action needed.|||无需操作。
+Using latest MTFW|||使用最新的 MTFW
+2. Connect to SSH|||2. 连接到 SSH
+2. Misc Utilities|||2. 杂项工具
+$CURRENT_VERSION|||$CURRENT_VERSION
+Device is pwned!|||设备已破解！
+3. Start Restore|||3. 开始恢复
+2. Start Restore|||2. 开始恢复
+[+] ECID: $ECID|||[+] ECID：$ECID
+Removing powerd|||正在移除 powerd
+IPSW is invalid|||IPSW 无效
+sha1sum: $sha1|||sha1sum：$sha1
+RELEASE NOTES:|||发布说明：
+$RELEASE_NOTES|||$RELEASE_NOTES
+$pkg: $version|||${pkg}：$version
+2. Select SHSH|||2. 选择 SHSH
+Making dirs...|||正在创建目录...
+Invalid option|||无效选项
+$loopdev $mnt|||$loopdev $mnt
+Source: $url|||来源：$url
+Information:|||信息：
+md5sum: $md5|||md5sum：$md5
+Sending iBSS|||正在发送 iBSS
+Sending iBEC|||正在发送 iBEC
+4. Just Boot|||4. Just Boot
+$(uname -r)|||$(uname -r)
+1. iOS 18.4|||1. iOS 18.4
+2. iOS 17.5|||2. iOS 17.5
+$INFO_TEXT|||$INFO_TEXT
+URL: $url|||URL：$url
+Aborting.|||中止。
+Options:|||选项：
+$VERSION|||$VERSION
+3. Exit|||3. 退出
+4. Back|||4. 返回
+3. Back|||3. 返回
+UNKNOWN|||UNKNOWN
+5. Back|||5. 返回
+fakevar|||fakevar
+5. Exit|||5. 退出
+$json|||$json
+APFS|||APFS
+HFS|||HFS
+$p|||$p
+10|||10
+3|||3
+5|||5
+4|||4
+8|||8
