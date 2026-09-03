@@ -654,7 +654,7 @@ ipsw_selector(){
 
 echo "正在检查更新..."
 rm -rf update/latest.txt
-download_with_retry "https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt" "update/latest.txt" 256
+download_with_retry "https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt" "update/latest.txt" 128
 LATEST_VERSION=$(head -n 1 "update/latest.txt" | tr -d '\r\n')
 RELEASE_NOTES=$(awk '/^RELEASE NOTES:/{flag=1; next} flag' "update/latest.txt")
 
@@ -1795,7 +1795,7 @@ fi
 switch_to_development(){
 
 echo "正在获取最新开发版本信息..."
-download_with_retry "https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt" "update/latest_dev.txt" 256
+download_with_retry "https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt" "update/latest_dev.txt" 128
 DEV_VERSION=$(head -n 1 "update/latest_dev.txt" | tr -d '\r\n')
 echo "当前版本：$CURRENT_VERSION"
 echo "最新开发版本：$DEV_VERSION"
@@ -1834,7 +1834,7 @@ fi
 switch_to_main(){
 
 echo "正在获取最新稳定版本信息..."
-download_with_retry "https://github.com/pwnerblu/surrealra1n/raw/refs/heads/main/update/latest.txt" "update/latest_main.txt" 256
+download_with_retry "https://github.com/pwnerblu/surrealra1n/raw/refs/heads/main/update/latest.txt" "update/latest_main.txt" 128
 MAIN_VERSION=$(head -n 1 "update/latest_main.txt" | tr -d '\r\n')
 
 CURRENT_CLEAN=$(echo "$CURRENT_VERSION" | sed 's/ beta//g' | sed 's/ .*//g' | tr -d 'v')
