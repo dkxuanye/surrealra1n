@@ -601,6 +601,7 @@ ipsw_selector(){
     echo "2. 在线下载 IPSW 文件"
     echo "3. 退出"
     read -p "请输入选项（1-3）：" fw_select_opts
+    fw_select_opts="${fw_select_opts//[$'\r']/}"
     if [[ $fw_select_opts == 1 ]]; then
         if [[ $1 == "target" ]]; then
             IPSW_PATH=$(pick_file "选择一个 IPSW 文件")
@@ -665,6 +666,7 @@ if [[ $LATEST_VERSION != $CURRENT_VERSION ]]; then
     echo ""
     echo "强烈建议更新以获得最新的功能与 bug 修复。"
     read -p "你现在要更新吗？（y/n）：" update
+    update="${update//[$'\r']/}"
     if [[ $update == y || $update == Y ]]; then
         rm -rf "updatefiles"
         mkdir updatefiles
@@ -1636,10 +1638,12 @@ if [[ -d "surrealra1n.old" ]]; then
     read -p "请输入选项（1-4）：" misc_utils_options
 else
     read -p "请输入选项（1-3）：" misc_utils_options
-fi
-if [[ $misc_utils_options == 1 ]]; then
+ fi
+ misc_utils_options="${misc_utils_options//[$'\r']/}"
+ if [[ $misc_utils_options == 1 ]]; then
     echo "警告：你的所有启动文件和其余内容都将被删除（surrealra1n 目录中的任何文件都会被清除），并将全新安装 surrealra1n。"
     read -p "你确定要重新安装 surrealra1n 吗？（y/N）：" surrealra1n_reinstall
+    surrealra1n_reinstall="${surrealra1n_reinstall//[$'\r']/}"
     if [[ $surrealra1n_reinstall == Y || $surrealra1n_reinstall == y ]]; then
         sudo rm -rf ./*
         git clone --branch development https://github.com/pwnerblu/surrealra1n repo --recursive
@@ -1662,6 +1666,7 @@ elif [[ $misc_utils_options == 2 ]]; then
     echo "警告：你的所有启动文件和恢复文件都将被删除。如果继续，之后你需要重新生成它们。"
     echo "如果你想要更多磁盘空间，这可能会很有用。"
     read -p "你确定要清除这些文件吗？（y/N）：" clear_files    
+    clear_files="${clear_files//[$'\r']/}"
     if [[ $clear_files == y || $clear_files == Y ]]; then
         sudo rm -rf "boot"
         sudo rm -rf "restorefiles"
@@ -1682,6 +1687,7 @@ elif [[ $misc_utils_options == 3 ]] && [[ -d "surrealra1n.old" ]]; then
     echo "警告：这将把 surrealra1n 恢复到备份在 surrealra1n.old 中的上一个版本。"
     echo "此 surrealra1n 版本中的任何新功能在上一个版本中可能都不存在"
     read -p "你确定要回到上一个版本吗？（y/N）：" rollback_confirm
+    rollback_confirm="${rollback_confirm//[$'\r']/}"
     if [[ $rollback_confirm == Y || $rollback_confirm == y ]]; then
         rm -rf "bin"
         rm -rf "futurerestore"
@@ -1757,6 +1763,7 @@ dfu_helper(){
 if [[ $MODE == Normal || $MODE == Recovery ]]; then
     echo "你需要将你的设备置于 DFU 模式。"
     read -p "你需要关于如何操作的方法说明吗？（y/n）：" dfu_instructions
+    dfu_instructions="${dfu_instructions//[$'\r']/}"
     if [[ $dfu_instructions == y || $dfu_instructions == Y ]]; then
         echo "说明将在以下时间开始："
         echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1" && sleep 1
@@ -1804,6 +1811,7 @@ echo "警告：你即将切换到开发分支。"
 echo "开发版本不稳定，可能包含 bug 或不兼容变更。"
 echo ""
 read -p "你确定要切换到开发版吗？（y/N）：" switch_confirm
+switch_confirm="${switch_confirm//[$'\r']/}"
 if [[ $switch_confirm == Y || $switch_confirm == y ]]; then
     echo "正在备份你当前的 surrealra1n 安装..."
     rm -rf "surrealra1n.old"
@@ -1870,6 +1878,7 @@ if [[ "$CURRENT_MAJOR" -gt "$MAIN_MAJOR" ]] || \
     echo "这意味着所有启动文件、恢复文件和二进制文件都将被删除。"
     echo ""
     read -p "你确定要切换到稳定版吗？（y/N）：" switch_confirm
+    switch_confirm="${switch_confirm//[$'\r']/}"
     if [[ $switch_confirm == Y || $switch_confirm == y ]]; then
         sudo rm -rf ./*
         git clone --branch main https://github.com/pwnerblu/surrealra1n repo --recursive
@@ -1893,6 +1902,7 @@ else
     echo "这将把你升级到稳定版，而不会清除你的启动/恢复文件。"
     echo ""
     read -p "你是否想切换到稳定版？（Y/n）：" switch_confirm
+    switch_confirm="${switch_confirm//[$'\r']/}"
     if [[ $switch_confirm == Y || $switch_confirm == y ]]; then
         rm -rf "surrealra1n.old"
         mkdir -p surrealra1n.old
@@ -1926,6 +1936,7 @@ dfu_helper_a11(){
 if [[ $MODE == Normal || $MODE == Recovery ]]; then
     echo "你需要将你的设备置于 DFU 模式。"
     read -p "你需要关于如何操作的方法说明吗？（y/n）：" dfu_instructions
+    dfu_instructions="${dfu_instructions//[$'\r']/}"
     if [[ $dfu_instructions == y || $dfu_instructions == Y ]] && [[ $MODE == Recovery ]]; then
         echo "说明将在以下时间开始："
         echo "3" && sleep 1 && echo "2" && sleep 1 && echo "1" && sleep 1
@@ -2296,6 +2307,7 @@ echo "2. 选择 SHSH"
 echo "3. 开始恢复"
 echo "4. 返回"
 read -p "请输入选项（1-4）：" untether_options
+untether_options="${untether_options//[$'\r']/}"
 if [[ $untether_options == 1 ]]; then
     ipsw_selector target
     restore_untethered_opts
@@ -2311,6 +2323,7 @@ elif [[ $untether_options == 2 ]]; then
 elif [[ $untether_options == 3 ]]; then
     sep_checker
     read -p "你是否要为此恢复启用 skip-blob？（y/n）：" skip_blob_det
+    skip_blob_det="${skip_blob_det//[$'\r']/}"
     if [[ $skip_blob_det == y || $skip_blob_det == Y ]]; then
         echo "为此恢复启用 --skip-blob 选项。"
         echo "警告：这会跳过 blob 验证，请确保你的 SHSH 有效！"
@@ -3562,6 +3575,7 @@ if [[ ! -f "$restoredir/custom.ipsw" ]] && [[ ! -f "$restoredir/ramdisk.im4p" ]]
 else
     echo "恢复文件已存在"
     read -p "你是否要生成新的？（y/n）：" restorefiles_remake
+    restorefiles_remake="${restorefiles_remake//[$'\r']/}"
     if [[ $restorefiles_remake == Y || $restorefiles_remake == y ]]; then
         rm -rf "$restoredir"
         if [[ $IDENTIFIER == iPhone10* ]] && [[ $VERSION == 16.* ]]; then
@@ -3788,6 +3802,7 @@ if [[ ! -f "$restoredir/custom.ipsw" ]]; then
 else
     echo "恢复文件已存在"
     read -p "你是否要生成新的？（y/n）：" restorefiles_remake
+    restorefiles_remake="${restorefiles_remake//[$'\r']/}"
     if [[ $restorefiles_remake == Y || $restorefiles_remake == y ]]; then
         rm -rf "$restoredir"
         if [[ $VERSION == 16.* || $VERSION == 17.* ]]; then
@@ -4164,6 +4179,7 @@ if [[ ! -f "$restoredir/$ipsw_custom" ]]; then
 else
     echo "恢复文件已存在"
     read -p "你是否要生成新的？（y/n）：" restorefiles_remake
+    restorefiles_remake="${restorefiles_remake//[$'\r']/}"
     if [[ $restorefiles_remake == Y || $restorefiles_remake == y ]]; then
         rm -rf "$restoredir"
         prepare_seprmvr64_ipsw_legacy
@@ -4207,6 +4223,7 @@ echo "2. 选择基础 IPSW"
 echo "3. 开始恢复"
 echo "4. 返回"
 read -p "请输入选项（1-4）：" tether_options
+tether_options="${tether_options//[$'\r']/}"
 if [[ $tether_options == 1 ]]; then
     ipsw_selector target
     restore_tethered_opts
@@ -4222,6 +4239,7 @@ elif [[ $tether_options == 3 ]]; then
             exit 1
         elif [[ $VERSION == 7.* ]]; then
             read -p "你是否想将此恢复的一部分也进行越狱？（Y/n）：" jailbreak_choice
+            jailbreak_choice="${jailbreak_choice//[$'\r']/}"
             if [[ $jailbreak_choice == Y || $jailbreak_choice == y ]]; then
                 echo "越狱选项已启用"
                 JAILBREAK=1
@@ -4312,6 +4330,7 @@ echo "1. 选择 10.3.3 IPSW"
 echo "2. 开始恢复"
 echo "3. 返回"
 read -p "请输入选项（1-3）：" restore_a7_options_choice
+restore_a7_options_choice="${restore_a7_options_choice//[$'\r']/}"
 if [[ $restore_a7_options_choice == 1 ]]; then
     ipsw_selector target
     if [[ $VERSION == 10.3.3 ]] && [[ $BUILD == 14G60 ]]; then
@@ -4358,6 +4377,7 @@ echo "3. 非有线恢复至 10.3.3（仅部分 A7 设备）"
 echo "4. Just Boot"
 echo "5. 返回"
 read -p "请输入选项（1-5）：" restore_options
+restore_options="${restore_options//[$'\r']/}"
 if [[ $restore_options == 1 ]]; then
     restore_untethered_opts
 elif [[ $restore_options == 2 ]]; then
@@ -4424,6 +4444,7 @@ echo "2. iOS 17.5"
 #echo "6. iOS 14.5 (do not use this ramdisk if device is on 16.4 or later)"
 #echo "7. iOS 14.0 (do not use this ramdisk if device is on 16.4 or later)"
 read -p "请选择一个选项（1-2）：" version_option
+version_option="${version_option//[$'\r']/}"
 
 sshrd_path="SSHRD/$IDENTIFIER"
 mkdir -p $sshrd_path
@@ -4599,6 +4620,7 @@ if [[ $sshrdversion == 16.0* || $sshrdversion == 15.* || $sshrdversion == 14.* ]
     echo "如果你的设备运行 16.3.1 或更低版本，使用这个可能没问题。"
     echo "如果你的设备运行 iOS 16.4 或更高版本，请勿启动此 ramdisk。请创建 ramdisk 版本至少为 iOS 16.4 的 ramdisk。"
     read -p "你是否要重建 ramdisk？（y/n）：" remake_ramdisk_opt
+    remake_ramdisk_opt="${remake_ramdisk_opt//[$'\r']/}"
     if [[ $remake_ramdisk_opt == Y || $remake_ramdisk_opt == y ]]; then
         make_ramdisk_again=1
     else
@@ -4609,6 +4631,7 @@ elif [[ $sshrdversion == 17.* || $sshrdversion == 18.* ]] && [[ $sshrd_just_made
     echo "如果你的设备运行 16.4 或更高版本，使用这个可能没问题。"
     echo "如果你的设备运行 16.3.1 或更低版本，最好为 iOS 16.4 以下的版本创建 ramdisk。"
     read -p "你是否要重建 ramdisk？（y/n）：" remake_ramdisk_opt
+    remake_ramdisk_opt="${remake_ramdisk_opt//[$'\r']/}"
     if [[ $remake_ramdisk_opt == Y || $remake_ramdisk_opt == y ]]; then
         make_ramdisk_again=1
     else
@@ -4661,6 +4684,7 @@ echo "1. 创建 FakeVar（iOS 18+）"
 echo "2. 连接到 SSH"
 echo "3. 退出"
 read -p "请选择一个选项（1-3）：" option_ssh
+option_ssh="${option_ssh//[$'\r']/}"
 if [[ $option_ssh == 1 ]]; then
     create_fakevar_a12
 elif [[ $option_ssh == 2 ]]; then
@@ -4683,6 +4707,7 @@ echo "3. surrealSSHRD（A12/A13）"
 echo "4. 切换到 main 分支"
 echo "5. 退出"
 read -p "请输入选项（1-5）：" option
+option="${option//[$'\r']/}"
 if [[ $option == 1 ]]; then
     restore_utils
 elif [[ $option == 2 ]]; then
@@ -4702,3 +4727,5 @@ fi
 }
 
 main_menu
+
+
