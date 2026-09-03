@@ -113,7 +113,7 @@ surrealra1n has been reinstalled! Please run the script again|||surrealra1n 已�
 [!] Could not find or install kernel headers for $(uname -r).|||[!] 无法找到或安装适用于 $(uname -r) 的内核头文件。
     Expected an HFS+ or APFS filesystem. Aborting for safety.|||预期的是 HFS+ 或 APFS 文件系统。为安全起见中止。
     The linux-apfs-rw write may have corrupted the container.|||linux-apfs-rw 的写入可能已损坏该容器。
-FakeVar is created! You can boot into FakeVar with Just Boot.|||FakeVar 已创建！你可以使用 Just Boot 启动进入 FakeVar。
+FakeVar is created! You can boot into FakeVar with Just Boot.|||FakeVar 已创建！你可以使用「仅启动」进入 FakeVar。
 Rollback feature is not supported if you update from a beta.|||如果你从测试版更新而来，则不支持回滚功能。
 Would you like to enable skip-blob for this restore? (y/n): |||你是否要为此恢复启用 skip-blob？（y/n）：
 A12/A13 downgrades are only supported on macOS 12 and later.|||A12/A13 降级仅在 macOS 12 及更高版本受支持。
@@ -402,7 +402,7 @@ Information:|||信息：
 md5sum: $md5|||md5sum：$md5
 Sending iBSS|||正在发送 iBSS
 Sending iBEC|||正在发送 iBEC
-4. Just Boot|||4. Just Boot
+4. Just Boot|||4. 仅启动
 $(uname -r)|||$(uname -r)
 1. iOS 18.4|||1. iOS 18.4
 2. iOS 17.5|||2. iOS 17.5

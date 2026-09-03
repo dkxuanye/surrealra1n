@@ -4374,7 +4374,7 @@ echo ""
 echo "1. 恢复（使用 SHSH blob）"
 echo "2. 恢复（有线）"
 echo "3. 非有线恢复至 10.3.3（仅部分 A7 设备）"
-echo "4. Just Boot"
+echo "4. 仅启动"
 echo "5. 返回"
 read -p "请输入选项（1-5）：" restore_options
 restore_options="${restore_options//[$'\r']/}"
@@ -4578,7 +4578,7 @@ python3 bin/dtpatch.py work/DeviceTree.raw -o work/DeviceTree.patch
 ./bin/sshpass -p "alpine" scp -P2222 work/devicetred.img4 root@localhost:/mnt6/$active/usr/standalone/firmware/devicetred.img4
 ./bin/sshpass -p "alpine" scp -P2222 work/kernelcachd root@localhost:/mnt6/$active/System/Library/Caches/com.apple.kernelcaches/kernelcachd
 ./bin/sshpass -p "alpine" ssh root@127.0.0.1 -p2222 -o StrictHostKeyChecking=no "/sbin/reboot || true" || true
-echo "FakeVar 已创建！你可以使用 Just Boot 启动进入 FakeVar。"
+echo "FakeVar 已创建！你可以使用「仅启动」进入 FakeVar。"
 exit 0
 
 }
