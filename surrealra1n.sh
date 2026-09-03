@@ -5,6 +5,10 @@ CURRENT_VERSION="v2.1 beta"
 # that points at https://github.com/ is prefixed with it (e.g. https://ghfast.top/).
 GITHUB_PROXY="${GITHUB_PROXY:-}"
 
+# Skip the startup update check. Set to 1 to avoid contacting GitHub and to
+# never be prompted to update:  SKIP_UPDATE_CHECK=1 ./surrealra1n.sh
+SKIP_UPDATE_CHECK="${SKIP_UPDATE_CHECK:-0}"
+
 if [ "$EUID" -eq 0 ]; then
   echo "错误：请勿使用 sudo 或以 root 身份运行此脚本。"
   exit 1
@@ -653,56 +657,65 @@ ipsw_selector(){
 
 #
 
-echo "正在检查更新..."
-rm -rf update/latest.txt
-download_with_retry "https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt" "update/latest.txt" 128
-LATEST_VERSION=$(head -n 1 "update/latest.txt" | tr -d '\r\n')
-RELEASE_NOTES=$(awk '/^RELEASE NOTES:/{flag=1; next} flag' "update/latest.txt")
-
-if [[ $LATEST_VERSION != $CURRENT_VERSION ]]; then
-    echo "surrealra1n 有新版本可用：$LATEST_VERSION"
-    echo "发布说明："
-    echo "$RELEASE_NOTES"
-    echo ""
-    echo "强烈建议更新以获得最新的功能与 bug 修复。"
-    read -p "你现在要更新吗？（y/n）：" update
-    update="${update//[$'\r']/}"
-    if [[ $update == y || $update == Y ]]; then
-        rm -rf "updatefiles"
-        mkdir updatefiles
-        rm -rf "updatefiles/repo"
-        git clone --branch development https://github.com/pwnerblu/surrealra1n updatefiles/repo --recursive
-        if [[ ! -d updatefiles/repo ]]; then
-            echo "克隆仓库失败。"
-            exit 1
-        fi
-        rm -rf "surrealra1n.old"
-        mkdir -p surrealra1n.old # make folder to back up old surrealra1n installation
-        echo "$CURRENT_VERSION" > surrealra1n.old/oldversion.txt
-        echo "正在备份你当前的 surrealra1n 安装..."
-        mv -v bin surrealra1n.old/
-        mv -v futurerestore surrealra1n.old/
-        mv -v keys surrealra1n.old/
-        mv -v surrealra1n.sh surrealra1n.old/
-        rm -rf "bin"
-        rm -rf "futurerestore"
-        rm -rf "keys"
-        echo "正在复制新文件..."
-        cp -av updatefiles/repo/. ./
-        chmod +x surrealra1n.sh
-
-        rm -rf "updatefiles"
-        echo "surrealra1n 已更新！请重新运行脚本"
-        exit 0
+if [[ $SKIP_UPDATE_CHECK != 1 ]]; then
+    echo "正在检查更新..."
+    rm -rf update/latest.txt
+    LATEST_VERSION=""
+    RELEASE_NOTES=""
+    if download_with_retry "https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt" "update/latest.txt" 128 && [[ -s update/latest.txt ]]; then
+        LATEST_VERSION=$(head -n 1 "update/latest.txt" | tr -d '\r\n')
+        RELEASE_NOTES=$(awk '/^RELEASE NOTES:/{flag=1; next} flag' "update/latest.txt")
     else
-        echo "你已拒绝更新。"
-        echo "此版本的 surrealra1n 已不再受支持，因此建议尽快更新。"
-        outdated=1
-        read -p "按回车继续"
+        echo "[!] 无法检查更新（离线或网络问题），已跳过。"
+    fi
+
+    if [[ -z "$LATEST_VERSION" ]]; then
+        echo "surrealra1n 已跳过更新检查。"
+        sleep 1
+    elif [[ $LATEST_VERSION == $CURRENT_VERSION ]]; then
+        echo "surrealra1n 是最新版本。"
+        sleep 1
+    else
+        echo "surrealra1n 有新版本可用：$LATEST_VERSION"
+        echo "发布说明："
+        echo "$RELEASE_NOTES"
+        echo ""
+        echo "是否更新？（y/n）："
+        read -p "你现在要更新吗？（y/n）：" update
+        update="${update//[$'\r']/}"
+        if [[ $update == y || $update == Y ]]; then
+            rm -rf "updatefiles"
+            mkdir updatefiles
+            rm -rf "updatefiles/repo"
+            git clone --branch development https://github.com/pwnerblu/surrealra1n updatefiles/repo --recursive
+            if [[ ! -d updatefiles/repo ]]; then
+                echo "克隆仓库失败。"
+                exit 1
+            fi
+            rm -rf "surrealra1n.old"
+            mkdir -p surrealra1n.old # make folder to back up old surrealra1n installation
+            echo "$CURRENT_VERSION" > surrealra1n.old/oldversion.txt
+            echo "正在备份你当前的 surrealra1n 安装..."
+            mv -v bin surrealra1n.old/
+            mv -v futurerestore surrealra1n.old/
+            mv -v keys surrealra1n.old/
+            mv -v surrealra1n.sh surrealra1n.old/
+            rm -rf "bin"
+            rm -rf "futurerestore"
+            rm -rf "keys"
+            echo "正在复制新文件..."
+            cp -av updatefiles/repo/. ./
+            chmod +x surrealra1n.sh
+
+            rm -rf "updatefiles"
+            echo "surrealra1n 已更新！请重新运行脚本"
+            exit 0
+        else
+            echo "你已拒绝更新，继续使用当前版本。"
+        fi
     fi
 else
-    echo "surrealra1n 是最新版本。"
-    sleep 1
+    echo "已跳过更新检查（SKIP_UPDATE_CHECK=1）。"
 fi
 
 echo "正在检查现有二进制文件..."
