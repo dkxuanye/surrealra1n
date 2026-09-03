@@ -1,6 +1,10 @@
 #!/bin/bash
 CURRENT_VERSION="v2.1 beta"
 
+# GitHub download acceleration: when GITHUB_PROXY is non-empty, any download URL
+# that points at https://github.com/ is prefixed with it (e.g. https://ghfast.top/).
+GITHUB_PROXY="${GITHUB_PROXY:-}"
+
 if [ "$EUID" -eq 0 ]; then
   echo "ERROR: Do not run this script with sudo or as root."
   exit 1
@@ -60,45 +64,51 @@ trap 'error_handler $LINENO' ERR
 
 # Download a file with retry and validate it's not an HTML error page
 # Usage: download_with_retry <url> <output_path> [min_size_bytes]
+# If GITHUB_PROXY is set and the URL points at github.com, the proxy prefix is prepended.
 download_with_retry() {
     local url="$1"
     local output="$2"
     local min_size="${3:-1024}"
     local max_attempts=3
     local attempt=1
+    if [[ -n "${GITHUB_PROXY:-}" && "$url" == https://github.com/* ]]; then
+        url="${GITHUB_PROXY}${url}"
+    fi
+    local part="${output}.part"
     while [[ $attempt -le $max_attempts ]]; do
         set +e
-        curl -L -f -o "$output" "$url" 2>/dev/null
+        curl -L -f -C - -o "$part" "$url" 2>/dev/null
         local curl_exit=$?
         set -e
-        if [[ $curl_exit -eq 0 ]] && [[ -f "$output" ]]; then
+        if [[ $curl_exit -eq 0 ]] && [[ -f "$part" ]]; then
             local file_size
-            file_size=$(wc -c < "$output" | tr -d ' ')
+            file_size=$(wc -c < "$part" | tr -d ' ')
             if [[ $file_size -ge $min_size ]]; then
                 # Check if file is HTML (GitHub error page)
-                if file "$output" 2>/dev/null | grep -qi "text\|html\|ascii"; then
+                if file "$part" 2>/dev/null | grep -qi "text\|html\|ascii"; then
                     local head_bytes
-                    head_bytes=$(head -c 64 "$output" 2>/dev/null)
+                    head_bytes=$(head -c 64 "$part" 2>/dev/null)
                     if echo "$head_bytes" | grep -qi "<!doctype\|<html\|<head"; then
                         echo "[!] Warning: $output appears to be an HTML page, retrying... (attempt $attempt/$max_attempts)"
-                        rm -f "$output"
+                        rm -f "$part"
                         attempt=$((attempt + 1))
                         sleep 2
                         continue
                     fi
                 fi
+                mv -f "$part" "$output"
                 return 0
             else
                 echo "[!] Warning: $output is too small (${file_size} bytes, minimum ${min_size}), retrying... (attempt $attempt/$max_attempts)"
-                rm -f "$output"
+                rm -f "$part"
             fi
         else
             echo "[!] Warning: Failed to download $output (curl exit $curl_exit), retrying... (attempt $attempt/$max_attempts)"
-            rm -f "$output"
         fi
         attempt=$((attempt + 1))
         sleep 2
     done
+    rm -f "$part"
     echo "[!] Error: Failed to download $output after $max_attempts attempts"
     return 0
 }
@@ -644,7 +654,7 @@ ipsw_selector(){
 
 echo "Checking for updates..."
 rm -rf update/latest.txt
-curl -L -o update/latest.txt https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt
+download_with_retry "https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt" "update/latest.txt" 256
 LATEST_VERSION=$(head -n 1 "update/latest.txt" | tr -d '\r\n')
 RELEASE_NOTES=$(awk '/^RELEASE NOTES:/{flag=1; next} flag' "update/latest.txt")
 
@@ -1785,7 +1795,7 @@ fi
 switch_to_development(){
 
 echo "Fetching latest development version info..."
-curl -L -o update/latest_dev.txt https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt
+download_with_retry "https://github.com/pwnerblu/surrealra1n/raw/refs/heads/development/update/latest.txt" "update/latest_dev.txt" 256
 DEV_VERSION=$(head -n 1 "update/latest_dev.txt" | tr -d '\r\n')
 echo "Current version: $CURRENT_VERSION"
 echo "Latest development version: $DEV_VERSION"
@@ -1824,7 +1834,7 @@ fi
 switch_to_main(){
 
 echo "Fetching latest stable version info..."
-curl -L -o update/latest_main.txt https://github.com/pwnerblu/surrealra1n/raw/refs/heads/main/update/latest.txt
+download_with_retry "https://github.com/pwnerblu/surrealra1n/raw/refs/heads/main/update/latest.txt" "update/latest_main.txt" 256
 MAIN_VERSION=$(head -n 1 "update/latest_main.txt" | tr -d '\r\n')
 
 CURRENT_CLEAN=$(echo "$CURRENT_VERSION" | sed 's/ beta//g' | sed 's/ .*//g' | tr -d 'v')
