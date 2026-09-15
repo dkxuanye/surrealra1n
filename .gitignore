@@ -1,3 +1,17 @@
 bin/*
 !bin/notice.txt
-apfs/  
+apfs/
+
+# 运行时产物 / 大文件（勿提交）
+firmware_downloads/
+shsh/
+restorefiles/
+boot/
+work/
+tmp/
+tmp1/
+tmp2/
+ipsw/
+SSHRD/
+futurerestore/futurerestore
+surrealra1n-cn-*.zip
