@@ -86,7 +86,7 @@ set_mirror_vars() {
     esac
 }
 
-# [1/7] 系统检测
+# [1/8] 系统检测
 check_os() {
     if [[ "$(uname)" != "Darwin" ]]; then
         printr "仅支持 macOS"
@@ -95,7 +95,7 @@ check_os() {
     printg "✅ 系统检测通过（macOS）"
 }
 
-# [2/7] Xcode 命令行工具
+# [2/8] Xcode 命令行工具
 ensure_xcode_clt() {
     if xcode-select -p >/dev/null 2>&1; then
         printg "✅ Xcode 命令行工具已安装"
@@ -114,7 +114,7 @@ ensure_xcode_clt() {
     printg "✅ Xcode 命令行工具已安装"
 }
 
-# [3/7] Homebrew 安装（镜像脚本 + 预置镜像变量）
+# [3/8] Homebrew 安装（镜像脚本 + 预置镜像变量）
 install_homebrew() {
     if find_brew; then
         printg "✅ Homebrew 已安装"
@@ -151,7 +151,7 @@ append_zshrc() {
     fi
 }
 
-# [4/7] 镜像配置（zshrc 幂等 + brew remote 切换）
+# [4/8] 镜像配置（zshrc 幂等 + brew remote 切换）
 set_mirrors() {
     if [[ -n "${HOMEBREW_BOTTLE_DOMAIN:-}" && "$HOMEBREW_BOTTLE_DOMAIN" != "$BOTTLE_URL" ]]; then
         printy "检测到已配置 HOMEBREW_BOTTLE_DOMAIN=${HOMEBREW_BOTTLE_DOMAIN}，跳过镜像覆盖"
@@ -172,7 +172,7 @@ set_mirrors() {
     printg "✅ 镜像配置完成（${MIRROR_NAME}）"
 }
 
-# [5/7] GitHub 下载加速（GITHUB_PROXY 环境变量 + git insteadOf）
+# [5/8] GitHub 下载加速（GITHUB_PROXY 环境变量 + git insteadOf）
 set_github_proxy() {
     if [[ $NO_PROXY -eq 1 ]]; then
         printy "已跳过 GitHub 代理配置（--no-proxy）"
@@ -195,7 +195,7 @@ set_github_proxy() {
     printg "✅ GitHub 下载加速配置完成（${GH_PROXY}）"
 }
 
-# [6/7] pip3 清华源
+# [6/8] pip3 清华源
 set_pip_mirror() {
     local current
     if [[ -n "${PIP_INDEX_URL_USER:-}" && "$PIP_INDEX_URL_USER" != "$PIP_INDEX_URL" ]]; then
@@ -215,7 +215,7 @@ set_pip_mirror() {
     fi
 }
 
-# [7/7] 依赖安装（已装跳过，单个失败不中断）
+# [7/8] 依赖安装（已装跳过，单个失败不中断）
 install_deps() {
     local dep failed=0
     if ! find_brew; then
@@ -236,6 +236,31 @@ install_deps() {
         fi
     done
     return $failed
+}
+
+# [8/8] aria2c CA 证书修复（macOS 系统 CA，规避 openssl 缺根证书导致的 SSL 握手失败）
+fix_aria2_ca() {
+    local ca="/etc/ssl/cert.pem"
+    local conf="$HOME/.aria2/aria2.conf"
+    local line="ca-certificate=$ca"
+    if [[ ! -f "$ca" ]]; then
+        return 0
+    fi
+    if [[ -f "$conf" ]] && grep -qF "$line" "$conf"; then
+        printg "✅ aria2c CA 证书已配置"
+        return 0
+    fi
+    if [[ -f "$conf" ]] && grep -q "^ca-certificate=" "$conf"; then
+        printy "检测到已配置 aria2c CA，跳过覆盖"
+        return 0
+    fi
+    if [[ $DRY_RUN -eq 1 ]]; then
+        echo "[演练] 写入 $conf: $line"
+        return 0
+    fi
+    mkdir -p "$(dirname "$conf")"
+    echo "$line" >> "$conf"
+    printg "✅ aria2c CA 证书配置完成（${ca}）"
 }
 
 # 摘要
@@ -302,6 +327,7 @@ main() {
     set_github_proxy
     set_pip_mirror
     install_deps
+    fix_aria2_ca
     print_summary
 }
 

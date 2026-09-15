@@ -66,6 +66,8 @@ error_handler() {
 }
 
 trap 'error_handler $LINENO' ERR
+# 退出时恢复被暂停的 macOS 设备识别代理，否则 Finder/iTunes 将无法识别任何 iOS 设备
+trap 'killall -CONT AMPDevicesAgent AMPDeviceDiscoveryAgent MobileDeviceUpdater 2>/dev/null || true' EXIT
 
 # Download a file with retry and validate it's not an HTML error page
 # Usage: download_with_retry <url> <output_path> [min_size_bytes]
@@ -274,6 +276,26 @@ pick_file() {
     echo "$p"
 }
 
+# 离线替补方案：获取 blobs 时 tsschecker 需联网下载 firmwares.json，国内用户普遍无法访问 api.ipsw.me。
+# 若检测到离线文件（脚本目录或桌面），等待 5 秒后直接替换 /tmp/firmwares.json，tsschecker 将直接读取该缓存，不再联网。
+ensure_firmwares_json(){
+    local offline_json=""
+    local p
+    for p in "$SCRIPT_DIR/firmwares.json" "$HOME/Desktop/firmwares.json"; do
+        if [[ -s "$p" ]] && [[ "$(wc -c < "$p" | tr -d ' ')" -gt 100000 ]]; then
+            offline_json="$p"
+            break
+        fi
+    done
+    if [[ -n "$offline_json" ]]; then
+        echo "检测到离线 firmwares.json：$offline_json"
+        echo "5 秒后用它替换 /tmp/firmwares.json（跳过联网下载）"
+        sleep 5
+        sudo cp -f "$offline_json" /tmp/firmwares.json
+        echo "已替换，tsschecker 将直接使用本地缓存"
+    fi
+}
+
 
 # Dependency check
 echo "正在检查所需依赖..."
@@ -406,43 +428,90 @@ require_dir() {
     fi
 }
 
+# 计算文件哈希：优先 GNU 工具，回退 macOS 自带工具（都不可用时输出为空）
+hash_file() {
+    local algo="$1" file="$2"
+    case "$algo" in
+        md5)
+            if command -v md5sum >/dev/null 2>&1; then
+                md5sum "$file" | awk '{print $1}'
+            elif command -v md5 >/dev/null 2>&1; then
+                md5 -q "$file"
+            fi
+            ;;
+        sha1)
+            if command -v sha1sum >/dev/null 2>&1; then
+                sha1sum "$file" | awk '{print $1}'
+            elif command -v shasum >/dev/null 2>&1; then
+                shasum -a 1 "$file" | awk '{print $1}'
+            fi
+            ;;
+    esac
+}
+
 verify_checksum() {
     local file_path=$1
     local md5_expected=$2
     local sha1_expected=$3
-    
-    # Try MD5 first if available
+    local local_hash
+
     if [ -n "$md5_expected" ] && [ "$md5_expected" != "null" ]; then
-        echo "正在验证 MD5 校验和..."
-        local local_md5=$(md5sum "$file_path" | awk '{print $1}')
-        if [ "$local_md5" = "$md5_expected" ]; then
-            echo "MD5 校验和验证成功！"
-            return 0
-        else
+        local_hash=$(hash_file md5 "$file_path") || true
+        if [ -n "$local_hash" ]; then
+            echo "正在验证 MD5 校验和..."
+            if [ "$local_hash" = "$md5_expected" ]; then
+                echo "MD5 校验和验证成功！"
+                return 0
+            fi
             echo "错误：MD5 校验和不匹配！" >&2
             echo "期望值：$md5_expected" >&2
-            echo "实际值：$local_md5" >&2
+            echo "实际值：$local_hash" >&2
             return 1
         fi
+        echo "未找到 MD5 工具（md5sum/md5），尝试 SHA1..." >&2
     fi
-    
-    # Fall back to SHA1 if MD5 is not available
+
     if [ -n "$sha1_expected" ] && [ "$sha1_expected" != "null" ]; then
-        echo "MD5 不可用，正在验证 SHA1 校验和..."
-        local local_sha1=$(sha1sum "$file_path" | awk '{print $1}')
-        if [ "$local_sha1" = "$sha1_expected" ]; then
-            echo "SHA1 校验和验证成功！"
-            return 0
-        else
+        local_hash=$(hash_file sha1 "$file_path") || true
+        if [ -n "$local_hash" ]; then
+            echo "正在验证 SHA1 校验和..."
+            if [ "$local_hash" = "$sha1_expected" ]; then
+                echo "SHA1 校验和验证成功！"
+                return 0
+            fi
             echo "错误：SHA1 校验和不匹配！" >&2
             echo "期望值：$sha1_expected" >&2
-            echo "实际值：$local_sha1" >&2
+            echo "实际值：$local_hash" >&2
             return 1
         fi
+        echo "未找到 SHA1 工具（sha1sum/shasum），跳过校验" >&2
     fi
-    
+
     echo "警告：没有可用于验证的有效校验和" >&2
     return 0
+}
+
+# 下载文件：优先 aria2c（显式指定系统 CA，规避 openssl CA 缺失），失败回退 curl 断点续传
+download_file() {
+    local url="$1" out="$2"
+    local aria2_ca=""
+    if [[ -f /etc/ssl/cert.pem ]]; then
+        aria2_ca="--ca-certificate=/etc/ssl/cert.pem"
+    fi
+    if command -v aria2c >/dev/null 2>&1; then
+        echo "使用 aria2c 以 16 个连接加速下载..."
+        if aria2c -x 16 -s 16 $aria2_ca -o "$out" "$url"; then
+            return 0
+        fi
+        echo "aria2c 下载失败，改用 curl 断点续传..." >&2
+    else
+        echo "未找到 aria2c，改用 curl..."
+    fi
+    if curl -L -C - -o "$out" "$url"; then
+        return 0
+    fi
+    echo "错误：下载失败（aria2c 与 curl 均失败）" >&2
+    return 1
 }
 
 fetch_firmware() {
@@ -466,6 +535,7 @@ fetch_firmware() {
 
         mkdir -p firmware_downloads/$IDENTIFIER
         IPSW_PATH="firmware_downloads/$IDENTIFIER/18A5342e.ipsw"
+        FETCHED_IPSW_FILE="$IPSW_PATH"
 
         if [ -f "$IPSW_PATH" ]; then
             echo "IPSW 文件已存在于 $IPSW_PATH"
@@ -481,19 +551,10 @@ fetch_firmware() {
         echo "来源：$url"
         echo "正在下载到 $IPSW_PATH"
 
-        if command -v aria2c >/dev/null 2>&1; then
-            echo "使用 aria2c 以 16 个连接加速下载..."
-            aria2c -x 16 -s 16 -o "$IPSW_PATH" $url || {
-                echo "错误：下载失败（aria2c）" >&2
-                return 1
-            }
-        else
-            echo "未找到 aria2c，改用 curl..."
-            curl -L -o "$IPSW_PATH" $url || {
-                echo "错误：下载失败（curl）" >&2
-                return 1
-            }
-        fi
+        download_file "$url" "$IPSW_PATH" || {
+            echo "错误：下载失败" >&2
+            return 1
+        }
 
         echo "下载完成。"
         rm -rf work/BuildManifest.plist
@@ -518,26 +579,37 @@ fetch_firmware() {
         echo "$json" | head -n 10 >&2
         return 1
     fi
-    filter='first(.firmwares[] | select(.version == "'"$version_request"'"))'
-    url=$(echo "$json" | jq -r "$filter | .url")
-    md5=$(echo "$json" | jq -r "$filter | .md5sum")
-    identifier2=$(echo "$json" | jq -r "$filter | .identifier")
-    version2=$(echo "$json" | jq -r "$filter | .version")
-    buildid=$(echo "$json" | jq -r "$filter | .buildid")
-    filesize=$(echo "$json" | jq -r "$filter | .filesize")
-    sha256=$(echo "$json" | jq -r "$filter | .sha256sum")
-    sha1=$(echo "$json" | jq -r "$filter | .sha1sum")
-    is_signed=$(echo "$json" | jq -r "$filter | .signed")
-    # b to gb
-    filesize=$(echo "scale=2; $filesize / 1024 / 1024 / 1024" | bc)
+    filter='first(.firmwares[] | select(.version == $v or .buildid == $v))'
+    url=$(echo "$json" | jq -r --arg v "$version_request" "$filter | .url")
+    md5=$(echo "$json" | jq -r --arg v "$version_request" "$filter | .md5sum")
+    identifier2=$(echo "$json" | jq -r --arg v "$version_request" "$filter | .identifier")
+    version2=$(echo "$json" | jq -r --arg v "$version_request" "$filter | .version")
+    buildid=$(echo "$json" | jq -r --arg v "$version_request" "$filter | .buildid")
+    filesize=$(echo "$json" | jq -r --arg v "$version_request" "$filter | .filesize")
+    sha256=$(echo "$json" | jq -r --arg v "$version_request" "$filter | .sha256sum")
+    sha1=$(echo "$json" | jq -r --arg v "$version_request" "$filter | .sha1sum")
+    is_signed=$(echo "$json" | jq -r --arg v "$version_request" "$filter | .signed")
+
+    if [ -z "$version2" ]; then
+        echo "错误：未找到固件（标识符：${IDENTIFIER}，输入：${version_request}）。请填版本号（如 14.3）或 build ID（如 18C66）" >&2
+        return 1
+    fi
+
+    # b to gb（filesize 为空/非数字时不要喂给 bc，bc 报错会因 set -e 中断整个脚本）
+    if [[ "$filesize" =~ ^[0-9]+$ ]]; then
+        filesize=$(echo "scale=2; $filesize / 1024 / 1024 / 1024" | bc)
+    else
+        filesize="未知"
+    fi
 
     if [ -z "$url" ] || [ "$url" = "null" ]; then
-        echo "错误：未找到固件（标识符：%s，版本：%s）" >&2
+        echo "错误：未找到固件（标识符：${IDENTIFIER}，输入：${version_request}）" >&2
         return 1
     fi
     
     mkdir -p firmware_downloads/$IDENTIFIER
     local ipsw_file="firmware_downloads/$IDENTIFIER/${version2}.ipsw"
+    FETCHED_IPSW_FILE="$ipsw_file"
 
     # Check if file already exists
     if [ -f "$ipsw_file" ]; then
@@ -575,19 +647,10 @@ fetch_firmware() {
     echo "来源：$url"
     echo "正在下载到 $ipsw_file"
 
-    if command -v aria2c >/dev/null 2>&1; then
-        echo "使用 aria2c 以 16 个连接加速下载..."
-        aria2c -x 16 -s 16 -o "$ipsw_file" $url || {
-            echo "错误：下载失败（aria2c）" >&2
-            return 1
-        }
-    else
-        echo "未找到 aria2c，改用 curl..."
-        curl -L -o "$ipsw_file" $url || {
-            echo "错误：下载失败（curl）" >&2
-            return 1
-        }
-    fi
+    download_file "$url" "$ipsw_file" || {
+        echo "错误：下载失败" >&2
+        return 1
+    }
 
     echo "下载完成。"
     
@@ -639,14 +702,14 @@ ipsw_selector(){
             fi
             read -p "你想下载哪个版本：" download_version
             fetch_firmware $download_version
-            IPSW_PATH="firmware_downloads/$IDENTIFIER/${download_version}.ipsw"
+            IPSW_PATH="$FETCHED_IPSW_FILE"
             rm -rf work/BuildManifest.plist
             unzip -j "$IPSW_PATH" "BuildManifest.plist" -d work
             BUILD=$(grep -A1 "ProductBuildVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
             VERSION=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
         elif [[ $1 == "base" ]]; then
             fetch_firmware $LATEST_VERSION
-            IPSW_PATH_LATEST="firmware_downloads/$IDENTIFIER/$LATEST_VERSION.ipsw"
+            IPSW_PATH_LATEST="$FETCHED_IPSW_FILE"
             rm -rf work/BuildManifest.plist
             unzip -j "$IPSW_PATH_LATEST" "BuildManifest.plist" -d work
             VERSION_LATEST=$(grep -A1 "ProductVersion" work/BuildManifest.plist | grep -o '<string>[^<]*</string>' | head -1 | sed 's/<[^>]*>//g')
@@ -3352,7 +3415,9 @@ sleep 5
 
 echo "正在发送 iBSS"
 if [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPhone12* || $IDENTIFIER == iPad11* ]]; then
-    curl -L -o bin/liter8ctl https://github.com/ahmadkamal09999-tech/usbliter8/raw/refs/heads/main/usbliter8ctl
+    if [[ ! -s bin/liter8ctl ]]; then
+        curl -L -o bin/liter8ctl https://github.com/ahmadkamal09999-tech/usbliter8/raw/refs/heads/main/usbliter8ctl || true
+    fi
     if [[ $dist == 1 || $dist == 2 || $dist == 5 ]]; then
         python3 bin/liter8ctl boot $bootdir/iBSS.boot || true
         echo "如果你看到错误：No such device（设备可能已断开连接）"
@@ -3579,6 +3644,7 @@ mkdir -p shsh
 mkdir -p boot
 ECID=$(./bin/irecovery -q 2>/dev/null | grep "^ECID:" | cut -d ':' -f2 | xargs) || true
 echo "$VERSION" > boot/$ECID.txt
+ensure_firmwares_json
 sudo ./bin/tsschecker -d $IDENTIFIER -s -e $ECID -i $LATEST_VERSION --save-path shsh
 
 # Find the .shsh2 file in the shsh directory
@@ -3844,7 +3910,9 @@ else
 fi
 pwn_device
 det_rsep_flag
-curl -L -o bin/liter8ctl https://github.com/ahmadkamal09999-tech/usbliter8/raw/refs/heads/main/usbliter8ctl
+if [[ ! -s bin/liter8ctl ]]; then
+    curl -L -o bin/liter8ctl https://github.com/ahmadkamal09999-tech/usbliter8/raw/refs/heads/main/usbliter8ctl || true
+fi
 if [[ $dist == 1 || $dist == 2 || $dist == 5 ]]; then
     python3 bin/liter8ctl boot boot/$IDENTIFIER/iBSS.patch || true
     echo "如果你看到错误：No such device（设备可能已断开连接）"
@@ -3881,6 +3949,7 @@ fi
 echo "正在获取 iOS $LATEST_VERSION 的 shsh blob"
 rm -rf "shsh"
 mkdir -p shsh
+ensure_firmwares_json
 sudo ./bin/tsschecker -d $IDENTIFIER -s -e $ECID -i $LATEST_VERSION --save-path shsh --apnonce $APNONCE
 # Find the .shsh2 file in the shsh directory
 SHSH_PATH=$(find shsh -type f -name "*.shsh2" | head -n 1)
@@ -3888,9 +3957,19 @@ if [[ -z "$SHSH_PATH" ]]; then
     echo "在 shsh 文件夹中未找到 SHSH 文件。中止"
     exit 1
 fi
+# 离线方案：iPad5,3/5,4 的"最新 SEP"即 15.8.8 的 SEP，直接从 Base IPSW 本地提取，避免 futurerestore 联网查询 api.ipsw.me；
+# 基带改用 --no-baseband（不刷基带，保留 15.8.8 基带固件；降级后蜂窝本就不可用）
+if [[ $IDENTIFIER == iPad5,3 || $IDENTIFIER == iPad5,4 ]]; then
+    mkdir -p tmp/sep_local
+    unzip -j -o "$IPSW_PATH_LATEST" "BuildManifest.plist" -d tmp/sep_local >/dev/null
+    unzip -j -o "$IPSW_PATH_LATEST" "Firmware/all_flash/sep-firmware.$BOARDID2.RELEASE.im4p" -d tmp/sep_local >/dev/null
+    fr_sep_flags="--use-pwndfu --skip-blob --sep tmp/sep_local/sep-firmware.$BOARDID2.RELEASE.im4p --sep-manifest tmp/sep_local/BuildManifest.plist --no-baseband"
+else
+    fr_sep_flags="--latest-sep $updatebb_flag"
+fi
 while true; do
     set +e
-    sudo ./futurerestore/futurerestore -t $SHSH_PATH $rsep_flag --latest-sep $updatebb_flag $restoredir/custom.ipsw
+    sudo ./futurerestore/futurerestore -t $SHSH_PATH $rsep_flag $fr_sep_flags $restoredir/custom.ipsw
     EXIT_CODE=$?
     set -e
     if [[ $EXIT_CODE -eq 139 ]]; then
@@ -4213,6 +4292,7 @@ fi
 
 rm -rf "shsh"
 mkdir -p shsh
+ensure_firmwares_json
 sudo ./bin/tsschecker -d $IDENTIFIER -s -e $ECID -i $LATEST_VERSION --save-path shsh
 # Find the .shsh2 file in the shsh directory
 SHSH_PATH=$(find shsh -type f -name "*.shsh2" | head -n 1)
@@ -4478,7 +4558,8 @@ rm -rf "shsh"
 mkdir -p shsh
 mkdir -p tarwork
 mkdir -p work
-sudo ./bin/tsschecker -d $IDENTIFIER -s -e $ECID -i $LATEST_VERSION --save-path shsh 
+ensure_firmwares_json
+sudo ./bin/tsschecker -d $IDENTIFIER -s -e $ECID -i $LATEST_VERSION --save-path shsh
 
 # Find the .shsh2 file in the shsh directory
 SHSH_PATH=$(find shsh -type f -name "*.shsh2" | head -n 1)
@@ -4672,7 +4753,9 @@ else
     dfu_helper
 fi
 pwn_device
-curl -L -o bin/liter8ctl https://github.com/ahmadkamal09999-tech/usbliter8/raw/refs/heads/main/usbliter8ctl
+if [[ ! -s bin/liter8ctl ]]; then
+    curl -L -o bin/liter8ctl https://github.com/ahmadkamal09999-tech/usbliter8/raw/refs/heads/main/usbliter8ctl || true
+fi
 python3 bin/liter8ctl boot $sshrd_path/iBSS.patch || true
 echo "usbliter8ctl 可能会出错。"
 echo "只要设备进入 iBSS 恢复模式，这个错误可能也是正常的（屏幕应保持黑屏，但会被识别为恢复模式设备）。"
