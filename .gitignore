@@ -15,3 +15,16 @@ ipsw/
 SSHRD/
 futurerestore/futurerestore
 surrealra1n-cn-*.zip
+surrealra1n-boot-*.zip
+
+# 个人文档 / 商业规划（勿入库，本地保留随包拷贝）
+GLM.md
+QWEN.md
+hy4.md
+firmwares.json
+SSHRD_Script/
+.workbuddy/
+restore_*.log
+start_13.5_restore.command
+win_boot_tool/test_*/
+update/latest_main.txt

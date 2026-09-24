@@ -269,10 +269,21 @@ fi
 
 pick_file() {
     local p
-    p=$($zenity --file-selection --title="$1" 2>/dev/null) || true
-    if [[ -z "$p" ]]; then
-        read -e -r -p "$1 - 请输入绝对路径（留空则取消）：" p </dev/tty
-    fi
+    p=$($zenity --file-selection --title="$1" 2>/tmp/zenity_err.txt) || true
+    while true; do
+        if [[ -z "$p" ]]; then
+            if [[ -s /tmp/zenity_err.txt ]]; then
+                echo "    [提示] 文件选择窗口未能打开：$(head -n 1 /tmp/zenity_err.txt)"
+            fi
+            read -e -r -p "$1 - 请输入固件完整路径（把文件拖进本窗口可自动填入，留空取消）：" p </dev/tty
+        fi
+        [[ -z "$p" ]] && break
+        if [[ -f "$p" ]]; then
+            break
+        fi
+        echo "    文件不存在：$p —— 请粘贴 .ipsw 文件的完整路径（可拖文件进窗口），留空取消"
+        p=""
+    done
     echo "$p"
 }
 
@@ -1606,9 +1617,9 @@ elif [[ $IDENTIFIER == iPhone10* ]]; then
 elif [[ $IDENTIFIER == iPhone11* ]]; then
     LATEST_VERSION="18.7.10"
 elif [[ $IDENTIFIER == iPhone12* ]]; then
-    LATEST_VERSION="26.6.1"
+    LATEST_VERSION="27.0"
 elif [[ $IDENTIFIER == iPad11* ]]; then
-    LATEST_VERSION="26.6.1"
+    LATEST_VERSION="26.7"
 else
     LATEST_VERSION="12.5.8"
 fi
@@ -2853,6 +2864,8 @@ cryptex_app_18=$(find_dmg tmp2 smallest)
 restored="restored_external"
 if [[ $LATEST_VERSION == 18.* ]]; then
     restore_ramdisk_dmg_18=$(find_dmg tmp2 largest 179000000)
+elif [[ $LATEST_VERSION == 27.* ]]; then
+    restore_ramdisk_dmg_18=$(find_dmg tmp2 largest 244000000)
 elif [[ $LATEST_VERSION == 26.* ]]; then
     restore_ramdisk_dmg_18=$(find_dmg tmp2 largest 232784000)
 fi
@@ -3234,6 +3247,8 @@ else
 fi
 if [[ $LATEST_VERSION == 18.* ]]; then
     restore_ramdisk_dmg_18=$(find_dmg tmp2 largest 179000000)
+elif [[ $LATEST_VERSION == 27.* ]]; then
+    restore_ramdisk_dmg_18=$(find_dmg tmp2 largest 244000000)
 elif [[ $LATEST_VERSION == 26.* ]]; then
     restore_ramdisk_dmg_18=$(find_dmg tmp2 largest 232784000)
 fi
