@@ -25,10 +25,17 @@ TRANSFER_SIZE = 0x800
 
 TOOL_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 
+if os.name == "nt":
+    os.system("chcp 65001 >nul")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 
 def pause():
     try:
-        pause()
+        input("\n按回车键退出...")
     except (EOFError, KeyboardInterrupt):
         pass
 
@@ -170,7 +177,18 @@ def send_ibss(dev, ibss_path):
     print(flush=True)
     dev.ctrl_transfer(0x21, DFU_DNLOAD, 0, 0, None, 100)
     dev.ctrl_transfer(0x21, CUSTOM_BOOT, 0, 0, None, 100)
-    dev.ctrl_transfer(0x21, DFU_ABORT, 0, 0, None, 100)
+    try:
+        dev.ctrl_transfer(0x21, DFU_ABORT, 0, 0, None, 100)
+    except usb.core.USBError:
+        pass
+    # Windows 下设备收到开机指令后会立刻离开 DFU，最后的收尾指令可能撞上
+    # 断开而报错，属正常。以「设备是否离开 DFU」为准判定成败。
+    deadline = time.time() + 8
+    while time.time() < deadline:
+        if not dfu_devices():
+            return
+        time.sleep(1)
+    raise usb.core.USBError("开机指令未被设备接受（设备仍停留在 DFU）")
 
 
 def selftest():
@@ -205,12 +223,6 @@ def selftest():
 def main():
     if "--selftest" in sys.argv:
         return selftest()
-    if os.name == "nt":
-        os.system("chcp 65001 >nul")
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
 
     banner()
 

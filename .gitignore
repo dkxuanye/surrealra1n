@@ -28,3 +28,7 @@ restore_*.log
 start_13.5_restore.command
 win_boot_tool/test_*/
 update/latest_main.txt
+
+# Windows 端测试目录与测试包
+win_boot_test/
+win_boot_test_*.zip
