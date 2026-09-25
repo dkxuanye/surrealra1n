@@ -427,3 +427,36 @@ $p|||$p
 5|||5
 4|||4
 8|||8
+surrealra1n only supports macOS 10.15 and later.|||surrealra1n 仅支持 macOS 10.15 及更高版本。
+Using Homebrew|||正在使用 Homebrew
+Using Homebrew is not recommended on your macOS version ($macos_ver).|||在你的 macOS 版本（$macos_ver ）上不推荐使用 Homebrew。
+Use MacPorts instead? [y/n] |||是否改用 MacPorts？[y/n] 
+Using MacPorts|||正在使用 MacPorts
+No package manager installed. Please install Homebrew or MacPorts.|||未安装任何包管理器。请安装 Homebrew 或 MacPorts。
+Homebrew is recommended on this Mac: https://brew.sh|||你的 Mac 推荐使用 Homebrew：https://brew.sh
+You can also use MacPorts: https://macports.org|||你也可以使用 MacPorts：https://macports.org
+MacPorts is recommended on this Mac: https://macports.org|||你的 Mac 推荐使用 MacPorts：https://macports.org
+While this part is true, there is now an experimental untether downgrade implemented into this tool.|||尽管这一点属实，本工具现已实现实验性的免引导（untether）降级。
+Although this is not really for the end-users, and we will not provide full support for this.|||不过这并不真正面向最终用户，我们不会为此提供完整支持。
+Issues that currently exist:|||目前存在的问题：
+4. Battery life may not be good, device may heat up, and constantly freeze|||4. 电池续航可能不佳，设备可能发热并频繁卡死
+3. Password protected Wi-Fi networks do not work by default, but since jailbreak is enabled on this restore, we will install a tweak that fixes Wi-Fi with passwords.|||3. 默认情况下受密码保护的 Wi-Fi 网络无法使用，但由于此恢复启用了越狱，我们将安装一个修复带密码 Wi-Fi 的补丁。
+Wi-Fi fix tweak used is from https://github.com/DevTweaker/Tweak (thanks to them for making the Wi-Fi fix)|||所使用的 Wi-Fi 修复补丁来自 https://github.com/DevTweaker/Tweak （感谢他们制作了该修复）
+iOS 8 restore enabled for $NAME.|||已为 $NAME 启用 iOS 8 恢复。
+Would you like to jailbreak as part of this restore? (y/N): |||你是否想将此次恢复的一部分也进行越狱？（y/N）：
+Jailbreak option is enabled|||越狱选项已启用
+Jailbreak option is disabled|||越狱选项已禁用
+Jailbreak option for iOS 8 is NOT SUPPORTED on Linux!|||iOS 8 的越狱选项在 Linux 上不受支持！
+4. Switch to development branch (not recommended)|||4. 切换到开发分支（不推荐）
+Unsupported|||不受支持
+Removing keybagd|||正在移除 keybagd
+Patching containermanagerd|||正在修补 containermanagerd
+Removing DataClassMigrators|||正在移除 DataClassMigrators
+Removing coreduetd|||正在移除 coreduetd
+Adding jailbreak stuff|||正在添加越狱所需文件
+Keep in mind, it may take a few boot attempts for the Wi-Fi jailbreak tweak to work|||请记住，Wi-Fi 越狱补丁可能需要多次启动尝试才能生效
+Do not expect password protected Wi-Fi to connect instantly on Setup screen. You may need to head to the Home Screen first (and potentially do a few reboots), for the Wi-Fi tweak to work.|||在设置界面不要指望受密码保护的 Wi-Fi 能立即连接。你可能需要先进入主屏幕（并可能需要重启几次），Wi-Fi 补丁才会生效。
+iOS 8 tethered restore is not supported on $IDENTIFIER.|||此设备不支持 iOS 8 有线恢复：$IDENTIFIER
+iOS 8.3-8.4.1 restores are not supported|||不支持 iOS 8.3-8.4.1 的恢复
+It may be added in the future though.|||不过将来可能会加入。
+Unsupported!|||不受支持！
