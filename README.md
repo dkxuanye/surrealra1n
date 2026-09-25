@@ -44,16 +44,16 @@ Extract the zip file and open a terminal window to the folder that contains surr
 GITHUB_PROXY=https://ghfast.top/ ./surrealra1n.sh
 ```
 
-## 启动更新检查（新增，非上游）
+## 更新检查（新增，非上游）
 
-脚本默认会在启动时检查更新（联网、可拒绝，绝不强制更新）。若不想每次运行都
-连接 GitHub，可用环境变量跳过：
+脚本默认跳过启动更新检查（离线优先：不联网、不提示、绝不强制更新）。如需在
+启动时联网检查更新：
 
 ```
-SKIP_UPDATE_CHECK=1 ./surrealra1n.sh
+SKIP_UPDATE_CHECK=0 ./surrealra1n.sh
 ```
 
-彻底跳过更新，无需联网、不会提示更新。检查失败（离线/网络问题）时也会自动跳过，
+联网检查失败（离线/网络问题）时会自动回退到本地缓存的更新信息并跳过，
 不会中断流程或强求你更新。
 
 
