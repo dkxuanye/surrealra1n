@@ -45,6 +45,10 @@ jobs:
           msiexec /a wdk-redist.msi /qn TARGETDIR=%CD%\wdk
           7z x libusb0-redist.zip
           7z x libusbk-redist.7z
+          rem 必须先删压缩包，否则下面的 move 通配符会把它们一起匹配走
+          del libusb0-redist.zip
+          del libusbk-redist.7z
+          del wdk-redist.msi
           move libusb-win32* libusb0
           move libusbK* libusbk
 
