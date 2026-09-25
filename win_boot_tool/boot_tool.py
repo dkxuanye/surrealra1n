@@ -25,6 +25,31 @@ TRANSFER_SIZE = 0x800
 
 TOOL_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 
+# ========== 品牌配置（发布前只改这里） ==========
+BRAND = {
+    "name": "玩机乐园",                    # TODO: 定名后替换
+    "slogan": "老设备焕新 · 专业玩机",
+    "contact": "客服 QQ：10000（示例）",    # TODO: 换成真实联系方式
+    "group_url": "",                       # TODO: 私域入口链接（QQ群/频道），留空不显示二维码
+    "site": "dkxuanye.cn",
+}
+
+
+def show_group_qr():
+    """开机成功后展示私域入口 ASCII 二维码（需 pip install qrcode，缺失时降级为文字）"""
+    if not BRAND["group_url"]:
+        return
+    try:
+        import qrcode
+        qr = qrcode.QRCode(border=1)
+        qr.add_data(BRAND["group_url"])
+        qr.make(fit=True)
+        out()
+        qr.print_ascii(invert=True)
+        out(f"    ↑ 扫码加入 {BRAND['name']} 交流群 · {BRAND['site']}")
+    except ImportError:
+        out(f"    加入交流群：{BRAND['group_url']}")
+
 if os.name == "nt":
     os.system("chcp 65001 >nul")
 try:
@@ -47,7 +72,8 @@ def out(s="", **kw):
 
 def banner():
     out("=" * 46)
-    out("      玩机乐园 · 一键开机工具")
+    out(f"      {BRAND['name']} · 一键开机工具")
+    out(f"      {BRAND['slogan']}")
     out("      适用：iPhone XR / 11 / SE2（半引导机型）")
     out("=" * 46)
     out()
@@ -216,7 +242,7 @@ def selftest():
             out(f"[✓] DFU 设备: {serial_of(d) or '(读不到序列号——请用 Zadig 安装驱动)'}")
     else:
         out("[i] 当前无 DFU 设备（手机开机/恢复模式状态属正常，引导时才需要 DFU）")
-    out("=== 自检结束，把以上全部截图发给客服 ===")
+    out(f"=== 自检结束，把以上全部截图发给客服（{BRAND['contact']}） ===")
     return 0
 
 
@@ -259,6 +285,9 @@ def main():
     out("    请等待 10-30 秒，屏幕亮起进入系统即可正常使用。")
     out("    提醒：关机/没电后需要重新执行本工具。")
     out()
+    out(f"    —— {BRAND['name']} · {BRAND['site']} ——")
+    out(f"    {BRAND['contact']}")
+    show_group_qr()
     if tmp:
         shutil.rmtree(tmp, ignore_errors=True)
     pause()
