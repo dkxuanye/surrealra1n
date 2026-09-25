@@ -17,38 +17,53 @@ echo   一次性驱动安装（装完以后不再需要）
 echo ==============================================
 echo.
 echo 本步骤为手机 DFU 模式安装通用 USB 驱动。
-echo 请先确保手机已用数据线连接电脑（不必进 DFU 也可以装）。
+echo 手机可不连接（驱动预装，手机下次进 DFU 自动生效）。
 echo.
 
-rem ========== 定位 wdi-simple：脚本目录 → vendor\ → PATH ==========
+rem ========== 方案一：随包驱动（证书 + WinUSB 驱动包，纯静默）==========
+if exist "%~dp0driver_pkg\dfu_driver.cer" if exist "%~dp0driver_pkg\apple_mobile_device_(dfu_mode).inf" goto :pkg_install
+
+rem ========== 方案二：wdi-simple（vendor\，静默）==========
 set "WDI="
 if exist "%~dp0wdi-simple.exe" set "WDI=%~dp0wdi-simple.exe"
 if not defined WDI if exist "%~dp0vendor\wdi-simple.exe" set "WDI=%~dp0vendor\wdi-simple.exe"
-if not defined WDI (
-    for /f "delims=" %%i in ('where wdi-simple.exe 2^>nul') do set "WDI=%%i"
-)
+if defined WDI goto :wdi_install
 
-if not defined WDI goto :no_wdi
+rem ========== 方案三：Zadig 图形界面（人工）==========
+goto :zadig_gui
 
-echo 正在静默安装 WinUSB 驱动（Apple DFU 设备）...
-"%WDI%" --vid 0x05AC --pid 0x1227 --type 2
-if errorlevel 1 goto :wdi_fail
-
+:pkg_install
+echo [1/2] 导入驱动信任证书...
+certutil -addstore -f TrustedPublisher "%~dp0driver_pkg\dfu_driver.cer" >nul 2>&1
+if errorlevel 1 goto :pkg_fail
+echo       完成
+echo [2/2] 安装 DFU 驱动（WinUSB）...
+pnputil /add-driver "%~dp0driver_pkg\apple_mobile_device_(dfu_mode).inf" /install >nul 2>&1
+if errorlevel 1 goto :pkg_fail
 echo.
 echo [成功] 驱动安装完成！以后直接双击「一键开机」即可。
 goto :end
 
-:wdi_fail
+:pkg_fail
 echo.
-echo [失败] wdi-simple 退出码 %errorlevel%，请截图联系客服。
+echo [失败] 随包驱动安装出错，改用备用方案...
+if defined WDI goto :wdi_install
+goto :zadig_gui
+
+:wdi_install
+echo 正在静默安装驱动（wdi-simple）...
+"%WDI%" --vid 0x05AC --pid 0x1227 --type 0
+if errorlevel 1 goto :zadig_gui
+echo.
+echo [成功] 驱动安装完成！以后直接双击「一键开机」即可。
 goto :end
 
-:no_wdi
-echo 未找到 wdi-simple.exe，将打开 Zadig 图形工具，请按提示操作：
+:zadig_gui
+echo 将打开 Zadig 工具，请按提示操作：
 echo   1. 菜单 Options 勾选 List All Devices
 echo   2. 下拉选择 Apple Mobile (DFU Mode)
 echo   3. 右侧驱动选择框选 WinUSB
-echo   4. 点击 Replace Driver / Install Driver，等待完成
+echo   4. 点击 Replace Driver，等待完成
 if exist zadig.exe (start "" zadig.exe) else (echo 请联系客服获取 zadig.exe)
 
 :end

@@ -37,6 +37,11 @@ cp "$EXE" "$D/boot_tool.exe"
 cp "安装驱动.bat" "一键开机.bat" "$D/"
 [[ -s vendor/wdi-simple.exe ]] && cp vendor/wdi-simple.exe "$D/"
 [[ -s zadig.exe ]] && cp zadig.exe "$D/"   # 无 wdi-simple 时 安装驱动.bat 的 GUI 降级工具
+# 随包静默驱动（证书+WinUSB 驱动包，优先方案）
+if [[ -d driver_pkg && -s driver_pkg/dfu_driver.cer ]]; then
+    mkdir -p "$D/driver_pkg"
+    cp driver_pkg/* "$D/driver_pkg/"
+fi
 if [[ -n "$ORDER_ZIP" && -s "$ORDER_ZIP" ]]; then
     cp "$ORDER_ZIP" "$D/"
     ORDER_NAME=$(basename "$ORDER_ZIP")
