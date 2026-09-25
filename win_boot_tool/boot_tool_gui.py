@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-玩机乐园 · 一键开机（图形界面版）
+玄烨品果 · 一键开机（图形界面版）
 引擎逻辑复用 boot_tool.py（同目录），界面 tkinter（Python 自带）。
 构建：pyinstaller -w -F -n boot_tool boot_tool_gui.py  （-w 无黑窗口）
 """
@@ -21,20 +21,29 @@ from tkinter import ttk, messagebox
 
 import boot_tool as engine  # 复用已验证的引擎
 
+# ---- iOS 风格配色 ----
+BG = "#f5f5f7"          # 背景
+CARD = "#ffffff"        # 卡片
+INK = "#1d1d1f"         # 主文字
+INK2 = "#86868b"        # 次要文字
+HAIR = "#e5e5ea"        # 分隔线/描边
+BLUE = "#007aff"        # 主色
+BLUE_D = "#0062d6"      # 主色按下
+GREEN = "#34c759"       # 成功
+RED = "#ff3b30"         # 失败
+
+FONT = "Microsoft YaHei UI" if os.name == "nt" else "PingFang SC"
+
 APP_TITLE = f"{engine.BRAND['name']} · 一键开机"
-GREEN = "#2e9e4f"
-RED = "#c0392b"
-BLUE = "#2469a8"
-BG = "#f5f6f8"
 
 
 class App:
     def __init__(self, root):
         self.root = root
         root.title(APP_TITLE)
-        root.geometry("560x640")
         root.configure(bg=BG)
-        root.minsize(520, 600)
+        root.geometry("540x740")
+        root.minsize(500, 700)
 
         self.q = queue.Queue()
         self.worker = None
@@ -44,51 +53,71 @@ class App:
 
     # ---------- UI ----------
     def _build_ui(self):
-        # 标题栏
+        # 顶部品牌区
         head = tk.Frame(self.root, bg=BG)
-        head.pack(fill="x", padx=24, pady=(18, 6))
-        tk.Label(head, text="一键开机", font=("PingFang SC", 26, "bold"),
-                 bg=BG, fg="#222").pack(side="left")
-        tk.Label(head, text=engine.BRAND["slogan"], font=("PingFang SC", 11),
-                 bg=BG, fg="#888").pack(side="left", padx=(10, 0), pady=(10, 0))
+        head.pack(fill="x", padx=28, pady=(26, 4))
+        tk.Label(head, text=engine.BRAND["name"], font=(FONT, 25, "bold"),
+                 bg=BG, fg=INK).pack(anchor="w")
+        tk.Label(head, text=f"{engine.BRAND['slogan']}    一键开机 · 自动引导",
+                 font=(FONT, 11), bg=BG, fg=INK2).pack(anchor="w", pady=(2, 0))
 
-        # 步骤大字提示
+        # 步骤标题
         self.step_var = tk.StringVar(value="准备就绪")
-        tk.Label(self.root, textvariable=self.step_var, font=("PingFang SC", 16, "bold"),
-                 bg=BG, fg=BLUE, wraplength=500, justify="left").pack(padx=24, pady=(8, 2), anchor="w")
+        self.step_label = tk.Label(self.root, textvariable=self.step_var,
+                                   font=(FONT, 16, "bold"), bg=BG, fg=BLUE,
+                                   wraplength=470, justify="left")
+        self.step_label.pack(padx=28, pady=(14, 8), anchor="w")
 
-        # 详细指引文本区
-        self.guide = tk.Text(self.root, height=12, font=("PingFang SC", 12), bd=0,
-                             bg="#ffffff", fg="#333", padx=16, pady=12, spacing2=6,
-                             wrap="word", state="disabled")
-        self.guide.pack(fill="both", expand=True, padx=24, pady=8)
+        # 指引卡片
+        card = tk.Frame(self.root, bg=HAIR)
+        card.pack(fill="both", expand=True, padx=28, pady=(0, 12))
+        self.guide = tk.Text(card, height=11, font=(FONT, 12), bd=0,
+                             bg=CARD, fg=INK, padx=16, pady=14, spacing2=7,
+                             spacing1=2, wrap="word", state="disabled",
+                             insertbackground=CARD, selectbackground="#cce4ff")
+        self.guide.pack(fill="both", expand=True, padx=1, pady=1)
 
-        # 进度条
-        self.prog = ttk.Progressbar(self.root, mode="determinate", maximum=100)
-        self.prog.pack(fill="x", padx=24, pady=(0, 8))
+        # 进度条 + 百分比
+        prog_wrap = tk.Frame(self.root, bg=BG)
+        prog_wrap.pack(fill="x", padx=28, pady=(0, 4))
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure("Slim.Horizontal.TProgressbar",
+                        troughcolor="#e5e5ea", background=BLUE,
+                        borderwidth=0, thickness=6)
+        self.prog = ttk.Progressbar(prog_wrap, style="Slim.Horizontal.TProgressbar",
+                                    mode="determinate", maximum=100)
+        self.prog.pack(fill="x", side="left", expand=True)
+        self.pct_var = tk.StringVar(value="")
+        tk.Label(prog_wrap, textvariable=self.pct_var, font=(FONT, 11),
+                 bg=BG, fg=INK2, width=5, anchor="e").pack(side="right", padx=(10, 0))
+
+        # 状态行
+        self.status_var = tk.StringVar(value="")
+        tk.Label(self.root, textvariable=self.status_var, font=(FONT, 10),
+                 bg=BG, fg=INK2).pack(padx=28, pady=(2, 10), anchor="w")
 
         # 按钮区
         btns = tk.Frame(self.root, bg=BG)
-        btns.pack(fill="x", padx=24, pady=(4, 6))
-        self.go_btn = tk.Button(btns, text="开 始", font=("PingFang SC", 15, "bold"),
-                                bg=GREEN, fg="white", activebackground="#257a3d",
-                                activeforeground="white", bd=0, height=2,
+        btns.pack(fill="x", padx=28, pady=(0, 10))
+        self.go_btn = tk.Button(btns, text="开 始", font=(FONT, 15, "bold"),
+                                bg=BLUE, fg="#ffffff", activebackground=BLUE_D,
+                                activeforeground="#ffffff", bd=0, height=2,
                                 cursor="hand2", command=self.on_start)
         self.go_btn.pack(side="left", fill="x", expand=True)
-        self.diag_btn = tk.Button(btns, text="诊 断", font=("PingFang SC", 13),
-                                  bg="#e8e8ec", fg="#444", activebackground="#d8d8de",
-                                  bd=0, height=2, width=8, cursor="hand2",
+        self.diag_btn = tk.Button(btns, text="诊 断", font=(FONT, 12),
+                                  bg=CARD, fg=INK, activebackground="#f2f2f7",
+                                  bd=0, height=2, width=7, cursor="hand2",
+                                  highlightbackground=HAIR, highlightthickness=1,
                                   command=self.on_diag)
         self.diag_btn.pack(side="left", padx=(10, 0))
 
         # 底部品牌/联系
         foot = tk.Frame(self.root, bg=BG)
-        foot.pack(fill="x", padx=24, pady=(2, 12))
-        contact = f"{engine.BRAND['contact']}    {engine.BRAND['site']}"
-        tk.Label(foot, text=contact, font=("PingFang SC", 10), bg=BG, fg="#999").pack()
-        self.status_var = tk.StringVar(value="")
-        tk.Label(foot, textvariable=self.status_var, font=("PingFang SC", 10),
-                 bg=BG, fg=BLUE).pack()
+        foot.pack(fill="x", padx=28, pady=(0, 14))
+        tk.Label(foot, text=f"{engine.BRAND['name']} · {engine.BRAND['site']}    "
+                            f"{engine.BRAND['contact']}",
+                 font=(FONT, 10), bg=BG, fg=INK2).pack(anchor="center")
 
         # 二维码（可选：卖家放 二维码.png 在工具旁，成功页显示）
         self.qr_img = None
@@ -104,18 +133,17 @@ class App:
                     self.qr_img = None
                 break
 
+        self.set_guide([
+            "欢迎使用一键开机。",
+            "",
+            "把手机用数据线连接电脑后，点「开始」。",
+            "工具会一步步指引你完成开机。",
+        ])
+
     # ---------- UI 工具 ----------
     def set_step(self, text, color=BLUE):
         self.step_var.set(text)
-        for w in self.root.winfo_children():
-            pass
-        # 直接改色：重建 label 成本高，用 tag 不便，这里简单重设 fg
-        for w in self.root.winfo_children():
-            if isinstance(w, tk.Label) and w["textvariable"]:
-                try:
-                    w.configure(fg=color)
-                except tk.TclError:
-                    pass
+        self.step_label.configure(fg=color)
 
     def set_guide(self, lines):
         self.guide.configure(state="normal")
@@ -137,6 +165,7 @@ class App:
                     self.set_guide(data)
                 elif ev == "progress":
                     self.prog["value"] = data
+                    self.pct_var.set(f"{data}%")
                 elif ev == "status":
                     self.set_status(data)
                 elif ev == "done":
@@ -152,29 +181,24 @@ class App:
     def _on_done(self, ok):
         self.go_btn.configure(state="normal", text="开 始")
         if ok:
-            self.set_step("✓ 开机指令已发送", GREEN)
+            self.set_step("开机指令已发送", GREEN)
             self.set_guide([
-                "手机正在启动，请等待 10-30 秒屏幕亮起。",
+                "正在确认开机状态，请稍候...",
                 "",
-                "【提醒】",
+                "【先别拔线】",
+                "· 手机正在启动，等待屏幕亮起（约 10-30 秒）",
                 "· 关机 / 没电后，需要重新运行本工具",
-                "· 引导包与你的手机一一绑定，请备份保存",
             ])
-            if self.qr_img:
-                top = tk.Toplevel(self.root)
-                top.title("加入交流群")
-                tk.Label(top, image=self.qr_img).pack(padx=20, pady=20)
-                tk.Label(top, text=f"扫码加入 {engine.BRAND['name']} 交流群",
-                         font=("PingFang SC", 12)).pack(pady=(0, 16))
         else:
-            self.set_step("✗ 未成功", RED)
+            self.set_step("未成功", RED)
+            self.pct_var.set("")
         self.worker = None
 
     def _watch_postboot(self):
         """发送成功后确认设备去向（后台线程，不卡界面）"""
         def worker():
             def on_check(pids):
-                tag = {0x1227: "DFU", 0x1281: "恢复", 0x12A8: "已开机"}.get(
+                tag = {0x1227: "DFU", 0x1281: "恢复模式", 0x12A8: "已开机"}.get(
                     next(iter(pids), None), "等待") if len(pids) <= 1 else "等待"
                 self.q.put(("status", f"确认开机状态：{tag}..."))
             result = engine.detect_post_boot(on_check=on_check)
@@ -184,7 +208,18 @@ class App:
     def _on_postboot_result(self, result):
         if result == "booted":
             self.set_step("✓ 开机成功", GREEN)
-            self.set_status("已确认手机正常开机")
+            self.pct_var.set("100%")
+            self.prog["value"] = 100
+            self.set_status("已确认手机正常开机，可正常使用")
+            self.set_guide([
+                "开机成功！手机已进入系统，可以正常使用。",
+                "",
+                "【日常提醒】",
+                "· 关机 / 没电后，需要重新运行本工具开机",
+                "· 引导包与你的手机一一绑定，请备份保存",
+                "· 遇到问题：点「诊断」，结果发给客服即可",
+            ])
+            self._show_qr()
         elif result == "recovery_stall":
             self.set_step("✗ 未能自动开机", RED)
             self.set_guide([
@@ -192,8 +227,10 @@ class App:
                 "",
                 "最常见原因：引导包版本与手机当前系统不一致",
                 "（例如手机之后刷过其他版本）。",
+                "",
                 "请联系客服核对手机当前的 iOS 版本，",
                 "重新制作对应版本的引导包。",
+                f"（{engine.BRAND['contact']}）",
             ])
         elif result == "dfu_back":
             self.set_step("✗ 本次开机未成功", RED)
@@ -201,12 +238,22 @@ class App:
         else:
             self.set_status("未能确认状态；屏幕亮起即成功")
 
+    def _show_qr(self):
+        if self.qr_img:
+            top = tk.Toplevel(self.root)
+            top.title("加入交流群")
+            top.configure(bg=CARD)
+            tk.Label(top, image=self.qr_img, bg=CARD).pack(padx=24, pady=(24, 8))
+            tk.Label(top, text=f"扫码加入 {engine.BRAND['name']} 交流群",
+                     font=(FONT, 12), bg=CARD, fg=INK).pack(pady=(0, 18))
+
     # ---------- 事件 ----------
     def on_start(self):
         if self.worker and self.worker.is_alive():
             return
         self.go_btn.configure(state="disabled", text="进行中...")
         self.prog["value"] = 0
+        self.pct_var.set("0%")
         self.worker = threading.Thread(target=self._run, daemon=True)
         self.worker.start()
 
@@ -368,7 +415,7 @@ def main():
     root = tk.Tk()
     try:
         from tkinter import font as tkfont
-        for fam in ("PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei"):
+        for fam in ("Microsoft YaHei UI", "PingFang SC"):
             try:
                 if fam in tkfont.families():
                     tkfont.nametofont("TkDefaultFont").configure(family=fam)

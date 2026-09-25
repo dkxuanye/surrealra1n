@@ -30,9 +30,9 @@ TOOL_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 # ========== 品牌配置（发布前只改这里） ==========
 BRAND = {
-    "name": "玩机乐园",                    # TODO: 定名后替换
+    "name": "玄烨品果",                     # 品牌名
     "slogan": "老设备焕新 · 专业玩机",
-    "contact": "客服 QQ：10000（示例）",    # TODO: 换成真实联系方式
+    "contact": "客服 QQ：1544075460",
     "group_url": "",                       # TODO: 私域入口链接（QQ群/频道），留空不显示二维码
     "site": "dkxuanye.cn",
 }
@@ -53,7 +53,9 @@ def show_group_qr():
     except ImportError:
         out(f"    加入交流群：{BRAND['group_url']}")
 
-if os.name == "nt":
+if os.name == "nt" and sys.stdout is not None:
+    # 控制台场景设置 UTF-8 代码页；-w 无窗口打包时 stdout 为 None，
+    # os.system 会闪出黑窗，跳过
     os.system("chcp 65001 >nul")
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -226,10 +228,11 @@ def _apple_pids_present():
     macOS/Linux：libusb 直接可见。"""
     if os.name == "nt":
         try:
+            flags = subprocess.CREATE_NO_WINDOW  # -w 打包下防止弹出 PowerShell 黑窗
             r = subprocess.run(
                 ["powershell", "-NoProfile", "-Command",
                  "(Get-PnpDevice -PresentOnly | Where-Object {$_.InstanceId -match 'VID_05AC'}).InstanceId"],
-                capture_output=True, text=True, timeout=15)
+                capture_output=True, text=True, timeout=15, creationflags=flags)
             pids = set()
             for line in r.stdout.splitlines():
                 if "PID_12" in line:

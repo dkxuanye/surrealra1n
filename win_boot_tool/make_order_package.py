@@ -55,8 +55,8 @@ README_TMPL = """「一键开机」引导启动包 —— 请妥善保存
 
 
 BRAND = {
-    "name": "玩机乐园",                    # TODO: 定名后替换
-    "contact": "客服 QQ：10000（示例）",    # TODO: 与 boot_tool.py 的 BRAND 保持一致
+    "name": "玄烨品果",                     # 与 boot_tool.py 的 BRAND 保持一致
+    "contact": "客服 QQ：1544075460",
     "site": "dkxuanye.cn",
 }
 
