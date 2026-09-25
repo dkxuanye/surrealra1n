@@ -4983,11 +4983,14 @@ restore_utils(){
 #fi
 
 if [[ $IDENTIFIER == NONE ]]; then
+    echo "[!] 未检测到设备：请用数据线把手机连接到电脑（正常开机/恢复/DFU 模式均可），"
+    echo "    解锁屏幕并点「信任」后，回到主菜单重试。"
+    read -p "按回车返回主菜单..."
     main_menu
     return
 fi
 
-clear 
+clear
 echo "$INFO_TEXT"
 echo ""
 echo "选项："
@@ -5226,6 +5229,8 @@ exit 0
 sshrd_a12(){
 
 if [[ $IDENTIFIER == NONE ]]; then
+    echo "[!] 未检测到设备：请先把手机连接到电脑，再使用 surrealSSHRD 功能。"
+    read -p "按回车返回主菜单..."
     main_menu
     return
 elif [[ $IDENTIFIER == iPhone11* || $IDENTIFIER == iPhone12* || $IDENTIFIER == iPad11* ]]; then
