@@ -32,3 +32,4 @@ update/latest_main.txt
 # Windows 端测试目录与测试包
 win_boot_test/
 win_boot_test_*.zip
+win_boot_tool/.DS_Store
