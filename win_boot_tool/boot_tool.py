@@ -10,6 +10,7 @@ import sys
 import time
 import glob
 import shutil
+import subprocess
 import tempfile
 import zipfile
 
@@ -18,6 +19,8 @@ import usb.util
 
 APPLE_VID = 0x05AC
 DFU_PID = 0x1227
+RECOVERY_PID = 0x1281
+NORMAL_PID = 0x12A8
 DFU_DNLOAD = 1
 DFU_ABORT = 4
 CUSTOM_BOOT = 8
@@ -217,6 +220,62 @@ def send_ibss(dev, ibss_path):
     raise usb.core.USBError("开机指令未被设备接受（设备仍停留在 DFU）")
 
 
+def _apple_pids_present():
+    """返回当前在位的 Apple 设备 PID 集合。
+    Windows：libusb 看不到 Apple 驱动占用的设备，走 PnP 查询；
+    macOS/Linux：libusb 直接可见。"""
+    if os.name == "nt":
+        try:
+            r = subprocess.run(
+                ["powershell", "-NoProfile", "-Command",
+                 "(Get-PnpDevice -PresentOnly | Where-Object {$_.InstanceId -match 'VID_05AC'}).InstanceId"],
+                capture_output=True, text=True, timeout=15)
+            pids = set()
+            for line in r.stdout.splitlines():
+                if "PID_12" in line:
+                    try:
+                        pids.add(int(line.split("PID_")[1][:4], 16))
+                    except (ValueError, IndexError):
+                        pass
+            return pids
+        except Exception:
+            return set()
+    try:
+        return {d.idProduct for d in usb.core.find(idVendor=APPLE_VID, find_all=True)}
+    except Exception:
+        return set()
+
+
+def detect_post_boot(timeout=60, stable_secs=12, on_check=None):
+    """发送引导后确认设备去向。
+    返回 'booted'（正常模式上线）/ 'recovery_stall'（卡恢复模式，版本错配典型症状）
+    / 'dfu_back'（退回 DFU）/ 'unknown'（超时未确认）。
+    on_check(pid_set) 可选回调，供 GUI 展示轮询状态。"""
+    t0 = time.time()
+    recovery_since = None
+    dfu_since = None
+    while time.time() - t0 < timeout:
+        pids = _apple_pids_present()
+        if on_check:
+            on_check(pids)
+        if NORMAL_PID in pids:
+            return "booted"
+        if RECOVERY_PID in pids:
+            recovery_since = recovery_since or time.time()
+            if time.time() - recovery_since >= stable_secs:
+                return "recovery_stall"
+        else:
+            recovery_since = None
+        if DFU_PID in pids:
+            dfu_since = dfu_since or time.time()
+            if time.time() - dfu_since >= stable_secs:
+                return "dfu_back"
+        else:
+            dfu_since = None
+        time.sleep(3)
+    return "unknown"
+
+
 def selftest():
     out("=== 自检 ===")
     try:
@@ -282,7 +341,22 @@ def main():
 
     out("[3/3] 发送完成！设备正在启动。")
     out()
-    out("    请等待 10-30 秒，屏幕亮起进入系统即可正常使用。")
+    out("    正在确认开机状态（最多 1 分钟）...")
+    result = detect_post_boot()
+    if result == "booted":
+        out("[✓] 已检测到手机成功开机，可以正常使用了。")
+    elif result == "recovery_stall":
+        out()
+        out("[!] 注意：手机停留在恢复模式，未能自动开机。")
+        out("    最常见原因：引导包版本与手机当前系统不一致（如手机刷过其他版本）。")
+        out("    请联系客服核对你手机当前的 iOS 版本，重新制作对应引导包。")
+        out("    （手机可强制重启后再进 DFU 重试：音量+ → 音量- → 长按电源）")
+    elif result == "dfu_back":
+        out()
+        out("[!] 设备退回了 DFU 模式，本次开机未成功，请重新运行本工具。")
+    else:
+        out("[i] 暂时未能确认开机状态。屏幕亮起即成功；若长时间黑屏请联系客服。")
+    out()
     out("    提醒：关机/没电后需要重新执行本工具。")
     out()
     out(f"    —— {BRAND['name']} · {BRAND['site']} ——")

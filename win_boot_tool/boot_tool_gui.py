@@ -141,6 +141,10 @@ class App:
                     self.set_status(data)
                 elif ev == "done":
                     self._on_done(data)
+                elif ev == "postboot":
+                    self._watch_postboot()
+                elif ev == "postboot_result":
+                    self._on_postboot_result(data)
         except queue.Empty:
             pass
         self.root.after(100, self._drain_queue)
@@ -165,6 +169,37 @@ class App:
         else:
             self.set_step("✗ 未成功", RED)
         self.worker = None
+
+    def _watch_postboot(self):
+        """发送成功后确认设备去向（后台线程，不卡界面）"""
+        def worker():
+            def on_check(pids):
+                tag = {0x1227: "DFU", 0x1281: "恢复", 0x12A8: "已开机"}.get(
+                    next(iter(pids), None), "等待") if len(pids) <= 1 else "等待"
+                self.q.put(("status", f"确认开机状态：{tag}..."))
+            result = engine.detect_post_boot(on_check=on_check)
+            self.q.put(("postboot_result", result))
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_postboot_result(self, result):
+        if result == "booted":
+            self.set_step("✓ 开机成功", GREEN)
+            self.set_status("已确认手机正常开机")
+        elif result == "recovery_stall":
+            self.set_step("✗ 未能自动开机", RED)
+            self.set_guide([
+                "手机停留在恢复模式，未能自动开机。",
+                "",
+                "最常见原因：引导包版本与手机当前系统不一致",
+                "（例如手机之后刷过其他版本）。",
+                "请联系客服核对手机当前的 iOS 版本，",
+                "重新制作对应版本的引导包。",
+            ])
+        elif result == "dfu_back":
+            self.set_step("✗ 本次开机未成功", RED)
+            self.set_guide(["设备退回了 DFU 模式。", "请重新点「开始」再试一次。"])
+        else:
+            self.set_status("未能确认状态；屏幕亮起即成功")
 
     # ---------- 事件 ----------
     def on_start(self):
@@ -296,13 +331,40 @@ class App:
                 time.sleep(1)
             q.put(("progress", 100))
             q.put(("done", ok))
+            if ok:
+                # 继续确认开机去向（booted / 卡恢复模式 / 退回 DFU）
+                q.put(("postboot", None))
         except Exception as e:
             q.put(("step", f"✗ 出错：{e}"))
             q.put(("guide", ["请截图本窗口发给客服。", "", traceback.format_exc()[:500]]))
             q.put(("done", False))
 
 
+def run_selftest_dialog():
+    """--selftest 入口：无主窗口，弹窗展示自检结果并复制到剪贴板（-w 打包无控制台）"""
+    root = tk.Tk()
+    root.withdraw()
+    import io
+    from contextlib import redirect_stdout
+    buf = io.StringIO()
+    try:
+        with redirect_stdout(buf):
+            engine.selftest()
+    except Exception:
+        buf.write(traceback.format_exc())
+    text = buf.getvalue()
+    root.clipboard_clear()
+    root.clipboard_append(text)
+    root.update()  # 让剪贴板在销毁前生效
+    messagebox.showinfo(
+        "自检结果",
+        text + "\n\n（结果已复制到剪贴板，请粘贴发给客服）")
+    root.destroy()
+
+
 def main():
+    if "--selftest" in sys.argv:
+        return run_selftest_dialog()
     root = tk.Tk()
     try:
         from tkinter import font as tkfont

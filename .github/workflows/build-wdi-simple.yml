@@ -1,0 +1,69 @@
+name: Build wdi-simple (Windows)
+
+# 产出 wdi-simple.exe（libwdi 官方命令行示例，用于 DFU 驱动静默安装）
+# 触发：手动 / libwdi 相关路径变更
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/build-wdi-simple.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Setup MSYS2 (MinGW64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: >-
+            git
+            make
+            autoconf
+            automake
+            libtool
+            mingw-w64-x86_64-toolchain
+
+      - name: Clone libwdi
+        shell: msys2 {0}
+        run: |
+          git clone --depth 1 https://github.com/pbatard/libwdi.git
+          cd libwdi
+
+      - name: Build
+        shell: msys2 {0}
+        run: |
+          cd libwdi
+          ./autogen.sh
+          ./configure --host=x86_64-w64-mingw32
+          make -j"$(nproc)"
+          ls -la .libs/ 2>/dev/null || true
+          find . -name "wdi-simple*" -o -name "*.exe" | head -20
+
+      - name: Verify artifact
+        shell: msys2 {0}
+        run: |
+          cd libwdi
+          WDI=$(find . -name "wdi-simple.exe" | head -1)
+          if [ -z "$WDI" ]; then
+            echo "::error::wdi-simple.exe 未产出，检查构建日志"
+            exit 1
+          fi
+          file "$WDI"
+          mkdir -p ../out
+          cp "$WDI" ../out/
+
+      - name: Smoke test (print usage)
+        shell: msys2 {0}
+        run: ./out/wdi-simple.exe --help || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wdi-simple-windows-x64
+          path: out/wdi-simple.exe
+          if-no-files-found: error
