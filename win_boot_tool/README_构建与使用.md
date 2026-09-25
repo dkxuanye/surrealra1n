@@ -1,45 +1,45 @@
 # Windows 一键开机工具 · 构建与使用说明
 
-## 给客户发什么（按订单）
+## 文件总览
 
-1. `boot_tool.exe`（工具本体，所有客户通用）
-2. 该设备的「引导启动包」——两种形态任选：
-   - `boot/` 文件夹（含 `boot/<机型>/<版本>/iBSS.boot` + `boot/0x<ECID>.txt`）
-   - 或整个 `.zip`（工具自动解包，微信可直接发）
+| 文件 | 用途 |
+|---|---|
+| `boot_tool.py` | 工具本体（跨平台 Python 引擎） |
+| `make_order_package.py` | 接单后生成客户引导包（Mac 端使用） |
+| `make_win_release.sh` | 组装 Windows 客户发货包（含 exe/bat/说明/订单包） |
+| `安装驱动.bat` | 客户端一次性驱动安装（自动提权；优先 wdi-simple 静默，降级 Zadig GUI） |
+| `一键开机.bat` | 客户端双击入口 |
 
-   生成方法：从本机 `boot/` 仓库里复制该设备对应的机型目录 + ECID 记录文件，打包即可
-   （参考成品：`surrealra1n-boot-XR-iPhone11-14.0-14.3.zip`）
+## 发货全流程（接一单的完整动作）
 
-## Windows 构建步骤（在 Windows 机器上执行一次）
+```bash
+# ① Mac 端：生成该客户的引导包
+python3 make_order_package.py --ecid 0x<客户设备ECID> --id iPhone11,8 --ver 14.3 --name 张三
 
-```bat
-pip install pyusb pyinstaller
-pyinstaller -F -n boot_tool boot_tool.py
-:: 把 libusb-1.0.dll 放到 dist 目录（与 exe 同级）
-:: 下载地址: https://github.com/libusb/libusb/releases （LibUSB-Win32/MS64/dll/libusb-1.0.dll）
+# ② Windows 端（一次性，工具版本不变则复用）：
+#    pyinstaller -F -n boot_tool boot_tool.py
+#    把 dist/boot_tool.exe + libusb-1.0.dll 放回本目录 dist/
+
+# ③ Mac 端：组装发货包（客户微信/QQ 直发）
+./make_win_release.sh boot_张三_iPhone11,8_14.3.zip 张三
 ```
+
+## 驱动方案（v1.1）
+
+首选 **wdi-simple.exe 静默安装**（libwdi 官方命令行示例，Zadig 的 CLI 版）：
+`wdi-simple --vid 0x05AC --pid 0x1227 --type 2`（type 2 = WinUSB）
+获取：Windows 上从 libwdi releases 下载或自行编译，放入 `vendor/wdi-simple.exe`，
+`安装驱动.bat` 会自动检测并用它静默安装（自动提权）。
+缺失时自动降级为引导客户用 Zadig GUI（步骤已打印在窗口里）。
 
 > macOS 上开发调试直接 `python3 boot_tool.py --selftest`
 
-## 客户端驱动（关键 UX）
-
-DFU 模式的手机在 Windows 上默认没有可用驱动，需要绑定 WinUSB：
-
-1. 首次引导时工具会提示，客户按指引让手机进 DFU
-2. 打开 Zadig（建议随工具附带）→ Options 勾选 List All Devices
-3. 下拉选择 **Apple Mobile (DFU Mode)** → 驱动选 **WinUSB** → Install
-4. 之后永久生效，不再需要
-
-改进方向（v1.1）：Zadig 有命令行模式（`zadig.exe /handler`相关参数），可做到工具内一键静默装驱动；或改用 libusb 过滤驱动安装包（全局生效但免选择）。
-
 ## 客户使用流程（写在包内使用说明里的逻辑）
 
-1. 双击 `boot_tool.exe`
-2. 按提示让手机进 DFU（工具内置分步指引）
-3. 按提示把手机连到 Pi Pico 完成破解，再插回电脑
-4. 工具自动发送引导文件 → 手动开机完成
+1. 首次：解压 → 双击「安装驱动.bat」→ 把订单引导包 zip 放进文件夹
+2. 每次开机：双击「一键开机.bat」→ 按提示 DFU → Pico 破解 → 自动发送引导
 
 ## 诊断
 
-客户报障时让他在工具所在目录跑：`boot_tool.exe --selftest`，把输出发回来即可定位
+客户报障时让他在工具目录执行：`boot_tool.exe --selftest`，把输出发回来即可定位
 （能看到：USB 库状态 / 引导包 ECID 与版本 / 引导文件清单 / DFU 设备与序列号）
