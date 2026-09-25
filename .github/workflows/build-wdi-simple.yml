@@ -1,15 +1,19 @@
 name: Build wdi-simple (Windows)
 
 # 产出 wdi-simple.exe（libwdi 官方命令行示例，用于 DFU 驱动静默安装）
-# 触发：手动 / libwdi 相关路径变更
+# 构建配方复刻 libwdi 官方 .github/workflows/mingw.yml（x86_64 单架构）
 on:
-  workflow_dispatch:
   push:
     paths:
       - ".github/workflows/build-wdi-simple.yml"
+  workflow_dispatch:
 
-permissions:
-  contents: write
+env:
+  WDK_URL: https://go.microsoft.com/fwlink/p/?LinkID=253170
+  LIBUSB0_URL: https://github.com/mcuee/libusb-win32/releases/download/release_1.4.0.0/libusb-win32-bin-1.4.0.0.zip
+  LIBUSBK_URL: https://github.com/mcuee/libusbk/releases/download/V3.1.0.0/libusbK-3.1.0.0-bin.7z
+  BUILD_OPTIONS: '--enable-toggable-debug --enable-examples-build --disable-debug --disable-shared'
+  DRIVERS_PATHS: '--with-wdkdir="wdk/Windows Kits/8.0" --with-wdfver=1011 --with-libusb0="libusb0" --with-libusbk="libusbk/bin"'
 
 jobs:
   build:
@@ -21,49 +25,46 @@ jobs:
           msystem: MINGW64
           update: false
           install: >-
-            git
-            make
-            autoconf
-            automake
-            libtool
             mingw-w64-x86_64-toolchain
+            base-devel
+            autotools
+            git
+            p7zip
 
-      - name: Clone libwdi
-        shell: msys2 {0}
+      - name: Checkout libwdi
+        uses: actions/checkout@v4
+        with:
+          repository: pbatard/libwdi
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Download support files (WDK8 / libusb0 / libusbK)
+        shell: cmd
         run: |
-          git clone --depth 1 https://github.com/pbatard/libwdi.git
-          cd libwdi
+          curl -L %WDK_URL% -o wdk-redist.msi
+          curl -L %LIBUSB0_URL% -o libusb0-redist.zip
+          curl -L %LIBUSBK_URL% -o libusbk-redist.7z
+          msiexec /a wdk-redist.msi /qn TARGETDIR=%CD%\wdk
+          7z x libusb0-redist.zip
+          7z x libusbk-redist.7z
+          move libusb-win32* libusb0
+          move libusbK* libusbk
 
       - name: Build
         shell: msys2 {0}
         run: |
-          cd libwdi
-          ./autogen.sh
-          ./configure --host=x86_64-w64-mingw32
+          ./bootstrap.sh
+          ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 $BUILD_OPTIONS --disable-32bit $DRIVERS_PATHS
           make -j"$(nproc)"
-          ls -la .libs/ 2>/dev/null || true
-          find . -name "wdi-simple*" -o -name "*.exe" | head -20
-
-      - name: Verify artifact
-        shell: msys2 {0}
-        run: |
-          cd libwdi
-          WDI=$(find . -name "wdi-simple.exe" | head -1)
-          if [ -z "$WDI" ]; then
-            echo "::error::wdi-simple.exe 未产出，检查构建日志"
-            exit 1
-          fi
-          file "$WDI"
-          mkdir -p ../out
-          cp "$WDI" ../out/
+          ls -la examples/*.exe
 
       - name: Smoke test (print usage)
         shell: msys2 {0}
-        run: ./out/wdi-simple.exe --help || true
+        run: ./examples/wdi-simple.exe --help || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: wdi-simple-windows-x64
-          path: out/wdi-simple.exe
+          path: examples/wdi-simple.exe
           if-no-files-found: error
