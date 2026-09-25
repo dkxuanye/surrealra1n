@@ -33,3 +33,7 @@ update/latest_main.txt
 win_boot_test/
 win_boot_test_*.zip
 win_boot_tool/.DS_Store
+
+# Windows 端 15.4 测试包
+win_gui_test/
+win_gui_test_*.zip

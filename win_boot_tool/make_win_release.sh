@@ -36,6 +36,7 @@ cp "$EXE" "$D/boot_tool.exe"
 [[ -n "$DLL" ]] && cp "$DLL" "$D/"
 cp "安装驱动.bat" "一键开机.bat" "$D/"
 [[ -s vendor/wdi-simple.exe ]] && cp vendor/wdi-simple.exe "$D/"
+[[ -s zadig.exe ]] && cp zadig.exe "$D/"   # 无 wdi-simple 时 安装驱动.bat 的 GUI 降级工具
 if [[ -n "$ORDER_ZIP" && -s "$ORDER_ZIP" ]]; then
     cp "$ORDER_ZIP" "$D/"
     ORDER_NAME=$(basename "$ORDER_ZIP")
@@ -72,7 +73,16 @@ cat > "$D/使用说明.txt" << EOF
 EOF
 
 rm -f "$OUT"
-python3 - "$STAGE" "$PWD/$OUT" << 'PY'
+# python3 优先（macOS/Linux）；Windows 下 python3 可能是 Microsoft Store 占位符，
+# 必须验证可真正执行后才使用，否则回退 python
+PY=""
+for c in python3 python; do
+    if command -v "$c" >/dev/null 2>&1 && "$c" -c "import sys" >/dev/null 2>&1; then
+        PY="$c"; break
+    fi
+done
+[[ -n "$PY" ]] || { echo "!! 未找到可用的 python3/python"; exit 1; }
+"$PY" - "$STAGE" "$PWD/$OUT" << 'PY'
 import os, sys, time, zipfile
 stage, out = sys.argv[1], sys.argv[2]
 def zi(arc, st, is_dir=False):
