@@ -3,22 +3,27 @@
 ## 🔧 Windows 环境下一步动作（按顺序做完即上线）
 
 ```bat
-① 打包 exe（一次性，工具代码不变则复用）
+① 打包图形界面 exe（一次性，代码不变则复用）
    cd win_boot_tool
-   pip install pyusb pyinstaller
-   pyinstaller -F -n boot_tool boot_tool.py
+   pip install pyusb pyinstaller pillow
+   pyinstaller -w -F -n boot_tool boot_tool_gui.py
+   :: -w = 无黑窗口；boot_tool_gui.py 是图形界面版（引擎复用 boot_tool.py）
    :: 确认 dist\boot_tool.exe 生成；把 libusb-1.0.dll（64位）复制到 dist\
+   :: 可选：放一张「二维码.png」进打包目录 → 客户开机成功后弹窗展示群二维码
 
 ② 获取 wdi-simple.exe（驱动静默安装）
    :: 来源：github.com/pbatard/libwdi releases 下载，或从源码编译示例
    :: 放到 win_boot_tool\vendor\wdi-simple.exe（没有 vendor 文件夹就新建）
 
-③ 实测驱动脚本（有 iPhone 在手时）
+③ 实测（有 iPhone 在手时）
    :: 手机连电脑（不必进 DFU）→ 双击 安装驱动.bat → 应静默装完提示成功
    :: 然后手机进 DFU → Pico 破解 → 插回 → 双击 一键开机.bat 走完整流程
+   :: （GUI 版界面：开始按钮 → 分步大字指引 → 进度条 → 成功页二维码）
 
 ④ 全部通过后：git push，回 Mac 端用 make_win_release.sh 出客户发货包
 ```
+
+控制台版（boot_tool.py / `python boot_tool.py`）保留作调试与 --selftest 诊断用。
 
 待你拍板（非 Windows 动作）：BRAND 定名 + 真实客服 QQ/群链接（改 boot_tool.py 和
 make_order_package.py 里的 BRAND 配置，两处保持一致）。
