@@ -1,5 +1,28 @@
 # Windows 一键开机工具 · 构建与使用说明
 
+## 🔧 Windows 环境下一步动作（按顺序做完即上线）
+
+```bat
+① 打包 exe（一次性，工具代码不变则复用）
+   cd win_boot_tool
+   pip install pyusb pyinstaller
+   pyinstaller -F -n boot_tool boot_tool.py
+   :: 确认 dist\boot_tool.exe 生成；把 libusb-1.0.dll（64位）复制到 dist\
+
+② 获取 wdi-simple.exe（驱动静默安装）
+   :: 来源：github.com/pbatard/libwdi releases 下载，或从源码编译示例
+   :: 放到 win_boot_tool\vendor\wdi-simple.exe（没有 vendor 文件夹就新建）
+
+③ 实测驱动脚本（有 iPhone 在手时）
+   :: 手机连电脑（不必进 DFU）→ 双击 安装驱动.bat → 应静默装完提示成功
+   :: 然后手机进 DFU → Pico 破解 → 插回 → 双击 一键开机.bat 走完整流程
+
+④ 全部通过后：git push，回 Mac 端用 make_win_release.sh 出客户发货包
+```
+
+待你拍板（非 Windows 动作）：BRAND 定名 + 真实客服 QQ/群链接（改 boot_tool.py 和
+make_order_package.py 里的 BRAND 配置，两处保持一致）。
+
 ## 文件总览
 
 | 文件 | 用途 |
