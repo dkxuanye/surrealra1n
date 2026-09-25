@@ -12,8 +12,6 @@ env:
   WDK_URL: https://go.microsoft.com/fwlink/p/?LinkID=253170
   LIBUSB0_URL: https://github.com/mcuee/libusb-win32/releases/download/release_1.4.0.0/libusb-win32-bin-1.4.0.0.zip
   LIBUSBK_URL: https://github.com/mcuee/libusbk/releases/download/V3.1.0.0/libusbK-3.1.0.0-bin.7z
-  BUILD_OPTIONS: '--enable-toggable-debug --enable-examples-build --disable-debug --disable-shared'
-  DRIVERS_PATHS: '--with-wdkdir="wdk/Windows Kits/8.0" --with-wdfver=1011 --with-libusb0="libusb0" --with-libusbk="libusbk/bin"'
 
 jobs:
   build:
@@ -54,7 +52,14 @@ jobs:
         shell: msys2 {0}
         run: |
           ./bootstrap.sh
-          ./configure --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 $BUILD_OPTIONS --disable-32bit $DRIVERS_PATHS
+          # 注意：--with-wdkdir 的路径含空格，必须字面量引号传入
+          # （不能用 bash 变量展开，引号会原样进 configure 拆碎路径）
+          ./configure \
+            --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 \
+            --enable-toggable-debug --enable-examples-build \
+            --disable-debug --disable-shared --disable-32bit \
+            --with-wdkdir="wdk/Windows Kits/8.0" --with-wdfver=1011 \
+            --with-libusb0="libusb0" --with-libusbk="libusbk/bin"
           make -j"$(nproc)"
           ls -la examples/*.exe
 
