@@ -1,70 +1,69 @@
 @echo off
-chcp 65001 >nul
-title ä¸€æ¬¡æ€§å®‰è£…é©±åŠ¨ï¼ˆç®¡ç†å‘˜ï¼‰
+title Ò»´ÎÐÔ°²×°Çý¶¯£¨¹ÜÀíÔ±£©
 cd /d "%~dp0"
 
-rem ========== è‡ªææƒï¼ˆé©±åŠ¨å®‰è£…éœ€è¦ç®¡ç†å‘˜ï¼‰==========
-rem å¿…é¡»åœ¨ææƒå‰ cd åˆ°è„šæœ¬ç›®å½•â€”â€”ææƒé‡å¯åŽå·¥ä½œç›®å½•ä¼šå˜æˆ System32
+rem ========== ×ÔÌáÈ¨£¨Çý¶¯°²×°ÐèÒª¹ÜÀíÔ±£©==========
+rem ±ØÐëÔÚÌáÈ¨Ç° cd µ½½Å±¾Ä¿Â¼¡ª¡ªÌáÈ¨ÖØÆôºó¹¤×÷Ä¿Â¼»á±ä³É System32
 net session >nul 2>&1
 if %errorlevel% neq 0 (
-    echo éœ€è¦ç®¡ç†å‘˜æƒé™ï¼Œæ­£åœ¨è¯·æ±‚...
+    echo ÐèÒª¹ÜÀíÔ±È¨ÏÞ£¬ÕýÔÚÇëÇó...
     powershell -Command "Start-Process '%~f0' -Verb RunAs -WorkingDirectory '%~dp0'"
     exit /b
 )
 
 echo ==============================================
-echo   ä¸€æ¬¡æ€§é©±åŠ¨å®‰è£…ï¼ˆè£…å®Œä»¥åŽä¸å†éœ€è¦ï¼‰
+echo   Ò»´ÎÐÔÇý¶¯°²×°£¨×°ÍêÒÔºó²»ÔÙÐèÒª£©
 echo ==============================================
 echo.
-echo æœ¬æ­¥éª¤ä¸ºæ‰‹æœº DFU æ¨¡å¼å®‰è£…é€šç”¨ USB é©±åŠ¨ã€‚
-echo æ‰‹æœºå¯ä¸è¿žæŽ¥ï¼ˆé©±åŠ¨é¢„è£…ï¼Œæ‰‹æœºä¸‹æ¬¡è¿› DFU è‡ªåŠ¨ç”Ÿæ•ˆï¼‰ã€‚
+echo ±¾²½ÖèÎªÊÖ»ú DFU Ä£Ê½°²×°Í¨ÓÃ USB Çý¶¯¡£
+echo ÊÖ»ú¿É²»Á¬½Ó£¨Çý¶¯Ô¤×°£¬ÊÖ»úÏÂ´Î½ø DFU ×Ô¶¯ÉúÐ§£©¡£
 echo.
 
-rem ========== æ–¹æ¡ˆä¸€ï¼šéšåŒ…é©±åŠ¨ï¼ˆè¯ä¹¦ + WinUSB é©±åŠ¨åŒ…ï¼Œçº¯é™é»˜ï¼‰==========
+rem ========== ·½°¸Ò»£ºËæ°üÇý¶¯£¨Ö¤Êé + WinUSB Çý¶¯°ü£¬´¿¾²Ä¬£©==========
 if exist "%~dp0driver_pkg\dfu_driver.cer" if exist "%~dp0driver_pkg\apple_mobile_device_(dfu_mode).inf" goto :pkg_install
 
-rem ========== æ–¹æ¡ˆäºŒï¼šwdi-simpleï¼ˆvendor\ï¼Œé™é»˜ï¼‰==========
+rem ========== ·½°¸¶þ£ºwdi-simple£¨vendor\£¬¾²Ä¬£©==========
 set "WDI="
 if exist "%~dp0wdi-simple.exe" set "WDI=%~dp0wdi-simple.exe"
 if not defined WDI if exist "%~dp0vendor\wdi-simple.exe" set "WDI=%~dp0vendor\wdi-simple.exe"
 if defined WDI goto :wdi_install
 
-rem ========== æ–¹æ¡ˆä¸‰ï¼šZadig å›¾å½¢ç•Œé¢ï¼ˆäººå·¥ï¼‰==========
+rem ========== ·½°¸Èý£ºZadig Í¼ÐÎ½çÃæ£¨ÈË¹¤£©==========
 goto :zadig_gui
 
 :pkg_install
-echo [1/2] å¯¼å…¥é©±åŠ¨ä¿¡ä»»è¯ä¹¦...
+echo [1/2] µ¼ÈëÇý¶¯ÐÅÈÎÖ¤Êé...
 certutil -addstore -f TrustedPublisher "%~dp0driver_pkg\dfu_driver.cer" >nul 2>&1
 if errorlevel 1 goto :pkg_fail
-echo       å®Œæˆ
-echo [2/2] å®‰è£… DFU é©±åŠ¨ï¼ˆWinUSBï¼‰...
+echo       Íê³É
+echo [2/2] °²×° DFU Çý¶¯£¨WinUSB£©...
 pnputil /add-driver "%~dp0driver_pkg\apple_mobile_device_(dfu_mode).inf" /install >nul 2>&1
 if errorlevel 1 goto :pkg_fail
 echo.
-echo [æˆåŠŸ] é©±åŠ¨å®‰è£…å®Œæˆï¼ä»¥åŽç›´æŽ¥åŒå‡»ã€Œä¸€é”®å¼€æœºã€å³å¯ã€‚
+echo [³É¹¦] Çý¶¯°²×°Íê³É£¡ÒÔºóÖ±½ÓË«»÷¡¸Ò»¼ü¿ª»ú¡¹¼´¿É¡£
 goto :end
 
 :pkg_fail
 echo.
-echo [å¤±è´¥] éšåŒ…é©±åŠ¨å®‰è£…å‡ºé”™ï¼Œæ”¹ç”¨å¤‡ç”¨æ–¹æ¡ˆ...
+echo [Ê§°Ü] Ëæ°üÇý¶¯°²×°³ö´í£¬¸ÄÓÃ±¸ÓÃ·½°¸...
 if defined WDI goto :wdi_install
 goto :zadig_gui
 
 :wdi_install
-echo æ­£åœ¨é™é»˜å®‰è£…é©±åŠ¨ï¼ˆwdi-simpleï¼‰...
+echo ÕýÔÚ¾²Ä¬°²×°Çý¶¯£¨wdi-simple£©...
 "%WDI%" --vid 0x05AC --pid 0x1227 --type 0
 if errorlevel 1 goto :zadig_gui
 echo.
-echo [æˆåŠŸ] é©±åŠ¨å®‰è£…å®Œæˆï¼ä»¥åŽç›´æŽ¥åŒå‡»ã€Œä¸€é”®å¼€æœºã€å³å¯ã€‚
+echo [³É¹¦] Çý¶¯°²×°Íê³É£¡ÒÔºóÖ±½ÓË«»÷¡¸Ò»¼ü¿ª»ú¡¹¼´¿É¡£
 goto :end
 
 :zadig_gui
-echo å°†æ‰“å¼€ Zadig å·¥å…·ï¼Œè¯·æŒ‰æç¤ºæ“ä½œï¼š
-echo   1. èœå• Options å‹¾é€‰ List All Devices
-echo   2. ä¸‹æ‹‰é€‰æ‹© Apple Mobile (DFU Mode)
-echo   3. å³ä¾§é©±åŠ¨é€‰æ‹©æ¡†é€‰ WinUSB
-echo   4. ç‚¹å‡» Replace Driverï¼Œç­‰å¾…å®Œæˆ
-if exist zadig.exe (start "" zadig.exe) else (echo è¯·è”ç³»å®¢æœèŽ·å– zadig.exe)
+echo ½«´ò¿ª Zadig ¹¤¾ß£¬Çë°´ÌáÊ¾²Ù×÷£º
+echo   1. ²Ëµ¥ Options ¹´Ñ¡ List All Devices
+echo   2. ÏÂÀ­Ñ¡Ôñ Apple Mobile (DFU Mode)
+echo   3. ÓÒ²àÇý¶¯Ñ¡Ôñ¿òÑ¡ WinUSB
+echo   4. µã»÷ Replace Driver£¬µÈ´ýÍê³É
+if exist zadig.exe (start "" zadig.exe) else (echo ÇëÁªÏµ¿Í·þ»ñÈ¡ zadig.exe)
 
 :end
 echo.
