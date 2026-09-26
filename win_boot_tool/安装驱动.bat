@@ -10,6 +10,8 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
+set "DRVLOG=%TEMP%\drv_install_result.log"
+
 echo ==============================================
 echo   一次性驱动安装（装完以后不再需要）
 echo ==============================================
@@ -18,45 +20,34 @@ echo 建议让手机先进 DFU 再运行本脚本（立即生效）。
 echo 手机不连接也可以装（下次进 DFU 时自动生效）。
 echo.
 
-rem ========== 方案一：wdi-simple 静默强制安装（可替换 Apple 驱动）==========
-set "WDI="
-if exist "%~dp0wdi-simple.exe" set "WDI=%~dp0wdi-simple.exe"
-if not defined WDI if exist "%~dp0vendor\wdi-simple.exe" set "WDI=%~dp0vendor\wdi-simple.exe"
-if defined WDI goto :wdi_install
-
-rem ========== 方案二：随包证书+驱动包（pnputil）==========
-if exist "%~dp0driver_pkg\dfu_driver.cer" goto :pkg_install
-
-rem ========== 方案三：Zadig 图形界面 ==========
-goto :zadig_gui
-
-:wdi_install
-echo [1/1] 正在静默安装 DFU 驱动（WinUSB，可自动替换 Apple 驱动）...
-set "WDIDEST=%TEMP%\wdi_drv_%RANDOM%"
-"%WDI%" --vid 0x05AC --pid 0x1227 --type 0 --name "Apple Mobile Device (DFU Mode)" --dest "%WDIDEST%" --silent
-if errorlevel 1 goto :pkg_try
-echo.
-echo [成功] 驱动安装完成！以后直接双击「一键开机」即可。
-goto :end
-
-:pkg_try
-echo wdi-simple 未成功，尝试备用方案...
-
-:pkg_install
 if not exist "%~dp0driver_pkg\dfu_driver.cer" goto :zadig_gui
-echo [1/2] 导入驱动信任证书...
+
+echo [1/3] 导入驱动信任证书...
 certutil -addstore -f TrustedPublisher "%~dp0driver_pkg\dfu_driver.cer" >nul 2>&1
 if errorlevel 1 goto :zadig_gui
 echo       完成
-echo [2/2] 安装 DFU 驱动（WinUSB）...
-pnputil /add-driver "%~dp0driver_pkgpple_mobile_device_(dfu_mode).inf" /install >nul 2>&1
-if errorlevel 1 goto :zadig_gui
+
+echo [2/3] 注册驱动包（WinUSB）...
+pnputil /add-driver "%~dp0driver_pkg\apple_mobile_device_(dfu_mode).inf" /install >nul 2>&1
+echo pnputil exit=%errorlevel% >> "%DRVLOG%"
+echo       完成（已注册）
+
+echo [3/3] 强制绑定到 DFU 设备（替换 Apple 驱动）...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0driver_install.ps1" -InfPath "%~dp0driver_pkg\apple_mobile_device_(dfu_mode).inf" -HardwareId "USB\VID_05AC&PID_1227" >> "%DRVLOG%" 2>&1
+if errorlevel 1 goto :force_fail
+echo       完成
+pnputil /scan-devices >nul 2>&1
 echo.
 echo [成功] 驱动安装完成！以后直接双击「一键开机」即可。
 goto :end
 
+:force_fail
+echo       强制绑定未成功，日志：%DRVLOG%
+echo       将打开 Zadig 工具，请按提示操作。
+
 :zadig_gui
-echo 将打开 Zadig 工具，请按提示操作：
+echo.
+echo Zadig 手动步骤：
 echo   1. 菜单 Options 勾选 List All Devices
 echo   2. 下拉选择 Apple Mobile (DFU Mode)
 echo   3. 右侧驱动选择框选 WinUSB

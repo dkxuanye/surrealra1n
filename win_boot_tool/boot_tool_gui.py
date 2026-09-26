@@ -105,6 +105,12 @@ class App:
                                 activeforeground="#ffffff", bd=0, height=2,
                                 cursor="hand2", command=self.on_start)
         self.go_btn.pack(side="left", fill="x", expand=True)
+        self.drv_btn = tk.Button(btns, text="安装驱动", font=(FONT, 11),
+                                 bg=CARD, fg=RED, activebackground="#f2f2f7",
+                                 bd=0, height=2, width=9, cursor="hand2",
+                                 highlightbackground=HAIR, highlightthickness=1,
+                                 command=self.on_install_driver)
+        self.drv_btn.pack(side="left", padx=(10, 0))
         self.diag_btn = tk.Button(btns, text="诊 断", font=(FONT, 12),
                                   bg=CARD, fg=INK, activebackground="#f2f2f7",
                                   bd=0, height=2, width=7, cursor="hand2",
@@ -272,6 +278,18 @@ class App:
             "诊断结果",
             "诊断完成，结果已复制到剪贴板。\n\n请粘贴发给客服（微信/QQ 均可）。")
 
+    def on_install_driver(self):
+        """一键运行 安装驱动.bat（自动提权：证书注册+强制绑定，Zadig 兜底）"""
+        bat = os.path.join(TOOL_DIR, "安装驱动.bat")
+        if not os.path.isfile(bat):
+            messagebox.showwarning("缺少文件", "未找到 安装驱动.bat，请联系客服。")
+            return
+        self.set_status("正在运行驱动安装（请在弹出的窗口里允许管理员权限）...")
+        try:
+            os.startfile(bat)  # noqa: S606 bat 自带 UAC 提权
+        except Exception as e:
+            messagebox.showerror("启动失败", str(e))
+
     # ---------- 引擎流程（后台线程） ----------
     def _run(self):
         q = self.q
@@ -305,6 +323,7 @@ class App:
             ]))
             pico_hinted = False
             dfu_hinted = False
+            driver_hinted_at = 0.0
             dev = None
             while not dev:
                 devs = engine.dfu_devices()
@@ -328,9 +347,29 @@ class App:
                         "",
                         "（期间手机屏幕保持全黑）",
                     ]))
-                elif not devs and not dfu_hinted:
-                    dfu_hinted = True  # 首条指引已给，静默等待
-                    q.put(("status", "等待 DFU 设备..."))
+                elif not devs:
+                    # 每 10 秒做一次驱动失明检查（手机在 DFU 但工具看不见）
+                    if time.time() - driver_hinted_at > 10 and engine.dfu_driver_blind():
+                        driver_hinted_at = time.time()
+                        q.put(("step", "✗ 正在自动安装驱动"))
+                        q.put(("guide", [
+                            "手机已进入 DFU，但驱动被 Apple 驱动占用。",
+                            "",
+                            "已自动启动驱动安装，",
+                            "请在弹出的窗口中点「是」允许管理员权限。",
+                            "安装完成后这里会自动继续。",
+                            "",
+                            "（若无窗口弹出，请点右下角红色「安装驱动」按钮）",
+                        ]))
+                        bat = os.path.join(TOOL_DIR, "安装驱动.bat")
+                        if os.path.isfile(bat):
+                            try:
+                                os.startfile(bat)  # noqa: S606
+                            except Exception:
+                                pass
+                    elif not dfu_hinted:
+                        dfu_hinted = True  # 首条指引已给，静默等待
+                        q.put(("status", "等待 DFU 设备..."))
                 time.sleep(1.0)
 
             q.put(("step", "设备已就绪，正在匹配..."))

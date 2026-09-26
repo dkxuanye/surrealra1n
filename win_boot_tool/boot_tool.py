@@ -28,6 +28,25 @@ TRANSFER_SIZE = 0x800
 
 TOOL_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 
+
+def _make_backend():
+    """Windows：显式用随包 libusb-1.0.dll 构造 pyusb 后端。
+    pyusb 默认按 PATH 找库，找不到会退回 System32 的 libusb0 后端——
+    它看不见 WinUSB 设备（本工具的 DFU 访问全靠随包 dll）。"""
+    if os.name != "nt":
+        return None
+    from usb.backend import libusb1
+    dll = os.path.join(TOOL_DIR, "libusb-1.0.dll")
+    if os.path.isfile(dll):
+        try:
+            return libusb1.get_backend(find_library=lambda _: dll)
+        except Exception:
+            return None
+    return None
+
+
+_USB_BACKEND = _make_backend()
+
 # ========== 品牌配置（发布前只改这里） ==========
 BRAND = {
     "name": "玄烨品果",                     # 品牌名
@@ -105,7 +124,8 @@ def load_boot_bundle():
 
 
 def dfu_devices():
-    return list(usb.core.find(idVendor=APPLE_VID, idProduct=DFU_PID, find_all=True))
+    return list(usb.core.find(idVendor=APPLE_VID, idProduct=DFU_PID,
+                               find_all=True, backend=_USB_BACKEND))
 
 
 def serial_of(dev):
@@ -115,11 +135,27 @@ def serial_of(dev):
         return ""
 
 
+def dfu_driver_blind():
+    """Windows 专属：PnP 能看到 DFU 设备但 pyusb 看不见 = 驱动缺失或被
+    Apple 驱动占用（每次重新进 DFU 都可能被重新抢占，需重装驱动）。"""
+    if os.name != "nt":
+        return False
+    try:
+        return DFU_PID in _apple_pids_present() and not dfu_devices()
+    except Exception:
+        return False
+
+
+_driver_fix_launched_at = 0.0
+
+
 def wait_dfu_pwned():
     """等待出现已破解（PWND）的 DFU 设备，返回该设备。期间给出引导。"""
     out("[1/3] 正在寻找设备（DFU 模式）...")
     gave_dfu_tips = False
     gave_pico_tips = False
+    gave_driver_tips = False
+    last_driver_check = 0.0
     while True:
         devs = dfu_devices()
         for dev in devs:
@@ -134,17 +170,39 @@ def wait_dfu_pwned():
                 out("    等 Pico 上的灯闪烁完成后，再把手机插回电脑。")
                 out("    （保持手机处于 DFU 状态：屏幕全程全黑）")
                 out()
-        if not devs and not gave_dfu_tips:
-            gave_dfu_tips = True
-            out()
-            out("    未检测到 DFU 设备。请按下面步骤让手机进入 DFU 模式：")
-            out("    1) 按一下「音量+」松开")
-            out("    2) 按一下「音量-」松开")
-            out("    3) 按住「电源键」直到屏幕完全变黑")
-            out("    4) 黑屏瞬间，同时按住「电源键+音量-」，心里数 5 秒")
-            out("    5) 松开「电源键」，继续按住「音量-」约 10 秒")
-            out("    6) 屏幕保持全黑 = 成功；出现 Apple 标志 = 失败，请重试")
-            out()
+        if not devs:
+            # 每 10 秒做一次驱动失明检查（系统看得见、工具看不见）
+            if time.time() - last_driver_check > 10:
+                last_driver_check = time.time()
+                if dfu_driver_blind():
+                    global _driver_fix_launched_at
+                    now = time.time()
+                    if now - _driver_fix_launched_at > 120:
+                        _driver_fix_launched_at = now
+                        out()
+                        out("    [!] 手机已进入 DFU，但驱动被 Apple 驱动占用。")
+                        out("    正在自动启动驱动安装，请在弹出的窗口中点「是」允许...")
+                        bat = os.path.join(TOOL_DIR, "安装驱动.bat")
+                        if os.path.isfile(bat):
+                            try:
+                                os.startfile(bat)  # noqa: S606 bat 自带 UAC 提权
+                            except Exception:
+                                out("    自动启动失败，请手动双击「安装驱动.bat」")
+                        else:
+                            out("    请手动双击「安装驱动.bat」")
+                        out("    装完后工具会自动继续。")
+                        out()
+            if not gave_dfu_tips:
+                gave_dfu_tips = True
+                out()
+                out("    未检测到 DFU 设备。请按下面步骤让手机进入 DFU 模式：")
+                out("    1) 按一下「音量+」松开")
+                out("    2) 按一下「音量-」松开")
+                out("    3) 按住「电源键」直到屏幕完全变黑")
+                out("    4) 黑屏瞬间，同时按住「电源键+音量-」，心里数 5 秒")
+                out("    5) 松开「电源键」，继续按住「音量-」约 10 秒")
+                out("    6) 屏幕保持全黑 = 成功；出现 Apple 标志 = 失败，请重试")
+                out()
         out(".", end="", flush=True)
         time.sleep(1.5)
 
