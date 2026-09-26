@@ -19,6 +19,14 @@ sys.path.insert(0, TOOL_DIR)
 import tkinter as tk
 from tkinter import ttk, messagebox
 
+if os.name == "nt":
+    try:
+        import winsound
+    except ImportError:
+        winsound = None
+else:
+    winsound = None
+
 import boot_tool as engine  # 复用已验证的引擎
 
 # ---- iOS 风格配色 ----
@@ -53,6 +61,15 @@ class App:
 
     # ---------- UI ----------
     def _build_ui(self):
+        # 窗口图标
+        ico = os.path.join(TOOL_DIR, "brand.png")
+        if os.path.isfile(ico):
+            try:
+                self._icon_img = tk.PhotoImage(file=ico)
+                self.root.iconphoto(True, self._icon_img)
+            except Exception:
+                pass
+
         # 顶部品牌区
         head = tk.Frame(self.root, bg=BG)
         head.pack(fill="x", padx=28, pady=(26, 4))
@@ -92,10 +109,24 @@ class App:
         tk.Label(prog_wrap, textvariable=self.pct_var, font=(FONT, 11),
                  bg=BG, fg=INK2, width=5, anchor="e").pack(side="right", padx=(10, 0))
 
+        # 数秒助手（DFU 阶段显示）
+        self.timer_row = tk.Frame(self.root, bg=BG)
+        tk.Label(self.timer_row, text="数秒助手：", font=(FONT, 11),
+                 bg=BG, fg=INK2).pack(side="left")
+        for secs, hint in ((5, "电源+音量-"), (10, "音量-")):
+            b = tk.Button(self.timer_row,
+                          text=f"{secs} 秒（{hint}）", font=(FONT, 11),
+                          bg=CARD, fg=BLUE, activebackground="#f2f2f7",
+                          bd=0, cursor="hand2", padx=10, pady=3,
+                          highlightbackground=HAIR, highlightthickness=1,
+                          command=lambda s=secs: self.start_countdown(s))
+            b.pack(side="left", padx=(8, 0))
+
         # 状态行
         self.status_var = tk.StringVar(value="")
-        tk.Label(self.root, textvariable=self.status_var, font=(FONT, 10),
-                 bg=BG, fg=INK2).pack(padx=28, pady=(2, 10), anchor="w")
+        self._status_label = tk.Label(self.root, textvariable=self.status_var,
+                                      font=(FONT, 10), bg=BG, fg=INK2)
+        self._status_label.pack(padx=28, pady=(2, 10), anchor="w")
 
         # 按钮区
         btns = tk.Frame(self.root, bg=BG)
@@ -118,12 +149,16 @@ class App:
                                   command=self.on_diag)
         self.diag_btn.pack(side="left", padx=(10, 0))
 
-        # 底部品牌/联系
+        # 底部品牌/联系：QQ 可点击复制
         foot = tk.Frame(self.root, bg=BG)
         foot.pack(fill="x", padx=28, pady=(0, 14))
-        tk.Label(foot, text=f"{engine.BRAND['name']} · {engine.BRAND['site']}    "
-                            f"{engine.BRAND['contact']}",
-                 font=(FONT, 10), bg=BG, fg=INK2).pack(anchor="center")
+        tk.Label(foot, text=f"{engine.BRAND['name']} · {engine.BRAND['site']}    v{engine.VERSION}",
+                 font=(FONT, 10), bg=BG, fg=INK2).pack(side="left")
+        self.qq_label = tk.Label(foot, text="💬 " + engine.BRAND["contact"],
+                                 font=(FONT, 10), bg=BG, fg=BLUE,
+                                 cursor="hand2")
+        self.qq_label.pack(side="right")
+        self.qq_label.bind("<Button-1>", lambda e: self.copy_contact())
 
         # 二维码（可选：卖家放 二维码.png 在工具旁，成功页显示）
         self.qr_img = None
@@ -139,12 +174,83 @@ class App:
                     self.qr_img = None
                 break
 
-        self.set_guide([
-            "欢迎使用一键开机。",
-            "",
-            "把手机用数据线连接电脑后，点「开始」。",
-            "工具会一步步指引你完成开机。",
-        ])
+        info = engine.bundle_summary()
+        self._stage1_lines = None
+        if info:
+            ecid_tail = info["ecid"][-6:].upper()
+            self.set_guide([
+                "欢迎使用一键开机。",
+                "",
+                f"📦 引导包：{info['identifier']} · iOS {info['version']}",
+                f"🔗 已绑定你的手机（识别码 {ecid_tail}）",
+                "",
+                "把手机用数据线连接电脑后，点「开始」。",
+            ])
+        else:
+            self.set_guide([
+                "未找到引导包！",
+                "",
+                "请把卖家发给你的引导包（zip 或 boot 文件夹）",
+                "放到本工具所在的文件夹里，再重新打开本工具。",
+                "",
+                "文件夹位置：" + TOOL_DIR,
+            ])
+
+    def copy_contact(self):
+        qq = "".join(c for c in engine.BRAND["contact"] if c.isdigit())
+        self.root.clipboard_clear()
+        self.root.clipboard_append(qq)
+        self.set_status(f"客服 QQ 已复制（{qq}），请打开 QQ 添加/粘贴发送")
+        if winsound:
+            try:
+                winsound.MessageBeep()
+            except Exception:
+                pass
+
+    def show_timer_row(self, show):
+        if show:
+            self.timer_row.pack(fill="x", padx=28, pady=(0, 4),
+                                before=self._status_label)
+        else:
+            self.timer_row.pack_forget()
+
+    def start_countdown(self, secs):
+        """大字倒计时：DFU 第4步按 5 秒（电源+音量-），第5步按 10 秒（音量-）"""
+        if self._stage1_lines is None:
+            return
+        if winsound:
+            try:
+                winsound.Beep(1200, 120)
+            except Exception:
+                pass
+
+        def restore():
+            if winsound:
+                try:
+                    winsound.Beep(1600, 250)
+                except Exception:
+                    pass
+            self.set_guide(self._stage1_lines)
+            self.set_status("倒计时结束——按指引继续下一步")
+
+        def tick(n):
+            if n <= 0:
+                self.root.after(300, restore)
+                return
+            self.guide.configure(state="normal")
+            self.guide.delete("1.0", "end")
+            self.guide.tag_configure("big", font=(FONT, 88, "bold"),
+                                     foreground=BLUE, justify="center")
+            self.guide.tag_configure("cap", font=(FONT, 13),
+                                     foreground=INK2, justify="center")
+            self.guide.insert("end", "\n", "cap")
+            self.guide.insert("end", f" {n} ", "big")
+            self.guide.insert("end", "\n\n保持按住，不要松手…", "cap")
+            self.guide.configure(state="disabled")
+            self.root.after(1000, lambda: tick(n - 1))
+
+        tick(secs)
+        self.set_status(f"{secs} 秒倒计时中——按住对应的按键！")
 
     # ---------- UI 工具 ----------
     def set_step(self, text, color=BLUE):
@@ -180,6 +286,10 @@ class App:
                     self._watch_postboot()
                 elif ev == "postboot_result":
                     self._on_postboot_result(data)
+                elif ev == "show_timer":
+                    self.show_timer_row(data)
+                elif ev == "stage1_lines":
+                    self._stage1_lines = data
         except queue.Empty:
             pass
         self.root.after(100, self._drain_queue)
@@ -310,7 +420,7 @@ class App:
 
             # 等待 DFU + 破解
             q.put(("step", "第 1 步：让手机进入 DFU 模式"))
-            q.put(("guide", [
+            stage1_lines = [
                 "手机用数据线连接电脑，然后：",
                 "  1. 按一下「音量+」松开",
                 "  2. 按一下「音量-」松开",
@@ -320,7 +430,12 @@ class App:
                 "",
                 "屏幕保持全黑 = 成功（出现苹果标志请重来）",
                 "进入后工具会自动继续...",
-            ]))
+                "",
+                "💡 数不准秒？用下方「数秒助手」按钮，开按的那一瞬间点它",
+            ]
+            q.put(("stage1_lines", stage1_lines))
+            q.put(("guide", stage1_lines))
+            q.put(("show_timer", True))
             pico_hinted = False
             dfu_hinted = False
             driver_hinted_at = 0.0
@@ -337,6 +452,7 @@ class App:
                     break
                 if devs and not pico_hinted:
                     pico_hinted = True
+                    q.put(("show_timer", False))
                     q.put(("step", "第 2 步：用 Pi Pico 破解"))
                     q.put(("guide", [
                         "已检测到 DFU 设备，但还未破解：",
@@ -373,6 +489,7 @@ class App:
                 time.sleep(1.0)
 
             q.put(("step", "设备已就绪，正在匹配..."))
+            q.put(("show_timer", False))
             ecid = engine.ecid_of(dev)
             q.put(("status", f"ECID: {ecid}"))
             picked = engine.pick_boot_files(boot_dir, ecid)

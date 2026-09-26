@@ -21,6 +21,7 @@ APPLE_VID = 0x05AC
 DFU_PID = 0x1227
 RECOVERY_PID = 0x1281
 NORMAL_PID = 0x12A8
+VERSION = "1.1.0"
 DFU_DNLOAD = 1
 DFU_ABORT = 4
 CUSTOM_BOOT = 8
@@ -126,6 +127,23 @@ def load_boot_bundle():
 def dfu_devices():
     return list(usb.core.find(idVendor=APPLE_VID, idProduct=DFU_PID,
                                find_all=True, backend=_USB_BACKEND))
+
+
+def bundle_summary():
+    """启动时给客户看的引导包摘要（不需要手机在线）。返回 None = 无包。"""
+    boot_dir, _ = load_boot_bundle()
+    if not boot_dir:
+        return None
+    ecid_files = glob.glob(os.path.join(boot_dir, "0x*.txt"))
+    if not ecid_files:
+        return None
+    with open(ecid_files[0], encoding="utf-8", errors="ignore") as fh:
+        version = fh.read().strip()
+    ecid = os.path.basename(ecid_files[0])[:-4]
+    boots = glob.glob(os.path.join(boot_dir, "*", version, "iBSS.boot"))
+    identifier = (os.path.basename(os.path.dirname(os.path.dirname(boots[0])))
+                  if boots else "未知机型")
+    return {"identifier": identifier, "version": version, "ecid": ecid}
 
 
 def serial_of(dev):
@@ -338,7 +356,7 @@ def detect_post_boot(timeout=60, stable_secs=12, on_check=None):
 
 
 def selftest():
-    out("=== 自检 ===")
+    out(f"=== 自检（v{VERSION}）===")
     try:
         import usb.core  # noqa: F401
         out("[✓] USB 库正常")

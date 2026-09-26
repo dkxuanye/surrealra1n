@@ -34,6 +34,7 @@ mkdir -p "$D"
 
 cp "$EXE" "$D/boot_tool.exe"
 [[ -n "$DLL" ]] && cp "$DLL" "$D/"
+[[ -s brand.png ]] && cp brand.png "$D/"   # 窗口图标（exe 图标已内嵌）
 cp "安装驱动.bat" "一键开机.bat" "$D/"
 [[ -s vendor/wdi-simple.exe ]] && cp vendor/wdi-simple.exe "$D/"
 [[ -s zadig.exe ]] && cp zadig.exe "$D/"   # 无 wdi-simple 时 安装驱动.bat 的 GUI 降级工具
