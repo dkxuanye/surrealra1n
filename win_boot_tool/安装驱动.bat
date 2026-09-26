@@ -39,20 +39,25 @@ echo       完成
 pnputil /scan-devices >nul 2>&1
 echo.
 echo [成功] 驱动安装完成！以后直接双击「一键开机」即可。
+echo （若之后手机重新进过 DFU 又提示驱动问题，重新运行本脚本即可）
 goto :end
 
 :force_fail
-echo       强制绑定未成功，日志：%DRVLOG%
-echo       将打开 Zadig 工具，请按提示操作。
+echo.
+echo [未完成] 强制绑定未成功（日志：%DRVLOG%）
+pnputil /enum-devices /connected 2>nul | find /i "PID_1227" >nul
+if errorlevel 1 (
+    echo   原因：当前没有处于 DFU 模式的手机。
+    echo   绑定只在手机进入 DFU 时生效——证书和驱动包已装好，
+    echo   手机下次进入 DFU 后重新运行本脚本即可完成绑定。
+) else (
+    echo   手机已在 DFU 但绑定失败，请用 zadig.exe 手动装一次：
+    echo   Options 勾 List All Devices - 选 Apple Mobile (DFU Mode)
+    echo   - 驱动选 WinUSB - 点 Replace Driver
+)
 
 :zadig_gui
 echo.
-echo Zadig 手动步骤：
-echo   1. 菜单 Options 勾选 List All Devices
-echo   2. 下拉选择 Apple Mobile (DFU Mode)
-echo   3. 右侧驱动选择框选 WinUSB
-echo   4. 点击 Replace Driver，等待完成
-if exist zadig.exe (start "" zadig.exe) else (echo 请联系客服获取 zadig.exe)
 
 :end
 echo.
