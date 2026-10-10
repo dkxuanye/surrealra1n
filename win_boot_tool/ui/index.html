@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>玄烨品果 · 一键开机</title>
+<style>
+:root{
+  --bg:#0a0c13; --ink:#f2f4fa; --ink2:rgba(235,238,250,.55); --ink3:rgba(235,238,250,.32);
+  --glass:rgba(255,255,255,.065); --glass2:rgba(255,255,255,.10);
+  --stroke:rgba(255,255,255,.14); --stroke2:rgba(255,255,255,.22);
+  --blue:#4d9fff; --blue2:#7db8ff; --green:#39d98a; --red:#ff5d5d; --amber:#ffb84d;
+  --r-lg:26px; --r-md:16px;
+  font-synthesis:none;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:"Segoe UI Variable Display","Segoe UI","Microsoft YaHei UI",-apple-system,sans-serif;
+  background:var(--bg);color:var(--ink);user-select:none;cursor:default;
+}
+/* ---- 液体背景：漂浮光晕 ---- */
+.orbs{position:fixed;inset:-20%;filter:blur(90px);opacity:.5;z-index:0}
+.orb{position:absolute;border-radius:50%;mix-blend-mode:screen}
+.o1{width:46vmax;height:46vmax;left:-10%;top:-15%;background:radial-gradient(circle,#1d4ed8aa,transparent 65%);animation:drift1 26s ease-in-out infinite alternate}
+.o2{width:40vmax;height:40vmax;right:-12%;top:20%;background:radial-gradient(circle,#7c3aed88,transparent 65%);animation:drift2 32s ease-in-out infinite alternate}
+.o3{width:36vmax;height:36vmax;left:20%;bottom:-18%;background:radial-gradient(circle,#0d948877,transparent 65%);animation:drift3 29s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(9vw,7vh) scale(1.12)}}
+@keyframes drift2{to{transform:translate(-8vw,-6vh) scale(.92)}}
+@keyframes drift3{to{transform:translate(6vw,-9vh) scale(1.08)}}
+/* ---- 玻璃卡 ---- */
+.shell{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;padding:26px 30px 20px}
+.card{
+  flex:1;display:flex;flex-direction:column;min-height:0;
+  background:var(--glass);
+  -webkit-backdrop-filter:blur(34px) saturate(170%);backdrop-filter:blur(34px) saturate(170%);
+  border:1px solid var(--stroke);border-radius:var(--r-lg);
+  box-shadow:0 24px 70px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(0,0,0,.25);
+  padding:24px 26px;overflow:hidden;
+}
+/* 头部 */
+.head{display:flex;align-items:center;gap:14px}
+.logo{width:46px;height:46px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#2f7dff,#0a3f9e);font-size:24px;font-weight:700;
+  box-shadow:0 6px 18px #1d4ed866, inset 0 1px 0 rgba(255,255,255,.35)}
+.brand{font-size:21px;font-weight:700;letter-spacing:.5px}
+.slogan{font-size:12px;color:var(--ink2);margin-top:2px;letter-spacing:.3px}
+.ver{margin-left:auto;font-size:11px;color:var(--ink3);background:var(--glass);border:1px solid var(--stroke);
+  padding:3px 10px;border-radius:99px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+/* 步骤条 */
+.steps{display:flex;align-items:center;gap:0;margin:20px 2px 16px}
+.stepp{display:flex;align-items:center;gap:8px}
+.dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--ink3);background:var(--glass);border:1px solid var(--stroke);
+  transition:all .45s cubic-bezier(.22,1.2,.36,1)}
+.dot.on{color:#fff;background:linear-gradient(150deg,#3d8bff,#1a5fd8);border-color:transparent;
+  box-shadow:0 0 14px #2f7dff88}
+.dot.done{color:var(--green);border-color:#39d98a55;background:#39d98a1a}
+.steplbl{font-size:12px;color:var(--ink3);transition:color .3s}
+.stepp.on .steplbl{color:var(--ink)}
+.bar{flex:1;height:2px;margin:0 10px;border-radius:2px;background:rgba(255,255,255,.09);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3d8bff,#7db8ff);border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+/* 步骤标题 */
+.h1{font-size:19px;font-weight:700;margin:6px 2px 12px;transition:color .3s}
+.h1.ok{color:var(--green)}.h1.err{color:var(--red)}.h1.warn{color:var(--amber)}
+/* 指引区 */
+.guide{flex:1;min-height:0;overflow-y:auto;border-radius:var(--r-md);padding:16px 18px;
+  background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.07);
+  font-size:13.5px;line-height:1.85;color:var(--ink2);white-space:pre-wrap}
+.guide::-webkit-scrollbar{width:6px}.guide::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}
+.guide b{color:var(--ink)}
+/* 进度环 */
+.prog{display:flex;align-items:center;gap:14px;margin:14px 2px 6px}
+.ring{width:52px;height:52px;flex:none;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:5;stroke-linecap:round}
+.ring .tr{stroke:rgba(255,255,255,.09)}
+.ring .vl{stroke:url(#gradP);stroke-dasharray:138.2;stroke-dashoffset:138.2;transition:stroke-dashoffset .35s ease}
+.ringTx{font-size:12.5px;color:var(--ink2);line-height:1.5}
+.ringTx b{color:var(--ink);font-size:14px}
+/* 状态行 */
+.status{min-height:18px;font-size:12px;color:var(--ink3);margin:4px 4px 12px;transition:color .3s}
+.status.hot{color:var(--blue2)}
+/* 数秒助手 */
+.timerRow{display:flex;gap:10px;margin:0 2px 12px}
+.tbtn{flex:1;padding:9px 0;border-radius:13px;text-align:center;font-size:12.5px;color:var(--blue2);
+  background:var(--glass);border:1px solid var(--stroke);cursor:pointer;transition:all .25s;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.tbtn:hover{background:var(--glass2);border-color:var(--stroke2);transform:translateY(-1px)}
+.tbtn:active{transform:scale(.97)}
+.tbtn small{display:block;color:var(--ink3);font-size:10.5px;margin-top:2px}
+/* 主按钮 */
+.actions{display:flex;gap:12px}
+.btn{border:none;cursor:pointer;font-family:inherit;border-radius:15px;transition:all .3s cubic-bezier(.22,1.2,.36,1)}
+.btn:active{transform:scale(.97)}
+.main{flex:1;padding:14px 0;font-size:15.5px;font-weight:700;color:#fff;letter-spacing:6px;
+  background:linear-gradient(160deg,#3d8bff,#1a55d4);box-shadow:0 10px 26px #1d4ed855, inset 0 1px 0 rgba(255,255,255,.35)}
+.main:hover{box-shadow:0 12px 32px #1d4ed877, inset 0 1px 0 rgba(255,255,255,.4);transform:translateY(-1px)}
+.main:disabled{filter:saturate(.3) brightness(.62);cursor:default;transform:none;box-shadow:none;letter-spacing:2px}
+.sub{padding:14px 20px;font-size:12.5px;color:var(--ink2);background:var(--glass);border:1px solid var(--stroke)}
+.sub:hover{background:var(--glass2);color:var(--ink)}
+.sub.red{color:#ff8d8d;border-color:#ff5d5d44}
+.sub.red:hover{border-color:#ff5d5d88}
+/* 页脚 */
+.foot{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;font-size:11px;color:var(--ink3)}
+.qq{color:var(--blue2);cursor:pointer;padding:2px 9px;border-radius:99px;border:1px solid transparent;transition:all .25s}
+.qq:hover{border-color:#4d9fff55;background:#4d9fff14}
+/* 倒计时遮罩 */
+.overlay{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(10,12,19,.55);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border-radius:var(--r-lg)}
+.overlay.show{display:flex}
+.cnum{font-size:130px;font-weight:800;line-height:1;color:#fff;text-shadow:0 0 60px #3d8bffaa;
+  animation:pop .9s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.55);opacity:0}55%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+.cap{margin-top:18px;font-size:14px;color:var(--ink2)}
+.cring{width:230px;height:230px;margin-bottom:10px}
+/* 成功打勾 */
+.okmark{width:86px;height:86px;border-radius:50%;margin:8px auto 6px;
+  background:radial-gradient(circle at 35% 30%,#39d98a,#0f9d58);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 46px #39d98a66;animation:spring .7s cubic-bezier(.2,1.6,.4,1)}
+.okmark svg{width:44px;height:44px}
+.okmark path{stroke:#fff;stroke-width:7;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:60;stroke-dashoffset:60;animation:draw .5s .25s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes spring{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.center{text-align:center}
+/* 通用入场 */
+.fade{animation:fade .45s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--glass);border:1px solid var(--stroke);font-size:11px;color:var(--ink2)}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--blue2);border-radius:50%;animation:rot .8s linear infinite;vertical-align:-2px;margin-right:7px}
+@keyframes rot{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="orbs"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<div class="shell">
+  <div class="card" id="card">
+    <div class="head">
+      <div class="logo">玄</div>
+      <div><div class="brand">玄烨品果</div><div class="slogan" id="slogan">老设备焕新 · 专业玩机</div></div>
+      <div class="ver" id="ver">v?</div>
+    </div>
+
+    <div class="steps">
+      <div class="stepp" id="sp1"><div class="dot">1</div><div class="steplbl">进入 DFU</div></div>
+      <div class="bar"><i id="b1"></i></div>
+      <div class="stepp" id="sp2"><div class="dot">2</div><div class="steplbl">Pico 破解</div></div>
+      <div class="bar"><i id="b2"></i></div>
+      <div class="stepp" id="sp3"><div class="dot">3</div><div class="steplbl">发送引导</div></div>
+    </div>
+
+    <div class="h1" id="h1">准备就绪</div>
+    <div class="guide fade" id="guide"></div>
+
+    <div class="prog" id="progRow" style="display:none">
+      <svg class="ring" viewBox="0 0 52 52">
+        <defs><linearGradient id="gradP" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#3d8bff"/><stop offset="1" stop-color="#7db8ff"/></linearGradient></defs>
+        <circle class="tr" cx="26" cy="26" r="22"/><circle class="vl" id="ringV" cx="26" cy="26" r="22"/>
+      </svg>
+      <div class="ringTx" id="progTx"></div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="timerRow" id="timerRow" style="display:none">
+      <div class="tbtn" onclick="App.countdown(5)">数 5 秒<small>黑屏后按住 电源+音量-</small></div>
+      <div class="tbtn" onclick="App.countdown(10)">数 10 秒<small>松开电源，继续按住 音量-</small></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn main" id="goBtn" onclick="App.start()">开 始</button>
+      <button class="btn sub red" onclick="App.py().install_driver()">安装驱动</button>
+      <button class="btn sub" onclick="App.selftest()">诊断</button>
+    </div>
+
+    <div class="foot">
+      <span>玄烨品果 · dkxuanye.cn</span><span id="ver2"></span>
+      <span class="qq" id="qq" onclick="App.py().copy_qq()">💬 客服</span>
+    </div>
+
+    <div class="overlay" id="overlay">
+      <svg class="cring" viewBox="0 0 230 230">
+        <defs><linearGradient id="gradC" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#3d8bff"/><stop offset="1" stop-color="#9db8ff"/></linearGradient></defs>
+        <circle cx="115" cy="115" r="104" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="7"/>
+        <circle id="cringV" cx="115" cy="115" r="104" fill="none" stroke="url(#gradC)" stroke-width="7"
+          stroke-linecap="round" stroke-dasharray="653.4" stroke-dashoffset="0"
+          transform="rotate(-90 115 115)" style="transition:stroke-dashoffset .95s linear"/>
+      </svg>
+      <div class="cnum" id="cnum">5</div>
+      <div class="cap" id="ccap">保持按住，不要松手…</div>
+    </div>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const App = {
+  state: {running:false},
+  py(){ return window.pywebview.api; },
+
+  async init(){
+    try{
+      const s = await this.py().get_state();
+      this.info = s;
+      $('slogan').textContent = s.brand.slogan;
+      $('ver').textContent = 'v'+s.version; $('ver2').textContent = 'v'+s.version;
+      $('qq').title = s.brand.contact;
+      if(s.bundle){
+        const tail = s.bundle.ecid.slice(-6).toUpperCase();
+        this.h1('准备就绪');
+        this.guide(
+`📦 引导包　<b>${s.bundle.identifier} · iOS ${s.bundle.version}</b>
+🔗 已绑定你的手机（识别码 ${tail}）
+${s.bundle.lic_ok ? '✅ '+s.bundle.lic_msg : '⚠ '+(s.bundle.lic_msg||'').split('\n')[0]}
+
+把手机用数据线连接电脑后，点「开始」。`);
+      }else{
+        this.h1('未找到引导包','err');
+        this.guide(
+`请把卖家发给你的引导包（zip 或 boot 文件夹）
+放到本工具所在的文件夹里，再重新打开本工具。
+
+📁 ${s.tool_dir}`);
+      }
+    }catch(e){ this.status('初始化中…'); setTimeout(()=>this.init(), 300); }
+  },
+
+  h1(t, cls){ $('h1').textContent = t; $('h1').className = 'h1 '+(cls||''); },
+  guide(html){ $('guide').innerHTML = html; $('guide').classList.remove('fade'); void $('guide').offsetWidth; $('guide').classList.add('fade'); },
+  status(t, hot){ $('status').innerHTML = t; $('status').className = 'status'+(hot?' hot':''); },
+  step(n){ // 1..3 激活; 4=全部完成
+    [1,2,3].forEach(i=>{
+      const p=$('sp'+i), d=p.querySelector('.dot');
+      d.className='dot'+(i<n||n>3?' done':'')+(i===n?' on':'');
+      p.className='stepp'+(i===n?' on':'');
+    });
+    $('b1').style.width = n>1?'100%':'0';
+    $('b2').style.width = n>2||n>3?'100%':'0';
+  },
+  progress(pct, tx){ // 0-100, -1 隐藏
+    if(pct<0){ $('progRow').style.display='none'; return; }
+    $('progRow').style.display='flex';
+    $('ringV').style.strokeDashoffset = 138.2*(1-pct/100);
+    $('progTx').innerHTML = tx||(`<b>${pct}%</b><br>正在发送引导文件`);
+  },
+  running(f){ this.state.running=f; const b=$('goBtn'); b.disabled=f; b.textContent=f?'进行中…':'开 始'; },
+
+  async start(){
+    if(this.state.running) return;
+    this.running(true);
+    this.step(1);
+    try{ await this.py().start(); }catch(e){ this.onEvent({type:'error', msg:''+e}); }
+  },
+  async selftest(){
+    this.status('<span class="spin"></span>正在自检…');
+    try{
+      const r = await this.py().selftest();
+      this.status('诊断结果已复制到剪贴板');
+      this.h1('诊断完成');
+      this.guide('<b>'+r.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</b>');
+    }catch(e){ this.status('诊断失败'); }
+  },
+
+  countdown(sec){
+    const ov=$('overlay'), num=$('cnum'), ring=$('cringV');
+    ov.classList.add('show');
+    const total=sec;
+    const tick=()=>{
+      if(sec<0){ ov.classList.remove('show'); this.status('倒计时结束——按指引继续下一步'); return; }
+      num.textContent=sec;
+      num.style.animation='none'; void num.offsetWidth; num.style.animation='';
+      ring.style.strokeDashoffset = 653.4*(1-sec/total);
+      sec--; setTimeout(tick, 1000);
+    };
+    tick();
+  },
+
+  onEvent(ev){
+    const d=ev.data||{};
+    switch(ev.type){
+      case 'step': this.h1(d.t, d.cls); break;
+      case 'guide': this.guide(d.html||d.t||''); break;
+      case 'status': this.status(d.t, d.hot); break;
+      case 'stage': this.step(d.n); break;
+      case 'timer': $('timerRow').style.display = d.show?'flex':'none'; break;
+      case 'progress': this.progress(d.pct, d.tx); break;
+      case 'busy': this.running(d.f); break;
+      case 'license_ok': this.status('✅ '+d.t, true); break;
+      case 'error':
+        this.running(false); this.h1('✗ 出错','err');
+        this.guide('<b>'+(d.msg||'未知错误')+'</b>\n\n请截图本窗口发给客服。');
+        break;
+      case 'done':
+        if(d.ok){
+          this.running(false); this.step(4);
+          this.h1('✓ 开机成功','ok'); this.progress(100,'<b>完成</b><br>手机已进入系统');
+          this.guide(
+`<div class="center"><div class="okmark"><svg viewBox="0 0 52 52"><path d="M14 27 L23 36 L38 18"/></svg></div></div>
+
+<b>开机成功！手机已进入系统，可以正常使用。</b>
+
+【日常提醒】
+· 关机 / 没电后，需要重新运行本工具开机
+· 引导包与你的手机一一绑定，请备份保存
+· 遇到问题：点「诊断」，结果发给客服即可`);
+          this.status('已确认手机正常开机');
+        }else{
+          this.running(false); this.progress(-1);
+          if(!($('h1').textContent.startsWith('✗'))) this.h1('未成功','err');
+        }
+        break;
+      case 'stall':
+        this.h1('✗ 未能自动开机','err');
+        this.guide(
+`手机停留在恢复模式，未能自动开机。
+
+<b>最常见原因：引导包版本与手机当前系统不一致</b>
+（例如手机之后刷过其他版本）。
+
+请联系客服核对手机当前的 iOS 版本，
+重新制作对应版本的引导包。
+（${this.info?this.info.brand.contact:''}）`);
+        break;
+      case 'dfu_back':
+        this.h1('✗ 本次开机未成功','err');
+        this.guide('设备退回了 DFU 模式。\n请重新点「开始」再试一次。');
+        break;
+      case 'postboot':
+        this.status('<span class="spin"></span>'+ (d.t||'正在确认开机状态…'), true);
+        break;
+    }
+  }
+};
+window.App = App;
+window.addEventListener('pywebviewready', ()=>{
+  App.init();
+  // 事件轮询通道（250ms）：WebView2 下 Python 无法跨线程推 JS，反向轮询最稳
+  setInterval(async ()=>{
+    try{ (await App.py().poll()).forEach(e=>App.onEvent(e)); }catch(e){}
+  }, 250);
+  // 自检探针（仅 #probe 时）：验证渲染与双向通道
+  if(location.hash === '#probe'){
+    App.py().report('ready|'+document.title+'|'+(document.getElementById('h1')?document.getElementById('h1').textContent:'NOH1'));
+    let n = 0; const orig = App.onEvent.bind(App);
+    App.onEvent = e => { n++; orig(e); };
+    App.start();
+    setTimeout(()=>App.py().report('events|'+n), 8000);
+  }
+});
+</script>
+</body>
+</html>

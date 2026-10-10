@@ -11,9 +11,9 @@ ORDER_ZIP="${1:-}"
 CUSTOMER="${2:-客户}"
 OUT="发货包_${CUSTOMER}.zip"
 
-# 定位 exe（Nuitka 原生构建优先，PyInstaller dist/ 次之）
+# 定位 exe（Nuitka Web 版优先，旧 tkinter 版次之）
 EXE=""
-for c in build_nuitka/boot_tool.exe dist/boot_tool.exe boot_tool.exe; do
+for c in build_web/boot_tool.exe build_nuitka/boot_tool.exe dist/boot_tool.exe; do
     [[ -s "$c" ]] && EXE="$c" && break
 done
 if [[ -z "$EXE" ]]; then
@@ -35,6 +35,7 @@ mkdir -p "$D"
 cp "$EXE" "$D/boot_tool.exe"
 [[ -n "$DLL" ]] && cp "$DLL" "$D/"
 [[ -s brand.png ]] && cp brand.png "$D/"   # 窗口图标（exe 图标已内嵌）
+[[ -d ui ]] && mkdir -p "$D/ui" && cp ui/index.html "$D/ui/"   # 液体玻璃前端
 cp "安装驱动.bat" "一键开机.bat" "$D/"
 [[ -s vendor/wdi-simple.exe ]] && cp vendor/wdi-simple.exe "$D/"
 [[ -s zadig.exe ]] && cp zadig.exe "$D/"   # 无 wdi-simple 时 安装驱动.bat 的 GUI 降级工具
