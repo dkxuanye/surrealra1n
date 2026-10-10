@@ -22,7 +22,7 @@ APPLE_VID = 0x05AC
 DFU_PID = 0x1227
 RECOVERY_PID = 0x1281
 NORMAL_PID = 0x12A8
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 DFU_DNLOAD = 1
 DFU_ABORT = 4
 CUSTOM_BOOT = 8
@@ -206,15 +206,25 @@ def serial_of(dev):
         return dev.serial_number or ""
     except usb.core.USBError:
         return ""
+    except Exception:
+        # util.get_string 在设备半枚举/驱动被抢占时会抛 ValueError 等非 USB
+        # 异常（真机实测崩溃点），一律视为读不到序列号
+        return ""
 
 
 def dfu_driver_blind():
-    """Windows 专属：PnP 能看到 DFU 设备但 pyusb 看不见 = 驱动缺失或被
-    Apple 驱动占用（每次重新进 DFU 都可能被重新抢占，需重装驱动）。"""
+    """Windows 专属：DFU 设备驱动不可用的两种形态。
+    全失明：PnP 可见但 pyusb 枚举不到；
+    半失明：能枚举但序列号读不出（Apple 驱动占用，真机实测形态）。"""
     if os.name != "nt":
         return False
     try:
-        return DFU_PID in _apple_pids_present() and not dfu_devices()
+        if DFU_PID not in _apple_pids_present():
+            return False
+        devs = dfu_devices()
+        if not devs:
+            return True
+        return not any(serial_of(d) for d in devs)
     except Exception:
         return False
 
@@ -230,7 +240,7 @@ def wait_dfu_pwned():
     gave_driver_tips = False
     last_driver_check = 0.0
     while True:
-        devs = dfu_devices()
+        devs = [d for d in dfu_devices() if serial_of(d)]  # 读不到序列号的（半失明）按未出现处理
         for dev in devs:
             srnm = serial_of(dev)
             if "PWND:[" in srnm:

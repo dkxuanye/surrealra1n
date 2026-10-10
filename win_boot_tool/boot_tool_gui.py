@@ -310,7 +310,9 @@ class App:
                 "· 关机 / 没电后，需要重新运行本工具",
             ])
         else:
-            self.set_step("未成功", RED)
+            # 出错标题（✗ 开头）不被覆盖，保留具体错误信息
+            if not self.step_var.get().startswith("✗"):
+                self.set_step("未成功", RED)
             self.pct_var.set("")
         self.worker = None
 
@@ -445,7 +447,8 @@ class App:
             driver_hinted_at = 0.0
             dev = None
             while not dev:
-                devs = engine.dfu_devices()
+                # 读不到序列号的（半失明/Apple 占用）按未出现处理，交给失明自愈
+                devs = [d for d in engine.dfu_devices() if engine.serial_of(d)]
                 hit = None
                 for d in devs:
                     if "PWND:[" in engine.serial_of(d):
