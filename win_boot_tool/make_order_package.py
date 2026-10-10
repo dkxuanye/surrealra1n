@@ -10,20 +10,16 @@
 """
 import argparse
 import glob
-import hmac
-import hashlib
 import os
 import sys
 import time
 import zipfile
 
-# 授权签名密钥：与 boot_tool.py 的 _LICENSE_SECRET 保持一致（泄露/换密后同步替换）
-_LICENSE_SECRET = b"xypg-boot-2026-!qY7"
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-
-def _license_sig(ecid, qq, expiry):
-    msg = f"{ecid}|{qq}|{expiry}".encode()
-    return hmac.new(_LICENSE_SECRET, msg, hashlib.sha256).hexdigest()[:16]
+# 授权签名私钥：默认与脚本同目录的 license_signing_key.pem（gitignore，勿外传）
+# 首次使用先运行 make_license_key.py 生成密钥对
 
 def find_repo():
     """boot/ 仓库定位：脚本旁 → 脚本上级（标准仓库布局）→ 当前目录"""
@@ -118,6 +114,9 @@ def main():
     ap.add_argument("--name", default="客户", help="客户名/订单号（用于文件命名，默认「客户」")
     ap.add_argument("--qq", required=True, help="客户 QQ（授权绑定+泄露溯源）")
     ap.add_argument("--expiry", default="", help="授权有效期 YYYY-MM-DD（留空=长期有效）")
+    ap.add_argument("--key", default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                  "license_signing_key.pem"),
+                    help="Ed25519 私钥路径（默认脚本旁 license_signing_key.pem）")
     args = ap.parse_args()
 
     # 定位目标
@@ -182,10 +181,22 @@ def main():
         name=args.name, identifier=identifier, version=ver, ecid=ecid,
         contact=BRAND["contact"], brand=BRAND["name"], site=BRAND["site"],
     )
-    license_txt = (f"ecid={ecid.removeprefix('0x')}\n"
+    if not os.path.isfile(args.key):
+        print(f"[!] 未找到签名私钥：{args.key}")
+        print("    首次使用请运行 make_license_key.py 生成密钥对")
+        sys.exit(1)
+    with open(args.key, "rb") as f:
+        priv = serialization.load_pem_private_key(f.read(), password=None)
+    if not isinstance(priv, Ed25519PrivateKey):
+        print("[!] 私钥类型不是 Ed25519，请用 make_license_key.py 重新生成")
+        sys.exit(1)
+    ecid_plain = ecid.removeprefix("0x")
+    sig = priv.sign(f"{ecid_plain}|{args.qq}|{args.expiry}".encode()).hex()
+    license_txt = (f"ecid={ecid_plain}\n"
                    f"qq={args.qq}\n"
                    f"expiry={args.expiry}\n"
-                   f"sig={_license_sig(ecid.removeprefix('0x'), args.qq, args.expiry)}\n")
+                   f"algo=ed25519\n"
+                   f"sig={sig}\n")
     ecid_txt = os.path.join(REPO, f"{ecid}.txt")
     with zipfile.ZipFile(out, "w") as z:
         z.writestr(zi("使用说明.txt", os.stat(ibss)), readme)

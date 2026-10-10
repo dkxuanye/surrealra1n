@@ -11,9 +11,9 @@ ORDER_ZIP="${1:-}"
 CUSTOMER="${2:-客户}"
 OUT="发货包_${CUSTOMER}.zip"
 
-# 定位 exe（dist/ 优先，本目录次之）
+# 定位 exe（Nuitka 原生构建优先，PyInstaller dist/ 次之）
 EXE=""
-for c in dist/boot_tool.exe boot_tool.exe; do
+for c in build_nuitka/boot_tool.exe dist/boot_tool.exe boot_tool.exe; do
     [[ -s "$c" ]] && EXE="$c" && break
 done
 if [[ -z "$EXE" ]]; then

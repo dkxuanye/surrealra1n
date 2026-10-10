@@ -13,8 +13,6 @@ import shutil
 import subprocess
 import tempfile
 import zipfile
-import hmac
-import hashlib
 import datetime
 
 import usb.core
@@ -151,14 +149,20 @@ def bundle_summary():
             "lic_ok": lic_ok, "lic_msg": lic_msg}
 
 
-# ---------- 授权（私域保护）----------
-# 注意：与 make_order_package.py 的 _LICENSE_SECRET 保持一致，泄露/换密后同步替换
-_LICENSE_SECRET = b"xypg-boot-2026-!qY7"
+# ---------- 授权（私域保护，Ed25519 非对称签名）----------
+# 工具内只嵌公钥：逆向本工具无法伪造授权。私钥只在卖家出单机
+# （make_order_package.py + license_signing_key.pem，勿入库勿外传）
+_LICENSE_PUBKEY_HEX = "e4d2a6167971699688d9734364adb5117a24d7abaa9ce38c9c6f4958b69dbe57"
 
 
-def _license_sig(ecid, qq, expiry):
-    msg = f"{ecid}|{qq}|{expiry}".encode()
-    return hmac.new(_LICENSE_SECRET, msg, hashlib.sha256).hexdigest()[:16]
+def _license_sig_verify(ecid, qq, expiry, sig_hex):
+    try:
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+        pub = Ed25519PublicKey.from_public_bytes(bytes.fromhex(_LICENSE_PUBKEY_HEX))
+        pub.verify(bytes.fromhex(sig_hex), f"{ecid}|{qq}|{expiry}".encode())
+        return True
+    except Exception:
+        return False
 
 
 def license_check(boot_dir, device_ecid=None):
@@ -181,7 +185,9 @@ def license_check(boot_dir, device_ecid=None):
     qq = fields.get("qq", "")
     expiry = fields.get("expiry", "")
     sig = fields.get("sig", "")
-    if sig != _license_sig(ecid, qq, expiry):
+    if fields.get("algo") != "ed25519" or not sig:
+        return False, "授权格式不受支持（旧版或无效），请联系客服重新获取。"
+    if not _license_sig_verify(ecid, qq, expiry, sig):
         return False, "授权信息校验失败（文件被改动或损坏），请联系客服。"
     if expiry:
         try:

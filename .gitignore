@@ -37,3 +37,9 @@ win_boot_tool/.DS_Store
 # Windows 端 15.4 测试包
 win_gui_test/
 win_gui_test_*.zip
+
+# 授权签名私钥（绝不入库）
+win_boot_tool/license_signing_key.pem
+
+# Nuitka 构建产物
+win_boot_tool/build_nuitka/
