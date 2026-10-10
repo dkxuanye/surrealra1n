@@ -10,10 +10,20 @@
 """
 import argparse
 import glob
+import hmac
+import hashlib
 import os
 import sys
 import time
 import zipfile
+
+# 授权签名密钥：与 boot_tool.py 的 _LICENSE_SECRET 保持一致（泄露/换密后同步替换）
+_LICENSE_SECRET = b"xypg-boot-2026-!qY7"
+
+
+def _license_sig(ecid, qq, expiry):
+    msg = f"{ecid}|{qq}|{expiry}".encode()
+    return hmac.new(_LICENSE_SECRET, msg, hashlib.sha256).hexdigest()[:16]
 
 def find_repo():
     """boot/ 仓库定位：脚本旁 → 脚本上级（标准仓库布局）→ 当前目录"""
@@ -106,6 +116,8 @@ def main():
     ap.add_argument("--id", dest="identifier", help="机型（如 iPhone11,8）")
     ap.add_argument("--ver", help="版本（如 14.3）")
     ap.add_argument("--name", default="客户", help="客户名/订单号（用于文件命名，默认「客户」")
+    ap.add_argument("--qq", required=True, help="客户 QQ（授权绑定+泄露溯源）")
+    ap.add_argument("--expiry", default="", help="授权有效期 YYYY-MM-DD（留空=长期有效）")
     args = ap.parse_args()
 
     # 定位目标
@@ -170,9 +182,14 @@ def main():
         name=args.name, identifier=identifier, version=ver, ecid=ecid,
         contact=BRAND["contact"], brand=BRAND["name"], site=BRAND["site"],
     )
+    license_txt = (f"ecid={ecid.removeprefix('0x')}\n"
+                   f"qq={args.qq}\n"
+                   f"expiry={args.expiry}\n"
+                   f"sig={_license_sig(ecid.removeprefix('0x'), args.qq, args.expiry)}\n")
     ecid_txt = os.path.join(REPO, f"{ecid}.txt")
     with zipfile.ZipFile(out, "w") as z:
         z.writestr(zi("使用说明.txt", os.stat(ibss)), readme)
+        z.writestr(zi("boot/license.txt", os.stat(ibss)), license_txt)
         with open(ibss, "rb") as f:
             z.writestr(zi(f"boot/{identifier}/{ver}/iBSS.boot", os.stat(ibss)), f.read())
         with open(ecid_txt, "rb") as f:
@@ -180,7 +197,8 @@ def main():
 
     size_kb = os.path.getsize(out) // 1024
     print(f"[✓] 已生成：{out}（{size_kb} KB）")
-    print(f"    内容：boot/{identifier}/{ver}/iBSS.boot + boot/{ecid}.txt + 使用说明.txt")
+    print(f"    内容：boot/{identifier}/{ver}/iBSS.boot + boot/{ecid}.txt + license.txt + 使用说明.txt")
+    print(f"    授权：QQ {args.qq} · {'有效期至 ' + args.expiry if args.expiry else '长期有效'}")
     print(f"    发给客户：连同 boot_tool 工具一起发送")
 
 

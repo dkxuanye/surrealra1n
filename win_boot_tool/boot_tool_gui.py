@@ -178,14 +178,18 @@ class App:
         self._stage1_lines = None
         if info:
             ecid_tail = info["ecid"][-6:].upper()
-            self.set_guide([
+            lines = [
                 "欢迎使用一键开机。",
                 "",
                 f"📦 引导包：{info['identifier']} · iOS {info['version']}",
                 f"🔗 已绑定你的手机（识别码 {ecid_tail}）",
-                "",
-                "把手机用数据线连接电脑后，点「开始」。",
-            ])
+            ]
+            if info.get("lic_ok"):
+                lines += [f"✅ {info['lic_msg']}", ""]
+            else:
+                lines += ["", "⚠ " + info.get("lic_msg", "缺少授权").splitlines()[0]]
+            lines += ["把手机用数据线连接电脑后，点「开始」。"]
+            self.set_guide(lines)
         else:
             self.set_guide([
                 "未找到引导包！",
@@ -503,6 +507,16 @@ class App:
                 return
             _identifier, version, ibss = picked
             q.put(("status", f"iOS {version}"))
+            lic_ok, lic_msg = engine.license_check(boot_dir, ecid)
+            if not lic_ok:
+                q.put(("step", "✗ 未获授权"))
+                q.put(("guide", lic_msg.splitlines() + [
+                    "",
+                    f"客服：{engine.BRAND['contact']}",
+                ]))
+                q.put(("done", False))
+                return
+            q.put(("status", lic_msg))
             q.put(("step", f"第 3 步：发送引导文件（iOS {version}）"))
             q.put(("guide", ["正在发送，请勿拔线...", ""]))
 

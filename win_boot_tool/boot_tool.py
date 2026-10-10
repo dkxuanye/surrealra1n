@@ -13,6 +13,9 @@ import shutil
 import subprocess
 import tempfile
 import zipfile
+import hmac
+import hashlib
+import datetime
 
 import usb.core
 import usb.util
@@ -143,7 +146,53 @@ def bundle_summary():
     boots = glob.glob(os.path.join(boot_dir, "*", version, "iBSS.boot"))
     identifier = (os.path.basename(os.path.dirname(os.path.dirname(boots[0])))
                   if boots else "未知机型")
-    return {"identifier": identifier, "version": version, "ecid": ecid}
+    lic_ok, lic_msg = license_check(boot_dir)
+    return {"identifier": identifier, "version": version, "ecid": ecid,
+            "lic_ok": lic_ok, "lic_msg": lic_msg}
+
+
+# ---------- 授权（私域保护）----------
+# 注意：与 make_order_package.py 的 _LICENSE_SECRET 保持一致，泄露/换密后同步替换
+_LICENSE_SECRET = b"xypg-boot-2026-!qY7"
+
+
+def _license_sig(ecid, qq, expiry):
+    msg = f"{ecid}|{qq}|{expiry}".encode()
+    return hmac.new(_LICENSE_SECRET, msg, hashlib.sha256).hexdigest()[:16]
+
+
+def license_check(boot_dir, device_ecid=None):
+    """校验引导包内 license.txt。返回 (ok, 提示文本)。fail-closed：无授权即拒绝。"""
+    path = os.path.join(boot_dir, "license.txt")
+    if not os.path.isfile(path):
+        return False, ("本工具仅服务玄烨品果正式客户。\n"
+                       "当前引导包缺少授权信息（非官方渠道获得）。\n"
+                       f"请联系客服购买：{BRAND['contact']}")
+    fields = {}
+    try:
+        with open(path, encoding="utf-8", errors="ignore") as fh:
+            for line in fh:
+                if "=" in line:
+                    k, v = line.strip().split("=", 1)
+                    fields[k] = v
+    except OSError:
+        return False, "授权文件无法读取，请联系客服。"
+    ecid = fields.get("ecid", "").lower().removeprefix("0x")
+    qq = fields.get("qq", "")
+    expiry = fields.get("expiry", "")
+    sig = fields.get("sig", "")
+    if sig != _license_sig(ecid, qq, expiry):
+        return False, "授权信息校验失败（文件被改动或损坏），请联系客服。"
+    if expiry:
+        try:
+            if datetime.date.today() > datetime.date.fromisoformat(expiry):
+                return False, (f"授权已于 {expiry} 到期。\n"
+                               f"续期请联系客服：{BRAND['contact']}")
+        except ValueError:
+            return False, "授权有效期格式异常，请联系客服。"
+    if device_ecid is not None and ecid != device_ecid:
+        return False, "授权与当前手机不匹配（授权绑定了其他设备）。"
+    return True, f"授权客户 {qq[:3]}****{qq[-2:]}（{ecid[-6:].upper()}）" + (f"，有效期至 {expiry}" if expiry else "，长期有效")
 
 
 def serial_of(dev):
@@ -374,6 +423,8 @@ def selftest():
             out(f"    引导文件: {os.path.relpath(b, boot_dir)} ({os.path.getsize(b) // 1024} KB)")
     else:
         out("[✗] 未找到引导包（boot 文件夹或 .zip）")
+    ok, lic_msg = license_check(boot_dir) if boot_dir else (False, "无引导包")
+    out(f"[{'✓' if ok else 'i'}] 授权: {lic_msg}")
     devs = dfu_devices()
     if devs:
         for d in devs:
@@ -408,6 +459,18 @@ def main():
         pause()
         return 1
     identifier, version, ibss = picked
+
+    ok, lic_msg = license_check(boot_dir, device_ecid)
+    if not ok:
+        out()
+        out("[!] 未获授权")
+        for line in lic_msg.splitlines():
+            out("    " + line)
+        out()
+        out(f"    —— {BRAND['name']} · {BRAND['contact']} ——")
+        pause()
+        return 1
+    out(f"[*] {lic_msg}")
 
     try:
         send_ibss(dev, ibss)
