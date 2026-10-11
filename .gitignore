@@ -48,3 +48,4 @@ win_boot_tool/build_nuitka/
 win_boot_tool/build_web/
 win_boot_tool/发货包_*.zip
 win_boot_tool/boot_*.zip
+win_boot_tool/__pycache__/
