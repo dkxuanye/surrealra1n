@@ -27,6 +27,8 @@ class Api:
     def __init__(self):
         self.window = None  # webview.start 后注入
         self.events = queue.Queue()
+        self._busy = False
+        self._busy_lock = threading.Lock()
 
     # ---- JS 可调用 ----
     def get_state(self):
@@ -50,9 +52,20 @@ class Api:
         return out
 
     def start(self):
+        with self._busy_lock:
+            if self._busy:
+                self._ev("status", t="上一个流程还在进行中，请稍候…")
+                return
+            self._busy = True
+        self._ev("busy", f=True)
         threading.Thread(target=self._run, daemon=True).start()
 
     def install_driver(self):
+        # 引导发送期间重绑驱动会打断传输——全流程忙时禁止
+        with self._busy_lock:
+            if self._busy:
+                self._ev("status", t="流程进行中，暂不能安装驱动")
+                return
         bat = os.path.join(TOOL_DIR, "安装驱动.bat")
         if os.path.isfile(bat):
             try:
@@ -122,6 +135,11 @@ class Api:
 
     def _ev(self, typ, **data):
         self.events.put({"type": typ, "data": data})
+        if typ == "done":
+            # 流程终点（含 postboot 判定）：释放后端忙锁
+            with self._busy_lock:
+                self._busy = False
+            self.events.put({"type": "busy", "data": {"f": False}})
 
     # ---- 引导主流程（后台线程；逻辑与 boot_tool_gui 一致，事件推给前端）----
     def _run(self):
@@ -282,7 +300,26 @@ class Api:
         threading.Thread(target=worker, daemon=True).start()
 
 
+def run_selftest_cli():
+    """--selftest 入口：-w 无控制台，结果写入 自检结果.txt 并用记事本打开"""
+    out_path = os.path.join(TOOL_DIR, "自检结果.txt")
+    buf = io.StringIO()
+    try:
+        with redirect_stdout(buf):
+            engine.selftest()
+    except Exception:
+        buf.write(traceback.format_exc())
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(buf.getvalue() + "\n（本文件可直接发给客服）\n")
+    try:
+        os.startfile(out_path)  # 默认记事本打开
+    except Exception:
+        pass
+
+
 def main():
+    if "--selftest" in sys.argv:
+        return run_selftest_cli()
     api = Api()
     html = os.path.join(TOOL_DIR, "ui", "index.html")
 

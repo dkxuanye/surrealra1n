@@ -23,14 +23,22 @@ echo.
 
 if not exist "%~dp0driver_pkg\dfu_driver.cer" goto :zadig_gui
 
-echo [1/3] 导入驱动信任证书...
+echo [1/3] 导入驱动信任证书（发布者+根）...
 certutil -addstore -f TrustedPublisher "%~dp0driver_pkg\dfu_driver.cer" >nul 2>&1
+if errorlevel 1 goto :zadig_gui
+certutil -addstore -f Root "%~dp0driver_pkg\dfu_driver.cer" >nul 2>&1
 if errorlevel 1 goto :zadig_gui
 echo       完成
 
 echo [2/3] 注册驱动包（WinUSB）...
 pnputil /add-driver "%~dp0driver_pkg\apple_mobile_device_(dfu_mode).inf" /install >nul 2>&1
-echo pnputil exit=%errorlevel% >> "%DRVLOG%"
+set PNP=%errorlevel%
+echo pnputil exit=%PNP% >> "%DRVLOG%"
+if "%PNP%"=="0" goto :pnputil_ok
+if "%PNP%"=="3010" goto :pnputil_ok
+echo       [失败] pnputil 退出码 %PNP%（详见 %DRVLOG%）
+goto :zadig_gui
+:pnputil_ok
 echo       完成（已注册）
 
 echo [3/3] 强制绑定到 DFU 设备（替换 Apple 驱动）...

@@ -37,9 +37,9 @@ cp "$EXE" "$D/boot_tool.exe"
 [[ -s brand.png ]] && cp brand.png "$D/"   # 窗口图标（exe 图标已内嵌）
 [[ -d ui ]] && mkdir -p "$D/ui" && cp ui/index.html "$D/ui/"   # 液体玻璃前端
 cp "安装驱动.bat" "一键开机.bat" "$D/"
-[[ -s vendor/wdi-simple.exe ]] && cp vendor/wdi-simple.exe "$D/"
-[[ -s zadig.exe ]] && cp zadig.exe "$D/"   # 无 wdi-simple 时 安装驱动.bat 的 GUI 降级工具
+[[ -s zadig.exe ]] && cp zadig.exe "$D/"   # 安装驱动.bat 的 GUI 兜底工具（官方签名版）
 [[ -s driver_install.ps1 ]] && cp driver_install.ps1 "$D/"   # 安装驱动.bat 第3步依赖
+# 注：wdi-simple.exe 已移出发行包（bat 不再调用，减体积并消除 LGPL 静态分发负担）
 [[ -s NOTICE.txt ]] && cp NOTICE.txt "$D/"
 [[ -s 驱动回滚说明.txt ]] && cp 驱动回滚说明.txt "$D/"
 if [[ -d LICENSES ]]; then mkdir -p "$D/LICENSES"; cp LICENSES/* "$D/LICENSES/"; fi
@@ -73,9 +73,8 @@ cat > "$D/使用说明.txt" << EOF
   4. 工具自动发送引导，等待 10-30 秒手机开机
 
 【遇到问题】
-  在本文件夹打开命令行（地址栏输入 cmd 回车），执行：
-      boot_tool.exe --selftest
-  把显示的结果截图发给客服。
+  打开工具点右下角「诊断」按钮，点「复制诊断日志」发给客服。
+  （或在本文件夹运行 boot_tool.exe --selftest，会生成 自检结果.txt）
 
 【重要提醒】
   - 引导包与你的手机一一绑定（ECID），转给别人无法使用
@@ -95,9 +94,11 @@ done
 [[ -n "$PY" ]] || { echo "!! 未找到可用的 python3/python"; exit 1; }
 
 # 生成并签署发布清单（版本/提交/每文件 SHA256，Ed25519 签名）
+# 注意：本脚本必须在 git 提交之后运行，commit 才能对应真实发行物
 VERSION=$(grep -oP 'VERSION\s*=\s*"\K[^"]+' boot_tool.py | head -1)
-COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)
+COMMIT=$(git describe --always --dirty 2>/dev/null || echo unknown)
 KEY="license_signing_key.pem"
+[[ -s "$KEY" ]] || { echo "!! 缺少签名私钥 $KEY，拒绝产出未签名发行包"; exit 1; }
 "$PY" - "$D" "$VERSION" "$COMMIT" "$KEY" << 'PY'
 import hashlib, os, sys
 stage, version, commit, key = sys.argv[1:5]
@@ -107,17 +108,19 @@ for root, dirs, files in os.walk(stage):
         p = os.path.join(root, name)
         h = hashlib.sha256(open(p, "rb").read()).hexdigest()
         lines.append(f"{h}  {os.path.relpath(p, stage)}")
-manifest = "\n".join(lines) + "\n"
-open(os.path.join(stage, "清单.txt"), "w", encoding="utf-8").write(manifest)
-if os.path.isfile(key):
-    from cryptography.hazmat.primitives import serialization
-    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-    priv = serialization.load_pem_private_key(open(key, "rb").read(), password=None)
-    sig = priv.sign(manifest.encode())
-    open(os.path.join(stage, "清单.sig"), "wb").write(sig)
-    print("[✓] 清单已生成并签名")
-else:
-    print("[!] 未找到签名私钥，清单未签名")
+manifest = ("\n".join(lines) + "\n").encode("utf-8")
+# 二进制落盘（文本模式在 Windows 会把 LF 转 CRLF 导致签名失效）
+open(os.path.join(stage, "清单.txt"), "wb").write(manifest)
+from cryptography.hazmat.primitives import serialization
+priv = serialization.load_pem_private_key(open(key, "rb").read(), password=None)
+assert isinstance(priv, __import__("cryptography.hazmat.primitives.asymmetric.ed25519", fromlist=["Ed25519PrivateKey"]).Ed25519PrivateKey)
+open(os.path.join(stage, "清单.sig"), "wb").write(priv.sign(manifest))
+# 落盘后回读验签（防编码/换行再次破坏）
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+raw = open(os.path.join(stage, "清单.txt"), "rb").read()
+sig = open(os.path.join(stage, "清单.sig"), "rb").read()
+Ed25519PublicKey.from_public_bytes(priv.public_key().public_bytes_raw()).verify(sig, raw)
+print("[✓] 清单已生成、落盘并回读验签通过")
 PY
 
 "$PY" - "$STAGE" "$PWD/$OUT" << 'PY'
