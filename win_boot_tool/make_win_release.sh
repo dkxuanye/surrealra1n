@@ -107,7 +107,7 @@ for root, dirs, files in os.walk(stage):
     for name in sorted(files):
         p = os.path.join(root, name)
         h = hashlib.sha256(open(p, "rb").read()).hexdigest()
-        lines.append(f"{h}  {os.path.relpath(p, stage)}")
+        lines.append(f"{h}  {os.path.relpath(p, stage).replace(os.sep, '/')}")
 manifest = ("\n".join(lines) + "\n").encode("utf-8")
 # 二进制落盘（文本模式在 Windows 会把 LF 转 CRLF 导致签名失效）
 open(os.path.join(stage, "清单.txt"), "wb").write(manifest)
