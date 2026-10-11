@@ -43,3 +43,8 @@ win_boot_tool/license_signing_key.pem
 
 # Nuitka 构建产物
 win_boot_tool/build_nuitka/
+
+# Web 版构建产物与发行包
+win_boot_tool/build_web/
+win_boot_tool/发货包_*.zip
+win_boot_tool/boot_*.zip
