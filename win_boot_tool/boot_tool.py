@@ -22,7 +22,7 @@ APPLE_VID = 0x05AC
 DFU_PID = 0x1227
 RECOVERY_PID = 0x1281
 NORMAL_PID = 0x12A8
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 DFU_DNLOAD = 1
 DFU_ABORT = 4
 CUSTOM_BOOT = 8
@@ -155,18 +155,24 @@ def bundle_summary():
 _LICENSE_PUBKEY_HEX = "e4d2a6167971699688d9734364adb5117a24d7abaa9ce38c9c6f4958b69dbe57"
 
 
-def _license_sig_verify(ecid, qq, expiry, sig_hex):
+def _license_msg(ecid, qq, expiry, identifier, version, ibss_sha):
+    return f"{ecid}|{qq}|{expiry}|{identifier}|{version}|{ibss_sha}".encode()
+
+
+def _license_sig_verify(msg, sig_hex):
     try:
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
         pub = Ed25519PublicKey.from_public_bytes(bytes.fromhex(_LICENSE_PUBKEY_HEX))
-        pub.verify(bytes.fromhex(sig_hex), f"{ecid}|{qq}|{expiry}".encode())
+        pub.verify(bytes.fromhex(sig_hex), msg)
         return True
     except Exception:
         return False
 
 
-def license_check(boot_dir, device_ecid=None):
-    """校验引导包内 license.txt。返回 (ok, 提示文本)。fail-closed：无授权即拒绝。"""
+def license_check(boot_dir, device_ecid=None, ibss_path=None):
+    """校验引导包内 license.txt。返回 (ok, 提示文本)。fail-closed：无授权即拒绝。
+    传入 ibss_path 时执行全量校验（机型/版本/iBSS 哈希须与签名一致），
+    防止授权文件与引导文件被调包。"""
     path = os.path.join(boot_dir, "license.txt")
     if not os.path.isfile(path):
         return False, ("本工具仅服务玄烨品果正式客户。\n"
@@ -185,10 +191,15 @@ def license_check(boot_dir, device_ecid=None):
     qq = fields.get("qq", "")
     expiry = fields.get("expiry", "")
     sig = fields.get("sig", "")
+    identifier = fields.get("identifier", "")
+    version = fields.get("version", "")
+    ibss_sha = fields.get("ibss_sha256", "")
     if fields.get("algo") != "ed25519" or not sig:
         return False, "授权格式不受支持（旧版或无效），请联系客服重新获取。"
-    if not _license_sig_verify(ecid, qq, expiry, sig):
+    if not _license_sig_verify(_license_msg(ecid, qq, expiry, identifier, version, ibss_sha), sig):
         return False, "授权信息校验失败（文件被改动或损坏），请联系客服。"
+    if not (identifier and version and ibss_sha):
+        return False, "授权缺少引导文件绑定信息（旧版授权），请联系客服升级。"
     if expiry:
         try:
             if datetime.date.today() > datetime.date.fromisoformat(expiry):
@@ -198,6 +209,13 @@ def license_check(boot_dir, device_ecid=None):
             return False, "授权有效期格式异常，请联系客服。"
     if device_ecid is not None and ecid != device_ecid:
         return False, "授权与当前手机不匹配（授权绑定了其他设备）。"
+    if ibss_path is not None:
+        import hashlib
+        with open(ibss_path, "rb") as f:
+            actual = hashlib.sha256(f.read()).hexdigest()
+        if actual != ibss_sha:
+            return False, ("引导文件与授权不匹配（文件被替换或损坏），\n"
+                           "请联系客服重新获取引导包。")
     return True, f"授权客户 {qq[:3]}****{qq[-2:]}（{ecid[-6:].upper()}）" + (f"，有效期至 {expiry}" if expiry else "，长期有效")
 
 
@@ -476,7 +494,7 @@ def main():
         return 1
     identifier, version, ibss = picked
 
-    ok, lic_msg = license_check(boot_dir, device_ecid)
+    ok, lic_msg = license_check(boot_dir, device_ecid, ibss)
     if not ok:
         out()
         out("[!] 未获授权")

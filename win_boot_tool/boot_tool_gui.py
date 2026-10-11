@@ -510,7 +510,7 @@ class App:
                 return
             _identifier, version, ibss = picked
             q.put(("status", f"iOS {version}"))
-            lic_ok, lic_msg = engine.license_check(boot_dir, ecid)
+            lic_ok, lic_msg = engine.license_check(boot_dir, ecid, ibss)
             if not lic_ok:
                 q.put(("step", "✗ 未获授权"))
                 q.put(("guide", lic_msg.splitlines() + [

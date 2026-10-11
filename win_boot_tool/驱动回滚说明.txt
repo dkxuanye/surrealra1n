@@ -1,0 +1,27 @@
+驱动安装的撤销与还原（管理员命令行执行）
+========================================
+
+本工具的「安装驱动」会：
+1. 向系统信任发布者添加一张自签名证书（仅用于本驱动包）
+2. 注册并绑定 WinUSB 驱动到 Apple DFU 设备 (USB\VID_05AC&PID_1227)
+
+如需完全撤销：
+
+步骤一：移除驱动包
+  1. 管理员运行：pnputil /enum-drivers
+  2. 找到"原始名称"为 apple_mobile_device_(dfu_mode).inf 的条目，
+     记下其"发布名称"（形如 oem59.inf）
+  3. 执行：pnputil /delete-driver oemXX.inf /uninstall /force
+
+步骤二：移除信任证书
+  管理员运行：
+  certutil -delstore TrustedPublisher 832E96B6DA1FF0DCF635376400BE43CAE8E0819E
+  （此指纹为驱动包 CAT 签名证书，仅影响该驱动包的信任）
+
+步骤三：还原 Apple 官方驱动
+  撤销后，手机下次进入 DFU 时 Windows 会自动改用 Apple 官方驱动
+  （若本机装有 iTunes / Apple Devices）。如需确保还原，重新安装
+  Apple Devices 应用或 iTunes 即可。
+
+说明：以上操作不影响手机本身，也不影响工具其他功能；
+仅恢复到未安装本工具驱动的初始状态。

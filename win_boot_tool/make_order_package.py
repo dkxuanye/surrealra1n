@@ -190,11 +190,19 @@ def main():
     if not isinstance(priv, Ed25519PrivateKey):
         print("[!] 私钥类型不是 Ed25519，请用 make_license_key.py 重新生成")
         sys.exit(1)
+    import hashlib
+    with open(ibss, "rb") as f:
+        ibss_sha = hashlib.sha256(f.read()).hexdigest()
     ecid_plain = ecid.removeprefix("0x")
-    sig = priv.sign(f"{ecid_plain}|{args.qq}|{args.expiry}".encode()).hex()
+    # 授权 v3：签名覆盖 机型|版本|iBSS 哈希，防授权与引导文件调包
+    msg = f"{ecid_plain}|{args.qq}|{args.expiry}|{identifier}|{ver}|{ibss_sha}".encode()
+    sig = priv.sign(msg).hex()
     license_txt = (f"ecid={ecid_plain}\n"
                    f"qq={args.qq}\n"
                    f"expiry={args.expiry}\n"
+                   f"identifier={identifier}\n"
+                   f"version={ver}\n"
+                   f"ibss_sha256={ibss_sha}\n"
                    f"algo=ed25519\n"
                    f"sig={sig}\n")
     ecid_txt = os.path.join(REPO, f"{ecid}.txt")

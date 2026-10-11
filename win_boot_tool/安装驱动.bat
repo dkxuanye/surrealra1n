@@ -18,6 +18,7 @@ echo ==============================================
 echo.
 echo 建议让手机先进 DFU 再运行本脚本（立即生效）。
 echo 手机不连接也可以装（下次进 DFU 时自动生效）。
+echo 撤销方法见同文件夹《驱动回滚说明.txt》。
 echo.
 
 if not exist "%~dp0driver_pkg\dfu_driver.cer" goto :zadig_gui
@@ -33,6 +34,7 @@ echo pnputil exit=%errorlevel% >> "%DRVLOG%"
 echo       完成（已注册）
 
 echo [3/3] 强制绑定到 DFU 设备（替换 Apple 驱动）...
+if not exist "%~dp0driver_install.ps1" goto :zadig_gui
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0driver_install.ps1" -InfPath "%~dp0driver_pkg\apple_mobile_device_(dfu_mode).inf" -HardwareId "USB\VID_05AC&PID_1227" >> "%DRVLOG%" 2>&1
 if errorlevel 1 goto :force_fail
 echo       完成
@@ -50,14 +52,19 @@ if errorlevel 1 (
     echo   原因：当前没有处于 DFU 模式的手机。
     echo   绑定只在手机进入 DFU 时生效——证书和驱动包已装好，
     echo   手机下次进入 DFU 后重新运行本脚本即可完成绑定。
-) else (
-    echo   手机已在 DFU 但绑定失败，请用 zadig.exe 手动装一次：
-    echo   Options 勾 List All Devices - 选 Apple Mobile (DFU Mode)
-    echo   - 驱动选 WinUSB - 点 Replace Driver
+    goto :end
 )
 
 :zadig_gui
 echo.
+echo 改用 Zadig 手动安装（本文件夹内已附 zadig.exe）：
+echo   1. 双击 zadig.exe
+echo   2. 菜单 Options 勾选 List All Devices
+echo   3. 下拉选择 Apple Mobile (DFU Mode)
+echo   4. 右侧驱动选择框选 WinUSB
+echo   5. 点击 Replace Driver，等待完成
+echo   完成后回到本工具即可。
+if exist zadig.exe (start "" zadig.exe) else (echo 未找到 zadig.exe，请联系客服)
 
 :end
 echo.

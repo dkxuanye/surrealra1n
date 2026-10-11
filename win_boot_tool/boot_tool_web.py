@@ -213,7 +213,7 @@ class Api:
                 return
             _identifier, version, ibss = picked
 
-            lic_ok, lic_msg = engine.license_check(boot_dir, ecid)
+            lic_ok, lic_msg = engine.license_check(boot_dir, ecid, ibss)
             if not lic_ok:
                 self._ev("step", t="✗ 未获授权", cls="err")
                 self._ev("guide", html="<br>".join(lic_msg.splitlines()) +
@@ -251,9 +251,12 @@ class Api:
                     break
                 time.sleep(1)
             self._ev("progress", pct=100)
-            self._ev("done", ok=ok)
-            if ok:
-                self._postboot()
+            if not ok:
+                self._ev("done", ok=False)
+                return
+            # 发送完成≠开机成功：进入确认阶段，PID 12A8 上线才算数
+            self._ev("sent")
+            self._postboot()
         except Exception as e:
             self._ev("error", msg=f"{e}\n{traceback.format_exc()[:400]}")
             self._ev("done", ok=False)
@@ -266,11 +269,16 @@ class Api:
                 self._ev("postboot", t=f"确认开机状态：{tag}…")
             result = engine.detect_post_boot(on_check=on_check)
             if result == "booted":
-                pass  # done(ok) 已展示成功页；这里只刷状态
+                self._ev("done", ok=True)
             elif result == "recovery_stall":
                 self._ev("stall")
+                self._ev("done", ok=False)
             elif result == "dfu_back":
                 self._ev("dfu_back")
+                self._ev("done", ok=False)
+            else:
+                self._ev("postboot", t="未能确认状态；屏幕亮起即成功")
+                self._ev("done", ok=False, soft=True)
         threading.Thread(target=worker, daemon=True).start()
 
 

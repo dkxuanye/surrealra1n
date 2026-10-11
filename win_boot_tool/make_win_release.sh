@@ -39,6 +39,10 @@ cp "$EXE" "$D/boot_tool.exe"
 cp "安装驱动.bat" "一键开机.bat" "$D/"
 [[ -s vendor/wdi-simple.exe ]] && cp vendor/wdi-simple.exe "$D/"
 [[ -s zadig.exe ]] && cp zadig.exe "$D/"   # 无 wdi-simple 时 安装驱动.bat 的 GUI 降级工具
+[[ -s driver_install.ps1 ]] && cp driver_install.ps1 "$D/"   # 安装驱动.bat 第3步依赖
+[[ -s NOTICE.txt ]] && cp NOTICE.txt "$D/"
+[[ -s 驱动回滚说明.txt ]] && cp 驱动回滚说明.txt "$D/"
+if [[ -d LICENSES ]]; then mkdir -p "$D/LICENSES"; cp LICENSES/* "$D/LICENSES/"; fi
 # 随包静默驱动（证书+WinUSB 驱动包，优先方案）
 if [[ -d driver_pkg && -s driver_pkg/dfu_driver.cer ]]; then
     mkdir -p "$D/driver_pkg"
@@ -89,6 +93,33 @@ for c in python3 python; do
     fi
 done
 [[ -n "$PY" ]] || { echo "!! 未找到可用的 python3/python"; exit 1; }
+
+# 生成并签署发布清单（版本/提交/每文件 SHA256，Ed25519 签名）
+VERSION=$(grep -oP 'VERSION\s*=\s*"\K[^"]+' boot_tool.py | head -1)
+COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)
+KEY="license_signing_key.pem"
+"$PY" - "$D" "$VERSION" "$COMMIT" "$KEY" << 'PY'
+import hashlib, os, sys
+stage, version, commit, key = sys.argv[1:5]
+lines = [f"玄烨品果·一键开机 发布清单", f"version={version}", f"commit={commit}", ""]
+for root, dirs, files in os.walk(stage):
+    for name in sorted(files):
+        p = os.path.join(root, name)
+        h = hashlib.sha256(open(p, "rb").read()).hexdigest()
+        lines.append(f"{h}  {os.path.relpath(p, stage)}")
+manifest = "\n".join(lines) + "\n"
+open(os.path.join(stage, "清单.txt"), "w", encoding="utf-8").write(manifest)
+if os.path.isfile(key):
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    priv = serialization.load_pem_private_key(open(key, "rb").read(), password=None)
+    sig = priv.sign(manifest.encode())
+    open(os.path.join(stage, "清单.sig"), "wb").write(sig)
+    print("[✓] 清单已生成并签名")
+else:
+    print("[!] 未找到签名私钥，清单未签名")
+PY
+
 "$PY" - "$STAGE" "$PWD/$OUT" << 'PY'
 import os, sys, time, zipfile
 stage, out = sys.argv[1], sys.argv[2]
