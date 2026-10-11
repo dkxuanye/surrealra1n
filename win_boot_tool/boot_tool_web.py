@@ -277,9 +277,22 @@ class Api:
 def main():
     api = Api()
     html = os.path.join(TOOL_DIR, "ui", "index.html")
+
+    # 屏幕居中（pywebview 默认位置随机漂；曾试 hidden+loaded 再 show，
+    # 该事件在本环境不触发导致窗口永不显示，弃用）
+    try:
+        import ctypes
+        sm = ctypes.windll.user32
+        sw, sh = sm.GetSystemMetrics(0), sm.GetSystemMetrics(1)
+    except Exception:
+        sw, sh = 1920, 1080
+    w, h = 580, 880
+    x, y = max(0, (sw - w) // 2), max(0, (sh - h) // 2)
+
     window = webview.create_window(
         "玄烨品果 · 一键开机", html,
-        js_api=api, width=580, height=880, min_size=(520, 760),
+        js_api=api, width=w, height=h, x=x, y=y,
+        min_size=(520, 760),
         background_color="#0a0c13")
     api.window = window
     webview.start()
