@@ -162,6 +162,10 @@ body{
 
     <div class="status" id="status"></div>
 
+    <div class="timerRow" id="logBar" style="display:none">
+      <div class="tbtn" style="color:var(--blue2);font-size:13.5px" onclick="App.copyLog()">📋 复制诊断日志（发给客服）</div>
+    </div>
+
     <div class="timerRow" id="timerRow" style="display:none">
       <div class="tbtn" onclick="App.countdown(5)">数 5 秒<small>黑屏后按住 电源+音量-</small></div>
       <div class="tbtn" onclick="App.countdown(10)">数 10 秒<small>松开电源，继续按住 音量-</small></div>
@@ -252,13 +256,27 @@ ${s.bundle.lic_ok ? '✅ '+s.bundle.lic_msg : '⚠ '+(s.bundle.lic_msg||'').spli
     try{ await this.py().start(); }catch(e){ this.onEvent({type:'error', msg:''+e}); }
   },
   async selftest(){
-    this.status('<span class="spin"></span>正在自检…');
+    this.h1('正在诊断…');
+    this.status('<span class="spin"></span>自检运行中，请稍候…', true);
+    $('logBar').style.display='none';
     try{
       const r = await this.py().selftest();
-      this.status('诊断结果已复制到剪贴板');
+      this.lastLog = r;
       this.h1('诊断完成');
       this.guide('<b>'+r.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</b>');
-    }catch(e){ this.status('诊断失败'); }
+      $('logBar').style.display='flex';
+      this.status('点下方按钮复制结果发给客服');
+    }catch(e){
+      this.h1('诊断失败','err');
+      this.guide('<b>'+e+'</b>');
+    }
+  },
+  async copyLog(){
+    if(!this.lastLog) return;
+    try{
+      await this.py().copy_text(this.lastLog);
+      this.status('✅ 诊断日志已复制——打开 QQ/微信粘贴发给客服');
+    }catch(e){ this.status('复制失败：'+e); }
   },
 
   countdown(sec){

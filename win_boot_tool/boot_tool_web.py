@@ -64,6 +64,10 @@ class Api:
         qq = "".join(c for c in engine.BRAND["contact"] if c.isdigit())
         self._clipboard(qq)
 
+    def copy_text(self, text):
+        """前端通用复制（诊断日志等）"""
+        self._clipboard(text or "")
+
     def selftest(self):
         buf = io.StringIO()
         try:
@@ -71,9 +75,7 @@ class Api:
                 engine.selftest()
         except Exception:
             buf.write(traceback.format_exc())
-        text = buf.getvalue()
-        self._clipboard(text)
-        return text
+        return buf.getvalue()
 
     def report(self, s):
         """前端 #probe 自检回传（生产环境无操作）"""
@@ -83,11 +85,38 @@ class Api:
 
     # ---- 内部 ----
     def _clipboard(self, text):
+        """Win32 剪贴板（ctypes）——tkinter 在 WebView2 工作线程会挂起，禁用"""
         try:
-            import tkinter as tk
-            r = tk.Tk(); r.withdraw()
-            r.clipboard_clear(); r.clipboard_append(text)
-            r.update(); r.destroy()
+            import ctypes
+            from ctypes import wintypes as wt
+
+            k32 = ctypes.windll.kernel32
+            u32 = ctypes.windll.user32
+            CF_UNICODETEXT = 13
+            GMEM_MOVEABLE = 0x0002
+            # 64 位下必须声明返回值类型，否则句柄/指针被按 32 位截断（实测崩溃）
+            k32.GlobalAlloc.restype = ctypes.c_void_p
+            k32.GlobalAlloc.argtypes = [ctypes.c_uint, ctypes.c_size_t]
+            k32.GlobalLock.restype = ctypes.c_void_p
+            k32.GlobalLock.argtypes = [ctypes.c_void_p]
+            k32.GlobalUnlock.argtypes = [ctypes.c_void_p]
+            u32.SetClipboardData.restype = ctypes.c_void_p
+            u32.SetClipboardData.argtypes = [ctypes.c_uint, ctypes.c_void_p]
+
+            data = text.replace("\r\n", "\n").replace("\n", "\r\n")
+            if not u32.OpenClipboard(0):
+                return
+            try:
+                u32.EmptyClipboard()
+                nbytes = (len(data) + 1) * 2
+                h = k32.GlobalAlloc(GMEM_MOVEABLE, nbytes)
+                p = k32.GlobalLock(h) if h else None
+                if p:
+                    ctypes.memmove(p, ctypes.create_unicode_buffer(data), nbytes)
+                    k32.GlobalUnlock(h)
+                    u32.SetClipboardData(CF_UNICODETEXT, h)
+            finally:
+                u32.CloseClipboard()
         except Exception:
             pass
 
