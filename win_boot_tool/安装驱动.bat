@@ -11,6 +11,7 @@ if %errorlevel% neq 0 (
 )
 
 set "DRVLOG=%TEMP%\drv_install_result.log"
+set "CERTID=832E96B6DA1FF0DCF635376400BE43CAE8E0819E"
 
 echo ==============================================
 echo   一次性驱动安装（装完以后不再需要）
@@ -27,7 +28,7 @@ echo [1/3] 导入驱动信任证书（发布者+根）...
 certutil -addstore -f TrustedPublisher "%~dp0driver_pkg\dfu_driver.cer" >nul 2>&1
 if errorlevel 1 goto :zadig_gui
 certutil -addstore -f Root "%~dp0driver_pkg\dfu_driver.cer" >nul 2>&1
-if errorlevel 1 goto :zadig_gui
+if errorlevel 1 goto :revoke_zadig
 echo       完成
 
 echo [2/3] 注册驱动包（WinUSB）...
@@ -37,12 +38,12 @@ echo pnputil exit=%PNP% >> "%DRVLOG%"
 if "%PNP%"=="0" goto :pnputil_ok
 if "%PNP%"=="3010" goto :pnputil_ok
 echo       [失败] pnputil 退出码 %PNP%（详见 %DRVLOG%）
-goto :zadig_gui
+goto :revoke_zadig
 :pnputil_ok
 echo       完成（已注册）
 
 echo [3/3] 强制绑定到 DFU 设备（替换 Apple 驱动）...
-if not exist "%~dp0driver_install.ps1" goto :zadig_gui
+if not exist "%~dp0driver_install.ps1" goto :revoke_zadig
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0driver_install.ps1" -InfPath "%~dp0driver_pkg\apple_mobile_device_(dfu_mode).inf" -HardwareId "USB\VID_05AC&PID_1227" >> "%DRVLOG%" 2>&1
 if errorlevel 1 goto :force_fail
 echo       完成
@@ -62,6 +63,13 @@ if errorlevel 1 (
     echo   手机下次进入 DFU 后重新运行本脚本即可完成绑定。
     goto :end
 )
+echo   绑定失败，撤销已导入的证书并转 Zadig 手动安装...
+goto :revoke_zadig
+
+:revoke_zadig
+rem 本链失败：撤销刚导入的两处证书信任，避免留下无用根信任
+certutil -delstore TrustedPublisher %CERTID% >nul 2>&1
+certutil -delstore Root %CERTID% >nul 2>&1
 
 :zadig_gui
 echo.

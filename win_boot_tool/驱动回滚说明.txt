@@ -13,9 +13,10 @@
      记下其"发布名称"（形如 oem59.inf）
   3. 执行：pnputil /delete-driver oemXX.inf /uninstall /force
 
-步骤二：移除信任证书
+步骤二：移除信任证书（安装时导入了发布者库和根证书库两处）
   管理员运行：
   certutil -delstore TrustedPublisher 832E96B6DA1FF0DCF635376400BE43CAE8E0819E
+  certutil -delstore Root 832E96B6DA1FF0DCF635376400BE43CAE8E0819E
   （此指纹为驱动包 CAT 签名证书，仅影响该驱动包的信任）
 
 步骤三：还原 Apple 官方驱动

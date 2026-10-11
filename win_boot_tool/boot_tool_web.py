@@ -82,6 +82,9 @@ class Api:
         self._clipboard(text or "")
 
     def selftest(self):
+        with self._busy_lock:
+            if self._busy:
+                return "（流程进行中，诊断暂不可用——请等当前流程结束后再试）"
         buf = io.StringIO()
         try:
             with redirect_stdout(buf):
@@ -281,22 +284,27 @@ class Api:
 
     def _postboot(self):
         def worker():
-            def on_check(pids):
-                tag = {0x1227: "DFU", 0x1281: "恢复模式", 0x12A8: "已开机"}.get(
-                    next(iter(pids), None), "等待") if len(pids) <= 1 else "等待"
-                self._ev("postboot", t=f"确认开机状态：{tag}…")
-            result = engine.detect_post_boot(on_check=on_check)
-            if result == "booted":
-                self._ev("done", ok=True)
-            elif result == "recovery_stall":
-                self._ev("stall")
+            try:
+                def on_check(pids):
+                    tag = {0x1227: "DFU", 0x1281: "恢复模式", 0x12A8: "已开机"}.get(
+                        next(iter(pids), None), "等待") if len(pids) <= 1 else "等待"
+                    self._ev("postboot", t=f"确认开机状态：{tag}…")
+                result = engine.detect_post_boot(on_check=on_check)
+                if result == "booted":
+                    self._ev("done", ok=True)
+                elif result == "recovery_stall":
+                    self._ev("stall")
+                    self._ev("done", ok=False)
+                elif result == "dfu_back":
+                    self._ev("dfu_back")
+                    self._ev("done", ok=False)
+                else:
+                    self._ev("postboot", t="未能确认状态；屏幕亮起即成功")
+                    self._ev("done", ok=False, soft=True)
+            except Exception as e:
+                # 异常必须走到 done，否则 _busy 永久锁死
+                self._ev("error", msg=f"确认开机状态时出错：{e}")
                 self._ev("done", ok=False)
-            elif result == "dfu_back":
-                self._ev("dfu_back")
-                self._ev("done", ok=False)
-            else:
-                self._ev("postboot", t="未能确认状态；屏幕亮起即成功")
-                self._ev("done", ok=False, soft=True)
         threading.Thread(target=worker, daemon=True).start()
 
 
